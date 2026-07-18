@@ -324,30 +324,39 @@ Locked tiers (CAD):
 | `pro_custom` | Pro (sur mesure) | 4290+ (range) | 59/mo |
 
 Add-on **schema** follows decision **#20** — exactly three price kinds: `flat`
-(integer cents), `percent_modifier`, `human_quote` (#21: e-commerce is
+(integer **cents**), `percent_modifier`, `human_quote` (#21: e-commerce is
 `human_quote`). Placeholders are un-runnable (#22): the loader hard-fails on any
-`TODO(...)`. The stub below predates #20; the real #20-schema config module + values
-land in the thread-1-closing commit (see §14). Interim stub:
+`TODO(...)` at boot and in tests. **Add-on values supplied** (CHECKLIST, founder
+2026-07-18) — thread 1 closed. Live module:
+[`src/pricing/pricing.config.ts`](src/pricing/pricing.config.ts), validated by
+[`loadPricingConfig.ts`](src/pricing/loadPricingConfig.ts), proven by
+[`test/pricing.config.test.ts`](test/pricing.config.test.ts). Shape:
 
 ```jsonc
-// pricing.config — single source of truth; repricing = edit here only
+// src/pricing/pricing.config.ts — single source of truth; repricing = edit here.
+// All monetary values are integer CENTS, CAD.
 {
   "currency": "CAD",
+  "care_plan": { "key": "tranquillite", "label_fr": "Tranquillité", "monthly_cents": 5900 },
   "tiers": {
-    "presence":   { "label_fr": "Présence", "price": 1490 },
-    "standard":   { "label_fr": "Standard", "price": 2790 },
-    "pro":        { "label_fr": "Pro",       "price": 4290 },
-    "pro_custom": { "label_fr": "Pro (sur mesure)", "price_min": 4290, "price_max": null }
+    "presence":   { "label_fr": "Présence",         "price_cents": 149000 },
+    "standard":   { "label_fr": "Standard",         "price_cents": 279000 },
+    "pro":        { "label_fr": "Pro",              "price_cents": 429000 },
+    "pro_custom": { "label_fr": "Pro (sur mesure)", "price_min_cents": 429000, "price_max_cents": null }
   },
-  "care_plan_monthly": 59,   // Tranquillité
   "addons": {
-    "bilingual":   { "label_fr": "Bilingue",       "price": "TODO(CHECKLIST)" },
-    "copywriting": { "label_fr": "Rédaction",      "price": "TODO(CHECKLIST)" },
-    "booking":     { "label_fr": "Réservation",    "price": "TODO(CHECKLIST)" },
-    "ecommerce":   { "label_fr": "Boutique",       "price": "TODO(CHECKLIST)" },
-    "extra_pages": { "label_fr": "Pages sup.",     "price": "TODO(CHECKLIST)" },
-    "logo":        { "label_fr": "Logo",           "price": "TODO(CHECKLIST)" }
+    "extra_page":           { "price": { "kind": "flat", "cents": 39000 } },  // $390
+    "copywriting_per_page": { "price": { "kind": "flat", "cents": 19000 } },  // $190 / page
+    "logo_refresh":         { "price": { "kind": "flat", "cents": 49000 } },  // $490
+    "bilingual":            { "price": { "kind": "flat", "cents": 69000 } },  // $690 (non-Pro)
+    "booking":              { "price": { "kind": "flat", "cents": 59000 } },  // $590
+    "ecommerce":            { "price": { "kind": "human_quote" } },           // #21 — sur mesure
+    "photo_sourcing":       { "price": { "kind": "flat", "cents": 14000 } },  // $140
+    "seo_migration":        { "price": { "kind": "flat", "cents": 39000 } },  // $390
+    "rush_delivery":        { "price": { "kind": "percent_modifier", "percent": 20, "applies_to": "build_subtotal" } }, // +20% build only
+    "extra_revision":       { "price": { "kind": "flat", "cents": 14000 } }   // $140
   }
+  // (label_fr on each add-on omitted here for brevity — present in the module.)
 }
 ```
 
@@ -394,10 +403,10 @@ itself (`creavy-site`, tracked as a separate phase but a separate repo).
 
 ## 14. Open items / blockers
 
-1. **CHECKLIST add-on prices** — **OPEN, schema decided (#20/#21/#22), values
-   pending the next commit** (`pricing config: CHECKLIST add-on values`, this tour).
-   Founder supplied the values; they encode as integer cents, with e-commerce →
-   `human_quote` (#21).
+1. **CHECKLIST add-on prices** — **✅ CLOSED.** Values encoded in
+   [`src/pricing/pricing.config.ts`](src/pricing/pricing.config.ts) as integer cents
+   per #20 (e-commerce → `human_quote`, #21); loader hard-fails on any `TODO(...)`
+   per #22, proven by [`test/pricing.config.test.ts`](test/pricing.config.test.ts).
 2. **Fingerprint lib / adapter choice** — **OPEN, pending amendment #23**
    (the fingerprint spike, this tour — gated on founder sign-off before #23 is
    committed). Candidates A (hand-rolled signal table), B (Wappalyzer-fork
