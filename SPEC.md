@@ -49,6 +49,52 @@ but the entry product is **Présence**. This spec standardizes tier keys to
 `presence | standard | pro` (+ `pro_custom` for the range/book-a-call case) and
 updates the persisted enum to match (§10). DB, config, and FR labels stay in sync.
 
+### 2.1 Phase 1 decision batch — amendments 8–22 (founder-ratified 2026-07-18)
+
+> Numbering continues after #7 (no renumber needed). Diffed against Phase 0 §2/§4.1.
+> On collision **Phase 0 wins** and the item is flagged below, not amended — per this
+> tour's rule and the batch doc's own header.
+
+**A. Crawl & bounder**
+
+| # | Decision | Closes |
+|---|----------|--------|
+| 8 | **Bounder returns a structured result, not an integer** — `{canonical_origin, core_pages, blog_posts, excluded{}, languages[], bilingual_mirror, needs_browser+reasons[], review_flags[], partial}`. The tier mapper consumes `core_pages` + components only; blog volume and bilingualism are pricing *signals*, not page inflation. | Inventory §2; shapes Table D + the assessment schema. |
+| 9 | **Caps from inventory §3, and caps live in config, not code.** Precise counting stops at 30 → report `"30+"` + `out_of_icp_scope`. The fast-path budget is the **universal governor**: politeness delays, slow hosts, absurd `Crawl-delay` all just exhaust the budget → `partial:true` + review. One mechanism, no edge-case forest. **Four numeric caps collide with Phase 0 §2 #2 — see Collision flags; Phase 0 values retained pending founder reconciliation.** | S-05, S-23, D-21, D-31, D-32, D-33. |
+| 10 | **Form input repair is permissive, never guessy.** Trim; repair `https:/`/`https//`; strip userinfo (+`suspicious_input`). Interior whitespace, non-http(s), >2000 chars → typed rejection + friendly message. | N-18, N-20, N-27, N-28. |
+| 11 | **Ownership principle** (governs 12–14): the submitter is unverified, so the crawler always behaves as a stranger — full robots respect for *expansion*, no evasion, no aggressive retries. Fetching the single submitted URL is a user-initiated (link-preview-class) request, always permitted. | — |
+| 12 | **robots `Disallow:/`** → fetch submitted URL only, no expansion/sitemap; `robots_blocked` → human review. | R-10. |
+| 13 | **robots errors:** 4xx → unrestricted (RFC 9309); 5xx / unreachable-after-5-hops → treat as full block + note. | R-02, R-03, R-05. |
+| 14 | **Anti-bot & invalid TLS:** challenge pages → one standard attempt, never a bypass, `anti_bot` → human; invalid TLS → one unverified retry (assessment only), `tls_invalid` always surfaced (doubles as a sales signal). | D-24, D-26. |
+| 15 | **Bot identity:** UA `CreavyQuoteBot/1.0 (+https://creavy.com/bot)`, from config. Commits to a one-paragraph bot page on creavy.com (may 404 until the marketing site ships — acceptable). `Crawl-delay` applied as-is; the budget converts extremes to homepage-only partial + review. | R-07, R-13. |
+| 16 | **Canonical host resolution:** redirects authoritative; apex+www both 200 → deterministic pick (https → homepage `rel=canonical` → internal-link majority → www) + `host_ambiguous`; root cross-domain redirect re-anchors once (`domain_moved`), 2nd hop stops + flag. | D-01…D-04. |
+| 17 | **Scope = canonical host only.** www↔apex unify; language subdomains merge as mirrors (#18); every other subdomain → `related_property`, out of `core_pages`. | D-20. |
+| 18 | **Bilingual pairing (pricing-critical):** `hreflang` authoritative, else mirror heuristic (lang path prefixes / `lang=` / lang subdomains, 1:1 tree). Paired → one core page per pair, `bilingual_mirror:true`, both languages recorded. Unpairable twin trees → larger tree + `bilingual_suspected` → human. **Never sum both trees.** | S-22, D-16. |
+| 19 | **Sitemap trust:** sample-verify `min(core,10)` locs; >30% non-200 → distrust → link-crawl fallback + `stale_sitemap`. Classify: pages→core, posts→`blog_posts`, taxonomies/authors/dates→`excluded.archives`. | S-20. |
+
+**B. Pricing config**
+
+| # | Decision | Closes |
+|---|----------|--------|
+| 20 | **Config schema knows exactly three price kinds:** `flat` (integer cents), `percent_modifier` (e.g. rush +20 %, applies to the one-time build subtotal only — never recurring), `human_quote` (no auto price → renders "sur mesure — réponse en 24 h" + review flag). No other kinds — "from $890" is unrepresentable as an auto-quote by construction. | — |
+| 21 | **E-commerce add-on ships as `human_quote` in v1.** (flat-with-scope-wall considered, declined — scope variance is exactly what flat can't hold; a human touch on the highest-ticket add-on is a feature.) Revisit if e-comm > ~1 in 5 quotes. | — |
+| 22 | **Placeholders are un-runnable.** Loader hard-fails on any `TODO(...)` at boot and in tests. No bypass flag; dev/CI run a complete fixture config. Gate E can't pass by accident; no environment can quote a $0 add-on. | — |
+
+**Collision flags (Phase 0 wins — not amended, founder's call):**
+
+Decision #9's caps table restates four numbers already fixed by **Phase 0 §2 #2** (and §4.1). Per the rule I kept Phase 0's values and did **not** amend them:
+
+| Cap | Phase 0 (kept) | Batch #9 wanted | Recommendation |
+|-----|----------------|-----------------|----------------|
+| Total fast-path / crawl budget | **20 s** (`CRAWL_BUDGET_MS`) | 25 s | Reconcile — pick one; both defensible. |
+| Per-fetch timeout | **5 s** (`FETCH_TIMEOUT_MS`) | 8 s (+1 retry, connect-errors only) | Adopt batch — 8 s + connect-retry suits slow Québec hosts. |
+| Fetch cap per scan | **30 URLs** (`CRAWL_URL_CAP`) | 60 fetches / 30 core counted | Adopt batch's split (fetch ≤60, count ≤30 core). |
+| Concurrency | **≥ 8** (`FETCH_CONCURRENCY`) | **2 / host** + ~300 ms spacing | **Adopt batch** — ≥8 to one small host contradicts invariant #4; 2/host is correct. |
+
+Non-colliding caps from inventory §3 **were adopted** into §4.1 (crawl depth 3, redirect hops 5, HTML read 2 MB, robots parse 500 KB, sitemap index depth 2, child sitemaps 5, `"30+"` short-circuit, budget-as-governor).
+
+**UA example (not a collision):** Phase 0 §6 carried an illustrative UA on `creavy.ca`; ratified #15 uses `creavy.com`. Since §6's UA was an example, not a §2 decision, it's been updated to `.com` to match the ratified decision.
+
 ---
 
 ## 3. What this service is (unchanged)
@@ -67,17 +113,25 @@ price — and stores every quote. Stripe, email, and auth are out of scope for v
 | Constant | Value | Meaning |
 |----------|-------|---------|
 | `SYNC_HOLD_MS` | 8000 | Max time `POST /quote` holds the connection before returning `pending`. Also the p95 SLO for `completed` fast-path responses. |
-| `FETCH_TIMEOUT_MS` | 5000 | Per-URL fetch timeout. |
-| `CRAWL_BUDGET_MS` | 20000 | Hard wall-clock ceiling for the whole crawl (homepage + sitemap + sampled pages). Background worker may run to this. |
-| `CRAWL_URL_CAP` | 30 | Max URLs fetched. |
-| `FETCH_CONCURRENCY` | ≥ 8 | Concurrency pool so 30×5 s fits inside 20 s. |
+| `FETCH_TIMEOUT_MS` | 5000 | Per-URL fetch timeout. ⚑ batch #9 proposed 8000 (+1 connect-retry) — see §2.1 collision flags. |
+| `CRAWL_BUDGET_MS` | 20000 | Hard wall-clock ceiling for the whole crawl; the **universal governor** (#9) — exhaustion → `partial:true` + review. ⚑ batch #9 proposed 25000. |
+| `CRAWL_URL_CAP` | 30 | Max URLs fetched. ⚑ batch #9 proposed fetch ≤60 / count ≤30 core (`"30+"` short-circuit beyond). |
+| `FETCH_CONCURRENCY` | ≥ 8 | Concurrency pool. ⚑ batch #9 proposed **2 / host** + ~300 ms spacing (politeness) — see flags; recommend adopting. |
+| `CRAWL_DEPTH` | 3 | Max crawl depth from root (inventory §3, adopted). |
+| `REDIRECT_HOPS` | 5 | Max redirect hops per URL, incl. robots.txt (adopted). |
+| `HTML_READ_CAP` | 2 MB | HTML bytes read per page; parse the truncated prefix (adopted). |
+| `ROBOTS_PARSE_CAP` | 500 KB | robots.txt parse cap, matches Google (adopted). |
+| `SITEMAP_INDEX_DEPTH` | 2 | Sitemap-index recursion depth (adopted). |
+| `CHILD_SITEMAPS` | 5 | Max child sitemaps fetched (adopted). |
 | `ASSESS_TIMEOUT_MS` | ~15000 | Claude call timeout (incl. one retry). |
 | `QUOTE_DEADLINE_MS` | ~45000 | Absolute per-quote deadline; on breach the worker writes `failed`. |
 
+⚑ = value collides with batch #9; **Phase 0 retained pending founder reconciliation** (§2.1 collision flags). Non-⚑ caps below `FETCH_CONCURRENCY` are the non-colliding inventory §3 caps, adopted.
+
 `SYNC_HOLD_MS` (8 s) and `CRAWL_BUDGET_MS` (20 s) are **independent timers**. The
 fast path (~90 %) completes crawl+assess+price well inside 8 s and returns
-`completed` synchronously. A crawl-heavy site legitimately needing up to 20 s
-returns `pending` at 8 s; the in-process worker continues and the client polls.
+`completed` synchronously. A crawl-heavy site legitimately needing up to the crawl
+budget returns `pending` at 8 s; the in-process worker continues and the client polls.
 
 ### 4.2 Pipeline
 
@@ -162,14 +216,21 @@ the graceful message → "we couldn't fully analyze your site, book a call."
 
 ## 6. Crawl & platform detection
 
-- **Politeness (invariant #4):** robots.txt honored; clear, identifiable
-  user-agent (e.g. `CreavyQuoteBot/1.0 (+https://creavy.ca/bot)`); public pages
-  only; `CRAWL_URL_CAP`/`FETCH_TIMEOUT_MS`/`CRAWL_BUDGET_MS`/`FETCH_CONCURRENCY`
-  enforced; SSRF guard (reject private/loopback/link-local hosts and redirects
+- **Politeness (invariant #4):** robots.txt honored (ownership principle #11 —
+  crawler behaves as a stranger); user-agent `CreavyQuoteBot/1.0
+  (+https://creavy.com/bot)` from config (#15); public pages only; all §4.1
+  caps enforced; SSRF guard (reject private/loopback/link-local hosts and redirects
   into them).
-- **Page discovery:** `/sitemap.xml` first for `page_count` (no per-page fetch);
-  if absent/invalid, capped concurrent link-crawl from the homepage. Fetch a
-  **sample** of pages sufficient to estimate distinct templates, not all 30.
+- **Bounder output (#8):** a **structured result**, not a bare integer —
+  `{canonical_origin, core_pages, blog_posts, excluded{}, languages[],
+  bilingual_mirror, needs_browser+reasons[], review_flags[], partial}`. The tier
+  mapper consumes `core_pages` + components only.
+- **Page discovery:** `/sitemap.xml` first for `core_pages` (no per-page fetch),
+  with the **trust rule** (#19: sample-verify `min(core,10)`, distrust > 30 %
+  non-200 → link-crawl fallback + `stale_sitemap`); classify pages→core,
+  posts→`blog_posts`, taxonomies/authors/dates→`excluded.archives`. If absent/invalid,
+  capped concurrent link-crawl from the homepage. Fetch a **sample** sufficient to
+  estimate distinct templates, not all 30. Bilingual mirrors pair-dedupe (#18).
 - **Fingerprint (#3):** HTTP-only, maintained Wappalyzer-style core; fingerprint
   DB vendored + pinned; output → `detected_platform ∈ wordpress | wix | squarespace
   | webflow | shopify | custom | unknown`.
@@ -222,7 +283,7 @@ this directly serves Gate E's "zero quotes below the manual price" rule.
 
 ```
 inputs:
-  page_count           # from sitemap/crawl
+  core_pages           # structured bounder (#8); blog_posts EXCLUDED from the count
   template_estimate    # max(claude.template_estimate, answers.distinct_page_designs)
   components           # claude.component_flags[] ∪ derived from answers
   score                # claude.complexity_score (0..100), guardrail/tiebreak
@@ -231,11 +292,11 @@ HEAVY = { booking, ecommerce, listings, membership }
 heavy = components ∩ HEAVY
 
 # precedence top-down; first match wins
-if page_count <= 2 and heavy == {} and template_estimate <= 2:
+if core_pages <= 2 and heavy == {} and template_estimate <= 2:
     tier = presence     # 1490
-elif page_count <= 4 and template_estimate <= 4 and |heavy| == 0:
+elif core_pages <= 4 and template_estimate <= 4 and |heavy| == 0:
     tier = standard     # 2790
-elif page_count <= 5 or |heavy| == 1:
+elif core_pages <= 5 or |heavy| == 1:
     tier = pro          # 4290
 else:
     tier = pro_custom   # Pro floor + "book a call" → price_min=4290, price_max=null (range)
@@ -262,9 +323,11 @@ Locked tiers (CAD):
 | `pro` | Pro | 4290 | 59/mo |
 | `pro_custom` | Pro (sur mesure) | 4290+ (range) | 59/mo |
 
-Add-ons — **BLOCKER: prices per CHECKLIST source docs, not yet available**
-(Drive connector returned token-expired; no `CHECKLIST.md` in repo). Ships as
-explicit placeholders until supplied:
+Add-on **schema** follows decision **#20** — exactly three price kinds: `flat`
+(integer cents), `percent_modifier`, `human_quote` (#21: e-commerce is
+`human_quote`). Placeholders are un-runnable (#22): the loader hard-fails on any
+`TODO(...)`. The stub below predates #20; the real #20-schema config module + values
+land in the thread-1-closing commit (see §14). Interim stub:
 
 ```jsonc
 // pricing.config — single source of truth; repricing = edit here only
@@ -331,9 +394,16 @@ itself (`creavy-site`, tracked as a separate phase but a separate repo).
 
 ## 14. Open items / blockers
 
-1. **CHECKLIST add-on prices (BLOCKER for finalizing §9).** Re-authorize the
-   Drive connector or paste the CHECKLIST. Config ships with `TODO(CHECKLIST)`
-   until then; tier prices are unblocked.
-2. **Fingerprint lib choice** — resolved by a short Phase-1 spike (§6/#3).
+1. **CHECKLIST add-on prices** — **OPEN, schema decided (#20/#21/#22), values
+   pending the next commit** (`pricing config: CHECKLIST add-on values`, this tour).
+   Founder supplied the values; they encode as integer cents, with e-commerce →
+   `human_quote` (#21).
+2. **Fingerprint lib / adapter choice** — **OPEN, pending amendment #23**
+   (the fingerprint spike, this tour — gated on founder sign-off before #23 is
+   committed). Candidates A (hand-rolled signal table), B (Wappalyzer-fork
+   ruleset), C (generator-meta control) per the spike brief.
 3. **Persona source** — `persona` (plumber|hvac|realtor…) comes from the landing-page
    source per architecture §8; wiring is a `creavy-site` concern (Phase 4).
+4. **Batch #9 numeric collisions (§2.1)** — four caps (budget 20 vs 25 s, per-fetch
+   5 vs 8 s, fetch 30 vs 60, concurrency ≥8 vs 2/host) retain Phase 0 values pending
+   founder reconciliation. Recommendations in §2.1.

@@ -38,16 +38,19 @@ these are the units TDD is built for.
 4. **Platform fingerprint adapter** — spike + choose the maintained Wappalyzer-style
    core ([SPEC.md](SPEC.md) §6/#3); vendor + pin the fingerprint DB; adapter
    interface so the lib is swappable.
-5. **Sitemap parse + link-crawl bounder** — `/sitemap.xml` → `page_count`; capped
-   concurrent link-crawl (`CRAWL_URL_CAP`/`FETCH_TIMEOUT_MS`/`CRAWL_BUDGET_MS`/
-   `FETCH_CONCURRENCY`); "mostly empty" detector.
+5. **Sitemap parse + link-crawl bounder** — returns the **structured bounder object**
+   (SPEC §2.1 #8), not a bare count; `/sitemap.xml` → `core_pages` with the trust
+   rule (#19); bilingual pair-dedupe (#18); config-driven caps (#9, SPEC §4.1);
+   "mostly empty" / `needs_browser` detector. Test IDs per the crawl edge-case
+   inventory (Tables B–D).
 6. **Assessment client + schema validation** — `claude-opus-4-8`, structured
    outputs, retry-once, latency-tuned ([SPEC.md](SPEC.md) §7). Contract-tested
    against a stub before live keys.
 7. **Tier-mapping + pricing config module** — pure function, exhaustive table tests
-   incl. **ties-round-up** ([SPEC.md](SPEC.md) §8). ⚠️ **Add-on prices are blocked
-   on the CHECKLIST** — tier logic + tests land now; add-on price values fill in
-   when the doc arrives (structure ships with `TODO(CHECKLIST)`).
+   incl. **ties-round-up** ([SPEC.md](SPEC.md) §8). Pricing config uses the #20
+   three-price-kinds schema (integer cents); the **loader hard-fails on any
+   `TODO(...)`** (#22). Add-on values are **supplied** (thread 1 closes this tour);
+   the config module + hard-fail loader + test land as the Task-2 commit.
 
 **DoD:** All core units green under TDD; tier-mapping table tests cover the §8
 precedence and ties-round-up; no live network/DB required to run the suite.
