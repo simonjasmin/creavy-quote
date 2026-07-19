@@ -23,13 +23,14 @@ lines.push("> run the adopted adapter, assert `platform` / `builder` / `confiden
 lines.push("> `confidence`: **high** where a deterministic signal exists; **low** for custom/static");
 lines.push("> (no platform claim). Builder asserted only where ground truth is a known builder.");
 lines.push("");
-lines.push("| ID | Fixture | Expect platform | Expect builder | Expect confidence |");
-lines.push("|----|---------|-----------------|----------------|-------------------|");
+lines.push("| ID | Fixture | Expect platform | Primary builder | builders_detected | Expect confidence |");
+lines.push("|----|---------|-----------------|-----------------|-------------------|-------------------|");
 rows.forEach((r, i) => {
   const id = `F-${String(i + 1).padStart(2, "0")}`;
   const conf = r.platform === "custom" ? "low (no claim)" : "high";
   const bld = r.builder && r.builder !== "unknown" ? r.builder : (r.platform === "wordpress" ? "— (any/none)" : "—");
-  lines.push(`| ${id} | ${r.slug} | ${r.platform} | ${bld} | ${conf} |`);
+  const bd = (r.builders_detected && r.builders_detected.length) ? r.builders_detected.join("+") : "—";
+  lines.push(`| ${id} | ${r.slug} | ${r.platform} | ${bld} | ${bd} | ${conf} |`);
 });
 lines.push("");
 lines.push("**Calibration properties (assert across the whole table):**");

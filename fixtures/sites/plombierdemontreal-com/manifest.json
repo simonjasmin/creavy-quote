@@ -5,6 +5,9 @@
   "ground_truth": {
     "platform": "wordpress",
     "builder": "divi",
+    "builders_detected": [
+      "divi"
+    ],
     "bilingual": false
   },
   "labeled_by": "human (harvest inspection 2026-07-18)"

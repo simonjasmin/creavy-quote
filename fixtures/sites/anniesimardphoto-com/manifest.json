@@ -5,6 +5,9 @@
   "ground_truth": {
     "platform": "wordpress",
     "builder": "beaver",
+    "builders_detected": [
+      "beaver"
+    ],
     "bilingual": false
   },
   "labeled_by": "human (harvest inspection 2026-07-18)"

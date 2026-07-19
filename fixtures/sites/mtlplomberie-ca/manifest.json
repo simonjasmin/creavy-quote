@@ -5,6 +5,7 @@
   "ground_truth": {
     "platform": "duda",
     "builder": null,
+    "builders_detected": [],
     "bilingual": true
   },
   "labeled_by": "human (harvest inspection 2026-07-18)"

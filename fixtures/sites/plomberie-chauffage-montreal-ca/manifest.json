@@ -4,7 +4,11 @@
   "final_url": "https://www.plomberie-chauffage-montreal.ca/",
   "ground_truth": {
     "platform": "wordpress",
-    "builder": "elementor",
+    "builder": "wpbakery",
+    "builders_detected": [
+      "elementor",
+      "wpbakery"
+    ],
     "bilingual": false
   },
   "labeled_by": "human (harvest inspection 2026-07-18)"

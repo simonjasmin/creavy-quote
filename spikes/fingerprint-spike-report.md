@@ -1,10 +1,54 @@
 # Fingerprint adapter — spike report
 
-> **STATUS: PROPOSAL — NOT committed to SPEC.** Presents the recommendation and a
-> proposed **SPEC amendment #23**. #23 is *not* written into SPEC §2 and the
-> fingerprint adapter is *not* implemented in `src/` — both wait on founder
-> sign-off (the gate). This report is a `/spikes` artifact; it gets pressure-tested
-> before #23 lands.
+> **STATUS: ✅ RATIFIED 2026-07-18.** #23 is committed to SPEC §2.2 (Candidate A,
+> with riders a/b/c incl. builder precedence); the adapter is built in
+> [`src/fingerprint/`](../src/fingerprint/), green on all F-01…F-50. See
+> **Post-sign-off** below for the rider-(c) correction + post-fix numbers. The
+> in-spike rubric table further down reflects the *pre-fix* Candidate A detector.
+
+## Post-sign-off — riders applied (2026-07-18)
+
+**Rider (c) correction — the builder row changed, as anticipated.** The in-spike
+report claimed builder 80 % with "misses benign." Rider (c) caught that 1 of the 2
+misses was **wrong-at-high vs. the label**: `plomberie-chauffage-montreal-ca` — A
+emitted `wpbakery`/high on a GT=`elementor` site. Root cause: A's Elementor regex
+`elementor-(page|widget|element|section)` was too narrow and missed Elementor's real
+classes, falling through to the also-present WPBakery.
+
+**Step-5 empirical verification (install vs content).** Confirmed across the 7
+Elementor fixtures before trusting the split:
+
+| fixture | Elementor content classes | Elementor install | WPBakery `vc_row` |
+|---|---|---|---|
+| pureplomberie / pierrehamelin / amenagementdupaysage / paysagistevilledequebec / coiffuredistinctive / itemconstruction | 14 · 527 · 917 · 588 · 1003 · 518 | present | 0 |
+| **plomberie-chauffage-montreal** (disputed) | **0** | **4** | **2** |
+| quebecelectricien (pure WPBakery control) | 0 | 0 | 29 |
+
+The split holds: true-Elementor sites carry 14–1003 content classes; the disputed
+site has **0 Elementor content** (install-only) + WPBakery content → **primary =
+WPBakery**.
+
+**Relabel.** `plomberie-chauffage-montreal-ca` ground truth → primary `wpbakery`,
+`builders_detected: [elementor, wpbakery]` (physical reality: Elementor installed,
+WPBakery built the content). `pureplomberie-com` stays `elementor` (broadened regex
+catches its `elementor-button` content class).
+
+**Fix applied (rider c hybrid i+ii):** broadened Elementor signals + typed every
+builder signal `install` vs `content`; **primary = most content matches** (install
+alone never beats another builder's content); added `builders_detected[]`.
+
+**Calibration definition (frozen in #23):** *builder wrong-at-high* = asserting at
+high confidence a builder with **zero signals of any class present**.
+
+**Post-fix numbers** (production adapter over 50 F-cases, `test/fingerprint.test.ts`):
+
+| metric | post-fix |
+|---|---|
+| platform @ high | **38/38** |
+| builder **primary** | **10/10** |
+| builders_detected set | **10/10** |
+| false-pos on 12 custom | **0** |
+| **wrong-at-high** | **0** |
 
 ## Spike question (brief)
 

@@ -30,7 +30,9 @@ const LABELS = {
   // --- WordPress + builder ---
   "plombierdemontreal-com": { platform: "wordpress", builder: "divi" },
   "pureplomberie-com": { platform: "wordpress", builder: "elementor" },
-  "plomberie-chauffage-montreal-ca": { platform: "wordpress", builder: "elementor" }, // also WPBakery
+  // Relabelled (rider c): Elementor is INSTALLED (0 content classes) but WPBakery
+  // BUILT the content (vc_row) → primary = wpbakery; both in builders_detected.
+  "plomberie-chauffage-montreal-ca": { platform: "wordpress", builder: "wpbakery", builders_detected: ["elementor", "wpbakery"] },
   "pierrehamelin-ca": { platform: "wordpress", builder: "elementor" },
   "amenagementdupaysage-com": { platform: "wordpress", builder: "elementor" },
   "paysagistevilledequebec-ca": { platform: "wordpress", builder: "elementor" },
@@ -99,11 +101,18 @@ for (const [slug, gt] of Object.entries(LABELS)) {
   if (!dirs.includes(slug)) continue;
   const hdr = JSON.parse(await readFile(join(OUT, slug, "root.headers.json"), "utf8"));
   const body = await readFile(join(OUT, slug, "root.html"), "utf8").catch(() => "");
+  const KNOWN = new Set(["elementor", "divi", "wpbakery", "beaver"]);
+  const buildersDetected = gt.builders_detected ?? (KNOWN.has(gt.builder) ? [gt.builder] : []);
   const manifest = {
     slug,
     requested_url: hdr.requested ?? null,
     final_url: hdr.final_url ?? null,
-    ground_truth: { platform: gt.platform, builder: gt.builder ?? null, bilingual: detectBilingual(body) },
+    ground_truth: {
+      platform: gt.platform,
+      builder: gt.builder ?? null,            // primary
+      builders_detected: buildersDetected,    // all builders present (rider c)
+      bilingual: detectBilingual(body),
+    },
     labeled_by: "human (harvest inspection 2026-07-18)",
   };
   await writeFile(join(OUT, slug, "manifest.json"), JSON.stringify(manifest, null, 2));
