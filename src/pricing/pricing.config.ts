@@ -11,6 +11,17 @@ export const rawPricingConfig = {
   // #28 bilingual tree-rung guards (config per #27.7; loader-validated).
   bilingual: { tree_lang_purity: 0.8, min_tree_pages: 3, min_size_ratio: 0.5 },
 
+  // #27 tier-mapping constants (config per #27.7; loader-validated).
+  tiermap: {
+    review_pages: 7,          // ≥ this → review_required, no auto-bundle (27.2)
+    blog_seo_threshold: 5,    // blog_posts ≥ this → SEO migration auto-included (27.5)
+    extra_page_cap: 3,        // max extra-page add-ons stacked before it's a review shape
+    presence_max_pages: 2,
+    standard_base_pages: 4,
+    pro_base_pages: 6,
+    pro_includes: ["bilingual", "booking", "listings"], // heavy components Pro covers flat
+  },
+
   tiers: {
     presence:   { label_fr: "Présence",         price_cents: 149000 },
     standard:   { label_fr: "Standard",         price_cents: 279000 },
