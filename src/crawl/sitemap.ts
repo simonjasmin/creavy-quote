@@ -5,6 +5,7 @@
 import { gunzipSync } from "node:zlib";
 import type { Transport } from "./types.ts";
 import { pairBilingual, dedupByIdentity } from "./bilingual.ts";
+import { type ScanEventEmitter, NOOP_EMITTER } from "./events.ts";
 
 export const SITEMAP_INDEX_DEPTH = 2; // #4.1
 export const CHILD_SITEMAPS = 5; // #4.1
@@ -68,7 +69,7 @@ async function fetchParse(transport: Transport, url: string): Promise<ParsedSite
   return parseSitemap({ body: res.body, bytes: res.bytes, contentEncoding: res.headers["content-encoding"] }, res.url);
 }
 
-export async function crawlSitemaps(transport: Transport, origin: string, robotsSitemaps: string[] = []): Promise<SitemapCrawl> {
+export async function crawlSitemaps(transport: Transport, origin: string, robotsSitemaps: string[] = [], emitter: ScanEventEmitter = NOOP_EMITTER): Promise<SitemapCrawl> {
   const empty: SitemapCrawl = { found: false, core: [], blog: 0, excluded: { archives: 0, media: 0, external: 0 }, languages: [], bilingual_mirror: false, review_flags: [], partial: false, overflow: false };
   const candidates = dedupByIdentity([...robotsSitemaps, origin + "/sitemap.xml", origin + "/sitemap_index.xml", origin + "/wp-sitemap.xml"]); // S-01
 
@@ -136,7 +137,12 @@ export async function crawlSitemaps(transport: Transport, origin: string, robots
   // S-20 stale-sitemap trust: sample-verify min(core,10)
   const sample = coreUrls.slice(0, Math.min(coreUrls.length, 10));
   let bad = 0;
-  for (const u of sample) { const r = await transport.fetch(u, { maxHops: 3 }); if (r.error || r.status >= 400) bad++; }
+  let n = 0;
+  for (const u of sample) {
+    const r = await transport.fetch(u, { maxHops: 3 });
+    if (r.error || r.status >= 400) bad++;
+    emitter.emit("page_fetched", { n: ++n, approx: coreUrls.length }); // #24 (throttled by sample size ≤10)
+  }
   if (sample.length > 0 && bad / sample.length > 0.30) return { ...empty, review_flags: [...flags, "stale_sitemap"] }; // distrust → link-crawl fallback
 
   return { found: true, core: coreUrls, blog, excluded: ex, languages: bi.languages, bilingual_mirror: bi.bilingual_mirror, review_flags: flags, partial, overflow: false };

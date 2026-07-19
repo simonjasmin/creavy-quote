@@ -157,6 +157,40 @@ one case per fixture) is part of #23; the `src/` adapter is built red-green agai
 it. A probe pack (`/wp-json/`, favicon hash) may be added by later amendment if
 passive accuracy degrades on a broader corpus.
 
+### 2.3 Live scan narration — amendment #24 (founder-initiated 2026-07-18)
+
+**24. One event spine, three readers.** Every pipeline step emits typed events to
+an injectable `ScanEventEmitter` (same discipline as transport + clock; default
+**no-op**). The log is **append-only, ordered by `seq`** — a window on work already
+done: an event never computes anything new and never blocks; a slow consumer can't
+slow a scan (fire-and-forget). Shape `{seq, ts, type, data}`, internal by default.
+Three readers of **one** log: **prospect** (public live stream), **founder** (full
+evidence trail behind every flag/number), **telemetry** (the persisted log *is*
+rider (b)'s signals/confidence record — no second logging system).
+
+**Public projection — default-deny, structural** ([src/crawl/eventProjection.ts](src/crawl/eventProjection.ts)):
+only whitelisted types reach the browser, rendered server-side through **FR/EN
+templates (data/config, not code branches)**. **Raw data never ships** — only the
+rendered string + a stable type. **Never public:** prices/tiers/dollar amounts,
+review flags, anything below **high** confidence (#23), signal internals, negative
+judgments (findings phrased as facts). **Honesty rule:** every public event is a
+real completed pipeline fact in real order — no synthetic delays, no fabricated
+reasoning. Claude's streamed analysis joins the spine as `assessment_*` events when
+the assessment layer ships.
+
+**Catalog (this tour):** `scan_started`☀ · `url_normalized`☀ · `robots_checked` ·
+`sitemap_found`/`sitemap_absent`☀ · `page_fetched`☀ · `platform_detected`☀ (high
+only) · `builder_detected`☀ (high only) · `bilingual_paired`☀ · `blog_classified`☀ ·
+`core_count_progress`☀ · `needs_browser` · `review_flag_raised` · `scan_partial` ·
+`scan_complete`☀. Spine in [src/crawl/events.ts](src/crawl/events.ts), threaded
+through sitemap + scan; proven by [test/crawl.events.test.ts](test/crawl.events.test.ts),
+incl. the bilingual **moat line** on a synthetic explicit-`/fr//en/` scan.
+
+**Transport (Phase 2, NOT this tour):** events persist to the job record; the async
+API exposes "events since seq N" via polling first, SSE as fast-follow. This
+amendment fixes only *ordered, append-only, resumable by seq* — no endpoint/SSE/
+persistence in Phase 1.
+
 ---
 
 ## 3. What this service is (unchanged)
@@ -484,3 +518,23 @@ itself (`creavy-site`, tracked as a separate phase but a separate repo).
 4. **Batch #9 cap reconciliation (§2.1)** — **✅ CLOSED (thread 4, §4.1):** all four
    caps adopt batch #9 (budget 25 s, per-fetch 8 s + retry, fetch 60/30 core,
    concurrency 2/host + 300 ms).
+5. **Bilingual implicit-FR-root — ⚠️ OPEN, MONEY-TOUCHING, needs founder decision.**
+   #18's `pairBilingual` pairs only when **both** languages carry explicit prefixes
+   (`/fr/` AND `/en/`). Real Québec ICP sites use **fr-at-root + `/en/`** — evidence:
+   golden sites `labarberie`, `mchenryplumbing`, `mtlplomberie` all report
+   `languages:["en"]`, `bilingual_mirror:false` despite being bilingual. This
+   under-detects the **$690 bilingual add-on / Pro signal → touches money**, so per
+   the tour's §4 rule it was **NOT auto-fixed** (the `bilingual_paired` moat line is
+   proven on a synthetic explicit-`/fr//en/` scan instead). **Recommendation:** pair
+   `/en/x` with prefix-less `/x` (root = the other language), inferring root language
+   from `<html lang>` (don't assume FR). Founder call.
+6. **scan() not yet routed through PoliteScheduler — crawl-mechanical, conservative.**
+   scan() fetches sequentially (one request at a time per host → polite by
+   construction) but doesn't yet enforce the 25 s budget cutoff / 2-per-host via the
+   built+tested `PoliteScheduler` (D-34). Sequential single-host fetching is
+   inherently polite; wiring is Phase-2 service assembly.
+7. **Soft-404 exclusion not wired into scan — crawl-mechanical, conservative.**
+   `isSoft404` (D-18) exists + tested, but scan doesn't fetch each core page's body
+   to apply it, so `excluded.soft_404` stays 0. Conservative direction:
+   under-excluding slightly over-counts core → higher tier → **never underprices**.
+   Per-page soft-404 checks are a later refinement.

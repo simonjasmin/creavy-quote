@@ -13,6 +13,7 @@ import {
   escalationReasons, capHtml, classifyTransportError,
 } from "./bounder.ts";
 import { fingerprint } from "../fingerprint/fingerprint.ts";
+import { type ScanEventEmitter, NOOP_EMITTER } from "./events.ts";
 
 export type ScanResult = BounderResult & { detected_platform: string; builders_detected: string[] };
 
@@ -24,14 +25,20 @@ function finalize(base: BounderResult, extra: Partial<ScanResult>): ScanResult {
   return merged;
 }
 
-export async function scan(transport: Transport, _clock: Clock, inputUrl: string): Promise<ScanResult> {
+export async function scan(transport: Transport, clock: Clock, inputUrl: string, emitter: ScanEventEmitter = NOOP_EMITTER): Promise<ScanResult> {
+  emitter.emit("scan_started", { url: inputUrl });
   const n = normalize(inputUrl);
   const startUrl = n.ok ? n.identity : inputUrl;
+  emitter.emit("url_normalized", { host: n.ok ? n.host : inputUrl });
 
-  if (n.ok && n.classification === "no_owned_site") // N-22
+  if (n.ok && n.classification === "no_owned_site") { // N-22
+    emitter.emit("review_flag_raised", { flag: "no_owned_site" }); emitter.emit("scan_complete", {});
     return finalize(emptyBounder("https://" + n.host), { detected_platform: "none", builders_detected: [], review_flags: ["no_owned_site"] });
-  if (n.ok && n.classification === "platform_profile") // N-23
+  }
+  if (n.ok && n.classification === "platform_profile") { // N-23
+    emitter.emit("review_flag_raised", { flag: "platform_profile" }); emitter.emit("scan_complete", {});
     return finalize(emptyBounder("https://" + n.host), { detected_platform: "unknown", builders_detected: [], review_flags: ["platform_profile"] });
+  }
 
   const canon = await resolveCanonical(transport, startUrl);
   const base = emptyBounder(canon.origin);
@@ -54,6 +61,7 @@ export async function scan(transport: Transport, _clock: Clock, inputUrl: string
   if (isAntiBot(html, headers)) base.review_flags.push("anti_bot"); // D-24
 
   const robots = await fetchRobots(transport, canon.origin);
+  emitter.emit("robots_checked", { blocked: robots.source === "disallow_all" || !robots.allows("/") });
 
   let core: number | "30+" = 1;
   let blog = 0;
@@ -68,8 +76,9 @@ export async function scan(transport: Transport, _clock: Clock, inputUrl: string
     if (robots.source === "disallow_all") base.review_flags.push("review:robots");
     core = 1;
   } else {
-    const sm = await crawlSitemaps(transport, canon.origin, robots.sitemaps);
+    const sm = await crawlSitemaps(transport, canon.origin, robots.sitemaps, emitter);
     const smTrusted = sm.found && !sm.review_flags.includes("stale_sitemap") && !sm.review_flags.includes("sitemap_off_domain_distrust");
+    if (sm.found) emitter.emit("sitemap_found", { count: sm.overflow ? "30+" : sm.core.length }); else emitter.emit("sitemap_absent", {});
     if (smTrusted) {
       sitemapFound = true;
       core = sm.overflow ? "30+" : Math.max(1, sm.core.length);
@@ -87,6 +96,17 @@ export async function scan(transport: Transport, _clock: Clock, inputUrl: string
   for (const r of escalationReasons(html, sitemapFound)) base.needs_browser_reasons.push(r); // D-22/D-23
 
   const fp = fingerprint([{ url: canon.final_url, status: canon.status, headers, body: html }]);
+
+  // Event spine (#24) — every event is a fact just computed; fire-and-forget.
+  emitter.emit("platform_detected", { platform: fp.platform, builder: fp.builder ?? null, confidence: fp.confidence });
+  if (fp.builder) emitter.emit("builder_detected", { builder: fp.builder, confidence: fp.confidence });
+  if (bilingual) emitter.emit("bilingual_paired", { languages }); // the moat line
+  if (blog > 0) emitter.emit("blog_classified", { count: blog });
+  emitter.emit("core_count_progress", { count: core });
+  if (base.needs_browser_reasons.length) emitter.emit("needs_browser", { reasons: base.needs_browser_reasons });
+  for (const f of new Set(base.review_flags)) emitter.emit("review_flag_raised", { flag: f });
+  if (partial) emitter.emit("scan_partial", {});
+  emitter.emit("scan_complete", {});
 
   return finalize(base, {
     core_pages: core, blog_posts: blog, excluded, languages, bilingual_mirror: bilingual,
