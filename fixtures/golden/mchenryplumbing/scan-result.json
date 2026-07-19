@@ -9,12 +9,15 @@
     "soft_404": 0
   },
   "languages": [
-    "en"
+    "en",
+    "fr"
   ],
-  "bilingual_mirror": false,
+  "bilingual_mirror": true,
   "needs_browser": false,
   "needs_browser_reasons": [],
-  "review_flags": [],
+  "review_flags": [
+    "pairing_evidence:hreflang"
+  ],
   "partial": false,
   "detected_platform": "duda",
   "builders_detected": []

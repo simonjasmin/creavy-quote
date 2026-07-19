@@ -42,8 +42,9 @@ test("D-15 cross-host canonical → platform_canonical review", () => {
   assert.ok(r.review_flags.includes("platform_canonical"));
 });
 test("D-16 fr/en mirrored trees via crawl → pair-dedup", () => {
-  const html = `<html>${a("/fr/services")}${a("/en/services")}${a("/fr/apropos")}${a("/en/apropos")}</html>`;
-  const r = countFromLinks(O + "/fr/", html, O);
+  // #26: a genuine mirror pairs the HOMEPAGE too — include both /fr/ and /en/ roots.
+  const html = `<html>${a("/en")}${a("/fr/services")}${a("/en/services")}${a("/fr/apropos")}${a("/en/apropos")}</html>`;
+  const r = countFromLinks(O + "/fr/", html, O, "fr");
   assert.equal(r.bilingual_mirror, true); assert.deepEqual(r.languages, ["en", "fr"]);
 });
 test("D-17 archives (blog/page, category, author, date)", () => {

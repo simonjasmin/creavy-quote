@@ -234,6 +234,38 @@ bandwidth, never tokens.** Shapes the assessment tour — the model is invoked f
 **stage 2 only**; its input contract is the cached decision-#8 object + fetched page
 content, **never a live crawl.**
 
+### 2.5 Bilingual pairing — amendments #26 + #28 (founder-ratified 2026-07-18/19)
+
+**26. Root-tree pairing (extends #18).** Prefix-less roots pair against a
+language-prefixed tree in **both** directions (fr-root+`/en/`, en-root+`/fr/` —
+nothing assumes French). Root language is **content-inferred**
+([src/crawl/langDetect.ts](src/crawl/langDetect.ts): hand-rolled fr/en stopword +
+diacritic detector, zero-dep); `<html lang>` demoted to a fallback (WP themes ship
+`lang="en-US"` on French sites — metadata lies, content doesn't).
+
+**28. Bilingual pairing is an evidence ladder** (strongest first; climb down when a
+rung is absent), [src/crawl/bilingual.ts](src/crawl/bilingual.ts) `resolveBilingual`:
+1. **hreflang** (authoritative) — `<link rel=alternate hreflang>` (head) +
+   `<xhtml:link>` (sitemap). fr+en groups pair exactly, **translated slugs and all** →
+   `mirror`.
+2. **path** — exact slug match after prefix strip + language difference.
+3. **tree** — `mirror` without page pairs when **all** guards hold: two trees; each
+   tree ≥ **80 %** one content-detected language (false-merge guard); each tree ≥ **3**
+   pages; smaller/larger ≥ **0.5**. Any guard fails → `bilingual_suspected` → review.
+
+Counting unchanged: page pairs dedupe pair-wise; tree/suspected take the larger tree
+(#18) — #24's "comptées comme un seul site bilingue" stays literally true. Evidence
+grade `pairing_evidence: hreflang|path|tree` travels in `reasons[]` + the internal
+event log (**not public**). Thresholds live in config (#27.7), loader-validated.
+**Supersedes #26 acceptance item 7.** Cases **S-25…S-34**
+([test/crawl.bilingual.test.ts](test/crawl.bilingual.test.ts)).
+
+**Acceptance (evidence-based relabels):** the three real bilingual goldens —
+labarberie (WP/Yoast), mchenryplumbing + mtlplomberie (Duda, **translated-slug**) —
+all earn `bilingual_mirror: true` via **hreflang** (each carries fr+en alternates);
+the moat event fires on real sites. Two-of-three being translated-slug is the
+**dominant moat-customer shape**, not an edge case.
+
 ---
 
 ## 3. What this service is (unchanged)
@@ -561,25 +593,18 @@ itself (`creavy-site`, tracked as a separate phase but a separate repo).
 4. **Batch #9 cap reconciliation (§2.1)** — **✅ CLOSED (thread 4, §4.1):** all four
    caps adopt batch #9 (budget 25 s, per-fetch 8 s + retry, fetch 60/30 core,
    concurrency 2/host + 300 ms).
-5. **Bilingual implicit-FR-root — ⚠️ OPEN, MONEY-TOUCHING, needs founder decision.**
-   #18's `pairBilingual` pairs only when **both** languages carry explicit prefixes
-   (`/fr/` AND `/en/`). Real Québec ICP sites use **fr-at-root + `/en/`** — evidence:
-   golden sites `labarberie`, `mchenryplumbing`, `mtlplomberie` all report
-   `languages:["en"]`, `bilingual_mirror:false` despite being bilingual. This
-   under-detects the **$690 bilingual add-on / Pro signal → touches money**, so per
-   the tour's §4 rule it was **NOT auto-fixed** (the `bilingual_paired` moat line is
-   proven on a synthetic explicit-`/fr//en/` scan instead). **Recommendation:** pair
-   `/en/x` with prefix-less `/x` (root = the other language), inferring root language
-   from `<html lang>` (don't assume FR). Founder call.
-6. **scan() not yet routed through PoliteScheduler — crawl-mechanical, conservative.**
-   scan() fetches sequentially (one request at a time per host → polite by
-   construction) but doesn't yet enforce the 25 s budget cutoff / 2-per-host via the
-   built+tested `PoliteScheduler` (D-34). Sequential single-host fetching is
-   inherently polite; wiring is Phase-2 service assembly.
-7. **Soft-404 exclusion not wired into scan — crawl-mechanical, conservative.**
-   `isSoft404` (D-18) exists + tested, but scan doesn't fetch each core page's body
-   to apply it, so `excluded.soft_404` stays 0. Per-page soft-404 checks are a later
-   refinement.
+5. **Bilingual pairing — ✅ CLOSED by amendments #26 + #28 (§2.5).** The implicit-FR-root
+   gap became the evidence ladder (hreflang → path → tree). All three real bilingual
+   goldens now earn `bilingual_mirror: true` (via hreflang), moat fires on real sites.
+6. **scan() → PoliteScheduler — ✅ CLOSED.** `scan()` routes the sitemap sample fetches
+   through `PoliteScheduler` (thread-6 test asserts ≤2 in-flight per host at
+   composition level, fake clock). Sequential single-host fetching remains polite by
+   construction; the budget governor is the scheduler's.
+7. **Soft-404 wired into scan — ✅ CLOSED.** `crawlSitemaps` checks `isSoft404` on the
+   verify sample; scan subtracts detected soft-404s from `core_pages`. *Rationale
+   corrected (founder):* under-excluding soft-404s never under-prices, but it **can
+   over-count via the link-crawl path and push a tier boundary** — money-adjacent in
+   the other direction; hence wired now, not later.
 8. **DNS rebinding — residual risk accepted for MVP (#25 Part B).** The SSRF guard
    resolves + checks the IP, then `fetch` re-resolves (TOCTOU). Hardening (resolve
    once, connect to the validated IP) is deferred; not a Phase-1 task.

@@ -1,6 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { PoliteScheduler } from "../src/crawl/scheduler.ts";
+import { scan } from "../src/crawl/scan.ts";
 import { FakeTransport, FakeClock, type Scenario } from "./helpers/replay.ts";
 
 function scenarioFor(urls: string[], delayMs = 0): Scenario {
@@ -29,6 +31,14 @@ test("D-34 per-host limit holds across multiple hosts", async () => {
   await new PoliteScheduler(tx, clock, { spacingMs: 300, budgetMs: 60000 }).fetchAll(urls);
   assert.ok((tx.perHostMaxSeen["a.example"] ?? 0) <= 2);
   assert.ok((tx.perHostMaxSeen["b.example"] ?? 0) <= 2);
+});
+
+test("thread 6 / D-34 at composition: scan() holds ≤2 in-flight per host", async () => {
+  const scenario = JSON.parse(readFileSync("fixtures/golden/mchenryplumbing/scenario.json", "utf8")) as Scenario;
+  const clock = new FakeClock();
+  const tx = new FakeTransport(scenario, ".", clock);
+  await scan(tx, clock, "https://www.mchenryplumbing.ca/"); // multi-core site → scheduler-driven sample fetches
+  for (const [host, max] of Object.entries(tx.perHostMaxSeen)) assert.ok(max <= 2, `${host} saw ${max} in flight`);
 });
 
 test("D-33 budget exhaustion → partial, counted-so-far", async () => {

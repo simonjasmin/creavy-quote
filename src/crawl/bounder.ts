@@ -46,13 +46,8 @@ export function classifyLink(url: string, origin: string): LinkClass {
   return classifyLoc(url); // core/blog/archive/media (D-17, S-19)
 }
 
-// D-18 soft-404: HTTP 200 but the page says "not found" (FR + EN markers)
-export function isSoft404(html: string): boolean {
-  const title = (html.match(/<title>([^<]*)<\/title>/i) || [])[1] || "";
-  const text = html.replace(/<[^>]+>/g, " ").slice(0, 4000);
-  return /(page (non trouv|not found)|introuvable|erreur\s*404|error\s*404|404 (not found|error))/i.test(title) ||
-    /(page non trouv[ée]+|page not found|cette page n['e]existe pas|nous n['e]avons pas (pu )?trouv)/i.test(text);
-}
+// D-18 soft-404 lives in sitemap.ts (shared content classification; avoids a cycle).
+export { isSoft404 } from "./sitemap.ts";
 export function detectParked(html: string): boolean { // D-29
   return /(domain (is |may be )?for sale|buy this domain|domain parking|sedoparking|parked (free|domain|by)|this domain is parked|acheter ce domaine)/i.test(html);
 }
@@ -104,7 +99,7 @@ export type CountResult = {
   partial: boolean;
 };
 
-export function countFromLinks(homepageUrl: string, html: string, origin: string): CountResult {
+export function countFromLinks(homepageUrl: string, html: string, origin: string, rootLang?: "fr" | "en"): CountResult {
   const { links, tel, mailto, canonical } = extractLinks(html, homepageUrl);
   const ex = { archives: 0, media: 0, soft_404: 0, external: 0 };
   const coreUrls: string[] = [homepageUrl]; // the homepage is always a core page
@@ -126,7 +121,7 @@ export function countFromLinks(homepageUrl: string, html: string, origin: string
     coreUrls.push(link);
   }
   const deduped = dedupByIdentity(coreUrls);
-  const bi = pairBilingual(deduped);
+  const bi = pairBilingual(deduped, rootLang);
   if (bi.suspected) flags.push("bilingual_suspected");
   let core: number | "30+" = bi.core_urls.length;
   if (bi.core_urls.length > CORE_CAP) { core = "30+"; partial = true; flags.push("out_of_icp_scope"); } // D-09 caps

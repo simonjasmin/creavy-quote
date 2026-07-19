@@ -8,6 +8,9 @@ export const rawPricingConfig = {
 
   care_plan: { key: "tranquillite", label_fr: "Tranquillité", monthly_cents: 5900 },
 
+  // #28 bilingual tree-rung guards (config per #27.7; loader-validated).
+  bilingual: { tree_lang_purity: 0.8, min_tree_pages: 3, min_size_ratio: 0.5 },
+
   tiers: {
     presence:   { label_fr: "Présence",         price_cents: 149000 },
     standard:   { label_fr: "Standard",         price_cents: 279000 },

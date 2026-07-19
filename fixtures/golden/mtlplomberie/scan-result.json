@@ -1,23 +1,25 @@
 {
-  "canonical_origin": "https://paysagesgenest.com",
-  "core_pages": 16,
+  "canonical_origin": "https://www.mtlplomberie.ca",
+  "core_pages": 18,
   "blog_posts": 0,
   "excluded": {
     "archives": 0,
     "media": 0,
-    "soft_404": 0,
-    "external": 5
+    "external": 0,
+    "soft_404": 0
   },
   "languages": [
+    "en",
     "fr"
   ],
-  "bilingual_mirror": false,
+  "bilingual_mirror": true,
   "needs_browser": false,
   "needs_browser_reasons": [],
   "review_flags": [
-    "sitemap_absent"
+    "under_construction",
+    "pairing_evidence:hreflang"
   ],
   "partial": false,
-  "detected_platform": "custom",
+  "detected_platform": "duda",
   "builders_detected": []
 }

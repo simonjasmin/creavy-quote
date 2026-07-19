@@ -10,16 +10,19 @@ import { FakeTransport, FakeClock, type Scenario } from "./helpers/replay.ts";
 // independently-verified invariants + the captured deterministic result.
 // Verified by inspecting each site's captured sitemap/homepage (rider-c rule:
 // assert only what the fixture evidence supports).
-const GOLDEN: Record<string, { input: string; platform: string; needs_browser: boolean; check?: (r: any) => void }> = {
+const GOLDEN: Record<string, { input: string; platform: string; needs_browser: boolean; bilingual?: string; check?: (r: any) => void }> = {
   lasouche: { input: "https://lasouche.ca/", platform: "wordpress", needs_browser: false, check: (r) => assert.ok(r.blog_posts >= 20, "blog-heavy: >=20 posts") },
   paysagesgenest: { input: "https://paysagesgenest.com/", platform: "custom", needs_browser: false, check: (r) => assert.ok(r.review_flags.includes("sitemap_absent"), "sitemap-less → link-crawl fallback") },
   itemconstruction: { input: "https://itemconstruction.com/", platform: "wordpress", needs_browser: false },
   protectoit: { input: "https://www.protectoit.com/", platform: "wix", needs_browser: false },
   toituresmarcelpouliot: { input: "http://toituresmarcelpouliot.com/", platform: "custom", needs_browser: false },
   pierrehamelin: { input: "https://pierrehamelin.ca/", platform: "wordpress", needs_browser: false },
-  // labarberie IS bilingual (fr-root + /en/) — scan reports langs=[en] (see §14 thread: implicit-FR-root gap, money-touching, NOT auto-fixed)
-  labarberie: { input: "https://labarberie.com/", platform: "wordpress", needs_browser: false },
-  mchenryplumbing: { input: "https://www.mchenryplumbing.ca/", platform: "duda", needs_browser: false },
+  // #28 evidence-based relabels — three REAL bilingual goldens now earn mirror.
+  // Evidence: each carries fr+en hreflang alternates (head + sitemap xhtml:link) →
+  // ladder rung 1 (hreflang). labarberie = WP/Yoast, mchenry+mtl = Duda translated-slug.
+  labarberie: { input: "https://labarberie.com/", platform: "wordpress", needs_browser: false, bilingual: "hreflang" },
+  mchenryplumbing: { input: "https://www.mchenryplumbing.ca/", platform: "duda", needs_browser: false, bilingual: "hreflang" },
+  mtlplomberie: { input: "https://www.mtlplomberie.ca/", platform: "duda", needs_browser: false, bilingual: "hreflang" },
 };
 
 for (const [slug, g] of Object.entries(GOLDEN)) {
@@ -36,6 +39,13 @@ for (const [slug, g] of Object.entries(GOLDEN)) {
     assert.equal(r.canonical_origin, expected.canonical_origin);
     g.check?.(r);
 
+    // #28 bilingual relabel with evidence
+    if (g.bilingual) {
+      assert.equal(r.bilingual_mirror, true, `${slug}: bilingual_mirror`);
+      assert.ok(r.languages.includes("fr") && r.languages.includes("en"), `${slug}: languages fr+en`);
+      assert.ok(r.review_flags.includes("pairing_evidence:" + g.bilingual), `${slug}: evidence grade ${g.bilingual}`);
+    }
+
     // deterministic replay of the full #8 object
     assert.equal(r.core_pages, expected.core_pages, "core_pages");
     assert.equal(r.blog_posts, expected.blog_posts, "blog_posts");
@@ -46,11 +56,11 @@ for (const [slug, g] of Object.entries(GOLDEN)) {
 }
 
 test("golden set covers required categories", () => {
-  // blog-heavy (lasouche) + sitemap-less (paysagesgenest) present and verified above.
-  // NOTE (reported): no real ICP site yielded a clean explicit /fr//en/ bilingual
-  // (all use fr-root + /en/ → §14 implicit-FR-root thread) or a true one-pager
-  // (trades sites are multi-page). Those two behaviours are proven by the synthetic
-  // scan tests (bilingual) and D-09 unit test (one-pager) instead.
+  // blog-heavy (lasouche), sitemap-less (paysagesgenest), and THREE real bilingual
+  // goldens (labarberie, mchenryplumbing, mtlplomberie) all → mirror via #28 hreflang,
+  // with the moat event proven on real sites (see crawl.events golden moat test).
+  // One-pager remains synthetic-only (trades sites are multi-page) — D-09 unit test.
   assert.ok(existsSync("fixtures/golden/lasouche/scenario.json"));
   assert.ok(existsSync("fixtures/golden/paysagesgenest/scenario.json"));
+  for (const s of ["labarberie", "mchenryplumbing", "mtlplomberie"]) assert.ok(existsSync(`fixtures/golden/${s}/scenario.json`), s);
 });

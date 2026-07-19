@@ -64,6 +64,17 @@ test("#24 honesty: every public line maps to a real spine event in order", async
   }
 });
 
+test("#24+#28 MOAT on a REAL golden site: labarberie fires bilingual_paired", async () => {
+  const scenario = JSON.parse(readFileSync("fixtures/golden/labarberie/scenario.json", "utf8")) as Scenario;
+  const clock = new FakeClock();
+  const em = new RecordingEmitter(clock);
+  const r = await scan(new FakeTransport(scenario), clock, "https://labarberie.com/", em);
+  assert.equal(r.bilingual_mirror, true, "real bilingual golden");
+  const line = projectStream(em.events, "fr").find((e) => e.type === "bilingual_paired");
+  assert.ok(line, "bilingual_paired reaches the public stream on a real site");
+  assert.equal(line!.text, "Versions française et anglaise détectées — comptées comme un seul site bilingue");
+});
+
 test("#24 fire-and-forget: a throwing consumer cannot break a scan", async () => {
   const scenario = syntheticScenario("parked").scenario;
   const throwing = { emit() { throw new Error("slow/broken consumer"); } };

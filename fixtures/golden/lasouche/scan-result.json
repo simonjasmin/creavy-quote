@@ -8,7 +8,9 @@
     "external": 0,
     "soft_404": 0
   },
-  "languages": [],
+  "languages": [
+    "fr"
+  ],
   "bilingual_mirror": false,
   "needs_browser": false,
   "needs_browser_reasons": [],

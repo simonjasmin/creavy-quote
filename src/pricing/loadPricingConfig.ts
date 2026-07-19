@@ -19,6 +19,7 @@ export type PricingConfig = {
   care_plan: { key: string; label_fr: string; monthly_cents: number };
   tiers: { presence: Tier; standard: Tier; pro: Tier; pro_custom: ProCustomTier };
   addons: Record<string, Addon>;
+  bilingual: { tree_lang_purity: number; min_tree_pages: number; min_size_ratio: number };
 };
 
 export class PricingConfigError extends Error {
@@ -86,6 +87,11 @@ export function loadPricingConfig(raw: unknown): PricingConfig {
   check(c.care_plan && isPositiveInt(c.care_plan.monthly_cents), "care_plan.monthly_cents required (positive integer cents)");
   check(typeof c.care_plan.label_fr === "string" && typeof c.care_plan.key === "string", "care_plan needs key + label_fr");
 
+  const b = c.bilingual ?? {};
+  check(typeof b.tree_lang_purity === "number" && b.tree_lang_purity > 0 && b.tree_lang_purity <= 1, "bilingual.tree_lang_purity must be in (0,1]"); // #28/#27.7
+  check(Number.isInteger(b.min_tree_pages) && b.min_tree_pages >= 1, "bilingual.min_tree_pages must be a positive integer");
+  check(typeof b.min_size_ratio === "number" && b.min_size_ratio > 0 && b.min_size_ratio <= 1, "bilingual.min_size_ratio must be in (0,1]");
+
   const t = c.tiers ?? {};
   for (const key of ["presence", "standard", "pro"] as const) {
     check(t[key] && isPositiveInt(t[key].price_cents), `tier ${key} needs a positive integer price_cents`);
@@ -112,5 +118,6 @@ export function loadPricingConfig(raw: unknown): PricingConfig {
       pro_custom: { label_fr: t.pro_custom.label_fr, price_min_cents: t.pro_custom.price_min_cents, price_max_cents: t.pro_custom.price_max_cents },
     },
     addons,
+    bilingual: { tree_lang_purity: b.tree_lang_purity, min_tree_pages: b.min_tree_pages, min_size_ratio: b.min_size_ratio },
   }) as PricingConfig;
 }
