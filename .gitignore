@@ -6,3 +6,6 @@ coverage/
 .env.*
 !.env.example
 .DS_Store
+
+# Spike: enthec/webappanalyzer GPL-3.0 fingerprints — fetched for candidate B evaluation, not vendored
+spikes/wappalyzer/
