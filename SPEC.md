@@ -297,6 +297,32 @@ in **stage 2**, not here). Invariant #1 holds: code computes the price.
 Tests **T-01…T-26** (expected totals from config) + golden bundles on 8 real sites.
 Report + candidate future decisions: [TIERMAP-REPORT.md](TIERMAP-REPORT.md).
 
+### 2.7 Price/assessment split — amendment #29 (founder-ratified 2026-07-19)
+
+**29. The deterministic indicative price is public + zero-PII** (supersedes part of
+#25C; extends #27.6).
+
+- **29.1 Stage 1½** — the #27 mapper output (`bundle`, `indicative_total`, `reasons`) is
+  returned **publicly, with no contact field**. It costs **zero tokens** — #25C's gate
+  existed to protect token spend, and #25A's wall (rate limits · Turnstile · cache ·
+  daily ceiling) already covers bandwidth. Everything returned is code-computed from
+  ratified config.
+- **29.2 Stage 2 unchanged in spirit** — the Claude assessment (personalized analysis +
+  written quote) stays **behind email capture** (#25C). The email hook becomes *"get
+  your full analysis,"* not *"get your price."*
+- **29.3 Declared basis** — a request may carry answers **without a URL** (`no_site`);
+  priced from declared answers through the same #27 mapper, tagged `basis:"declared"`
+  (vs `"scanned"`). #27.6's greenfield rule is amended: greenfield still **skips
+  assessment** (nothing to assess), but an **answers-only indicative price is
+  legitimate** — it fakes no scan.
+- **29.4 Estimation register (derived, not invented)** — partly-declared inputs or a
+  softened #27 blocking condition → `register:"estimation"` + `range:{min,max}` = the
+  bounds of the **valid-bundle set the #27.3 enumerator already computes**, plus a
+  `confidence` enum. `register:"flat"` → single `indicative_total`. **No number in
+  either register may originate outside the pricing config + the #27 enumerator.**
+- **29.5 Binding** — nothing is binding until founder sign-off; every response is
+  indicative and says so via a machine flag `indicative:true`, **never localized text**.
+
 ---
 
 ## 3. What this service is (unchanged)
