@@ -323,6 +323,33 @@ Report + candidate future decisions: [TIERMAP-REPORT.md](TIERMAP-REPORT.md).
 - **29.5 Binding** — nothing is binding until founder sign-off; every response is
   indicative and says so via a machine flag `indicative:true`, **never localized text**.
 
+### 2.8 Answers reconciliation + contract hardening — amendment #30 (founder-ratified 2026-07-19)
+
+**30. Resolves the contract-v0.1 flag batch** (see [contracts/quote-api-contract.md](contracts/quote-api-contract.md) v0.2).
+
+- **30.1 Declared vs scanned** — URL + answers both present: bands **agree** →
+  `register:"flat"`, `basis:"scanned"`; **disagree** → `register:"estimation"`, range =
+  #27.3 bundle-set bounds across the **union** of both readings' need-sets, confidence
+  lowered, review raised (joins #29.4's estimation triggers). **Scanned facts (bilingual,
+  blog_posts, platform, components) always apply as needs** regardless of the page-band —
+  declared answers **add needs, never erase evidence**.
+- **30.2 Component enum** — `needs_booking_or_listings: boolean` → `component:
+  none|booking|listings|both`. `booking`→booking need (Standard-compatible, $590 path);
+  `listings`→listings (Pro trigger, #27.4); `both`→both (enumerator decides). Legacy
+  `true` → `estimation` [cheapest booking bundle … Pro] — **never a silent under-price**.
+- **30.3 Suggestion prices** — `suggested_addons` → `[{id, amount}]`, amounts integer
+  cents from config (#20; #22 no-drift extended across the repo boundary).
+- **30.4 CORS** — production origin only from env; deploy previews use the mock adapter.
+- **30.5 Reason codes** — a stable `reason_code` enum lands **next quote-side tour**;
+  the mapper's prose moves to internal `reason_text` (never crosses the API). Until then
+  `reasons[]` are opaque/optional.
+- **30.6 suggested_addons emission** — the engine emits suggestions **next tour** (#27.5
+  SEO rule + `has_brand_assets:false`→`logo_refresh`); until then the field is present +
+  empty.
+- **30.7 Honeypot/Turnstile** request fields remain Phase 2 (#25A).
+- **30.8 Answers schema founder-verified** against the creavy-site object (with 30.2
+  applied).
+
 ---
 
 ## 3. What this service is (unchanged)
