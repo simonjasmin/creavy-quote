@@ -1,4 +1,4 @@
-# Creavy Quote API — contract v0.1
+# Creavy Quote API — contract v0.2
 
 > **Canonical home:** this file (`contracts/quote-api-contract.md` in `creavy-quote`).
 > creavy-site keeps a **synced copy** and never reads `SPEC.md`. Machine enums only;
@@ -12,7 +12,17 @@
 
 ## 1. Header / traceability
 
-- **Version:** 0.1 (2026-07-19). **Status:** draft for creavy-site E1; indicative only.
+- **Version:** 0.2 (2026-07-19). **Status:** draft for creavy-site E1; indicative only.
+- **Changelog v0.1 → v0.2 (amendment #30):**
+  - `component: none|booking|listings|both` replaces the `needs_booking_or_listings`
+    boolean (30.2).
+  - Declared-vs-scanned page-band disagreement → `estimation` register over the union
+    need-set (30.1); resolves ⚠-1/§P-3.
+  - `suggested_addons` → `[{id, amount}]`, amounts integer cents from config (30.3).
+  - CORS: production origin only; previews use the mock adapter — ratified (30.4).
+  - Answers schema founder-verified against the site object (30.8); ⚠-2 resolved by the
+    enum. §P-1 (reason codes) + §P-5 (suggestion emission) deferred to the next quote-side
+    tour (30.5/30.6).
 - **Base:** `POST /quote` (create) · `GET /quote/:id` (poll) — async-capable contract
   from Phase 0 §7, sync-hold 8 s (#1) with polling fallback.
 - **Two-stage + price/assessment split (#25C, #29):**
@@ -33,7 +43,7 @@
 | Money | integer **cents**, `currency:"CAD"` always explicit | #20 |
 | Enums | machine values only; **no localized strings in any response** | #24 default-deny; site owns FR/EN |
 | Priced bundle | `bundle:{tier, addons[]}` — the #27 mapper output; `addons[]` are **priced** (reflected in `indicative_total`) | #27 |
-| Suggested add-ons | `suggested_addons[]` — **unpriced upsells** (e.g. `logo_refresh` when `has_brand_assets:false`; `seo_migration` when blog < 5). Verbatim config IDs | [cfg], #27.4/27.5 · §P-5 |
+| Suggested add-ons | `suggested_addons: [{id, amount}]` — **unpriced upsells** with the config price in **integer cents** (30.3); site renders labels + formats money, **never hardcodes a price**. `id` = verbatim config add-on ID | [cfg], #20/#22, #27.4/27.5 · 30.6 emits it next tour |
 | Price kinds | `flat` (cents) · `percent_modifier` · `human_quote` | #20 |
 | Tiers | `presence` · `standard` · `pro` · `pro_custom` | [cfg], naming §2 |
 | Confidence | `platform` appears **only at high confidence**, else `"unknown"` | #23 |
@@ -48,10 +58,10 @@
 (human_quote), `photo_sourcing`, `seo_migration`, `rush_delivery` (percent_modifier),
 `extra_revision`. [cfg]
 
-**§P-1 — reason codes vs prose.** `reasons[]` in responses are **machine codes** (site
-renders FR/EN). The #27 engine currently emits **English prose** reasons; a reason-code
-enum + engine mapping is **§ PROVISIONAL** (see §10). v0.1 lists the codes; the prose
-stays internal (founder panel).
+**Reason codes (30.5).** `reasons[]` in responses are **machine codes** (site renders
+FR/EN). The #27 engine emits **English prose** today; the stable `reason_code` enum lands
+**next quote-side tour** (prose → internal `reason_text`, never on the API). Until then
+the site treats `reasons[]` as **opaque/optional**.
 
 **Flag line (contracts must not collide):** this "no localized strings" rule does **not**
 apply to the #24 **event-stream** endpoint, whose server-side FR/EN templates are
@@ -66,7 +76,7 @@ separately ratified. That endpoint is out of scope here (§8). [#24]
   "no_site": false,                        // optional, default false (#29.3 declared basis)
   "answers": {                             // REQUIRED — all 4 keys, no partial requests
     "pages": "3_4",                        // enum "1_2" | "3_4" | "5_plus"
-    "needs_booking_or_listings": true,     // boolean
+    "component": "listings",               // enum "none"|"booking"|"listings"|"both" (30.2)
     "languages": "fr_en",                  // enum "fr" | "fr_en"
     "has_brand_assets": false              // boolean
   }
@@ -79,13 +89,26 @@ role · `no_site` interplay.
 
 | key | type / values | role | `no_site` interplay | trace |
 |---|---|---|---|---|
-| `pages` | enum `1_2`\|`3_4`\|`5_plus` | **tier_input** (page band) | **only key that changes meaning:** current-site pages when scanned; pages **needed** when `no_site` (site swaps the label; API sees one field) | #27.2 · ⚠-1 precedence vs crawl `core_pages` |
-| `needs_booking_or_listings` | boolean | **tier_input** (Pro trigger) | mode-independent — *desired* functionality the crawl can't see | #27.4 · ⚠-2 booking-vs-listings pricing |
+| `pages` | enum `1_2`\|`3_4`\|`5_plus` | **tier_input** (page band) | **only key that changes meaning:** current-site pages when scanned; pages **needed** when `no_site` (site swaps the label; API sees one field) | #27.2 · **30.1** reconciliation (disagreement → estimation) |
+| `component` | enum `none`\|`booking`\|`listings`\|`both` | **tier_input** | mode-independent — *desired* functionality the crawl can't see | #27.4 · 30.2 · `booking`→$590 add-on path, `listings`→Pro trigger, `both`→enumerator decides |
 | `languages` | enum `fr`\|`fr_en` (room for future `en`) | **tier_input** (bilingual) | mode-independent — *desired* delivered language(s) | #18 (bilingual pricing) · #26/#28 |
 | `has_brand_assets` | boolean | **addon_signal only** (never tier) | mode-independent | #27 addon · `logo_refresh` $490 [cfg] |
 
 **Validation:** any **missing key** or **out-of-enum** value → **`400`** (§5 shape). `url`
 absent while `no_site=false` → `400`. Answers are all-or-nothing (client submits once).
+
+**Reconciliation — declared vs scanned (30.1).** When both `url` (→ scanned `core_pages`)
+and `answers.pages` are present:
+- **bands agree** → `register:"flat"`, `basis:"scanned"`.
+- **bands disagree** → `register:"estimation"`, `range` = the #27.3 bundle-set bounds over
+  the **union** of both readings' need-sets; `confidence` lowered; `review_required:true`
+  (an enumerated estimation trigger, #29.4).
+- **Scanned facts (bilingual, blog_posts, platform, components) always apply as needs** —
+  declared answers **add** needs, never erase evidence.
+
+**Legacy `needs_booking_or_listings:true`** (pre-30.2 site adapters) → `register:
+"estimation"`, `range` = [cheapest booking bundle … Pro] — never a silent under-price
+(30.2). Adapters should migrate to `component`.
 
 **Response (sync-hold ≤ 8 s, #1):** `202`-style body
 ```jsonc
@@ -110,9 +133,9 @@ absent while `no_site=false` → `400`. Answers are all-or-nothing (client submi
     "bundle": { "tier": "standard", "addons": [] },  // #27; addons here are PRICED
     "indicative_total": 279000,       // cents = tier + priced addons, #20/#29.4
     "currency": "CAD",
-    "suggested_addons": ["logo_refresh"], // unpriced upsells (has_brand_assets:false), [cfg]
+    "suggested_addons": [{ "id": "logo_refresh", "amount": 49000 }], // unpriced upsells, cents (30.3)
     "care_plan_monthly": 5900,        // cents, [cfg] (attached at render, #27.8)
-    "reasons": ["cheapest_bundle"],   // machine codes, §P-1
+    "reasons": ["cheapest_bundle"],   // machine codes (opaque/optional until 30.5)
     "core_pages": 4,                  // #8 (int | "30+")
     "detected_platform": "wordpress", // high-conf only, else "unknown" (#23)
     "confidence": "high"              // #23
@@ -201,9 +224,8 @@ ratified outcomes. Every terminal state is renderable — no dead ends (Phase 0 
 
 - **Production:** `Access-Control-Allow-Origin` = the **single production origin** from
   env (`ALLOWED_ORIGIN`, the Netlify domain). [#25A placement rule; Phase-2 env]
-- **⚠-3 deploy previews:** preview-origin policy is **unratified**. **Recommended
-  default:** allowlist the **production origin only**; deploy previews use the site's
-  **mock adapter** (no live cross-origin). Founder call.
+- **Deploy previews (30.4, ratified):** **production origin only**; deploy previews use
+  the site's **mock adapter** (no live cross-origin).
 
 ## 8. Not in this contract
 
@@ -267,31 +289,49 @@ ratified outcomes. Every terminal state is renderable — no dead ends (Phase 0 
 { "quote_id":"qt_6","status":"failed","indicative":true,"reason":"unreachable","book_a_call":true }
 ```
 
-## 10. Gate — flags for founder ratification
+**E7 — declared/scanned page-band disagreement → estimation (30.1):** scanned `core_pages:3`
+(band `3_4`) but `answers.pages:"5_plus"`.
+```json
+{ "quote_id":"qt_7","status":"completed","indicative":true,"basis":"scanned",
+  "register":"estimation","review_required":true,
+  "result":{ "range":{"min":279000,"max":429000},"currency":"CAD","confidence":"low",
+    "suggested_addons":[],"reasons":["declared_scanned_disagreement"],
+    "core_pages":3,"detected_platform":"wordpress","confidence_platform":"high" } }
+```
+*(Bounds = Standard 279000 … Pro 429000 across the union of the 3-page and 5+-page
+need-sets, #27.3/30.1. Scanned facts still apply as needs.)*
 
-Nothing below is guessed; each is a stated open question. Batch:
+**E8 — `component: "listings"` → Pro (30.2):** 4-page site, listings desired.
+```json
+{ "quote_id":"qt_8","status":"completed","indicative":true,"basis":"scanned",
+  "register":"flat","review_required":false,
+  "result":{ "bundle":{"tier":"pro","addons":[]},"indicative_total":429000,"currency":"CAD",
+    "suggested_addons":[],"care_plan_monthly":5900,
+    "reasons":["cheapest_bundle","listings_needs_pro"],
+    "core_pages":4,"detected_platform":"wordpress","confidence":"high" } }
+```
+*(Listings has no Standard add-on → only Pro covers it, #27.4/30.2. Pro = 429000.)*
 
-- **⚠-1 `pages` vs crawl `core_pages` precedence.** When declared `pages` and scanned
-  `core_pages` disagree, which wins? Schema is fixed; the **mapping** belongs to the
-  deferred tier-mapping tour. Contract uses `core_pages` for scanned, declared `pages`
-  for `no_site`; the *conflict* rule is unresolved.
-- **⚠-2 `needs_booking_or_listings` conflation.** One boolean covers **booking** (has a
-  Standard add-on, $590 [cfg]) **and** **listings** (no Standard add-on → forces Pro).
-  They price differently; the declared answer can't distinguish. v0.1 maps `true` →
-  **booking** need (representative). Founder: split the field, or fix the mapping?
-- **⚠-3 CORS deploy-preview policy** (§7). Recommended: production origin only; previews
-  use the mock adapter.
-- **§P-1 reason codes** (§2). `reasons[]` are machine codes; the #27 engine emits English
-  prose today — a reason-code enum + mapping is provisional.
-- **§P-2 Answer-object source.** The tour's `[FOUNDER PASTES…]` block was **empty**; this
-  contract used the **"consumer-fixed ANSWERS SCHEMA"** section (which says "Encode
-  these:") as authoritative. Confirm it matches the creavy-site answer object.
-- **§P-3 declared-answer integration into #27.** How declared `pages`/`languages`/
-  `needs_*` combine with scan facts (override vs supplement) is the deferred tier-mapping
-  tour's work; the contract fixes the **schema + shapes**, not the integration.
-- **§P-4 honeypot/Turnstile fields** in the request envelope (§8) — endpoint-layer
-  (#25A), shape TBD at Phase-2 service assembly.
-- **§P-5 `suggested_addons` derivation.** The #27 engine returns the **priced** bundle;
-  the **unpriced upsell** list (`logo_refresh` from `has_brand_assets:false`,
-  `seo_migration` when blog < 5, `bilingual` on a monolingual lower tier) is derived from
-  answer signals + #27 reasons and is **not yet emitted** by the engine — provisional.
+## 10. Gate — flag batch (all resolved by amendment #30, 2026-07-19)
+
+v0.1's eight flags + the missed ninth (suggestion prices), ratified:
+
+- **⚠-1 `pages` vs `core_pages` precedence** → ✅ **30.1**: disagreement → `estimation`
+  over the union need-set; scanned facts always apply as needs.
+- **⚠-2 booking-vs-listings conflation** → ✅ **30.2**: `component` enum
+  (`none|booking|listings|both`); legacy `true` → estimation, never a silent under-price.
+- **⚠-3 CORS deploy previews** → ✅ **30.4**: production origin only; previews mock.
+- **§P-2 answer-object source** → ✅ **30.8**: founder-verified against the site object
+  (with the 30.2 enum applied).
+- **§P-3 declared-answer integration** → ✅ **30.1**: declared answers *add* needs, never
+  erase evidence.
+- **(ninth) suggestion prices** → ✅ **30.3**: `suggested_addons: [{id, amount}]`, cents
+  from config.
+- **§P-1 reason codes** → ⏳ **30.5**: stable `reason_code` enum lands next quote-side
+  tour; `reasons[]` stay opaque/optional until a contract bump.
+- **§P-5 `suggested_addons` emission** → ⏳ **30.6**: engine emits next tour; the field is
+  **present + empty** (`[]`) until then — the site must tolerate `[]`.
+- **§P-4 honeypot/Turnstile fields** → ⏳ **30.7**: Phase 2 (#25A).
+
+**No open flags block v0.2.** The ⏳ items are ratified deferrals to the next quote-side
+tour, not open questions.
