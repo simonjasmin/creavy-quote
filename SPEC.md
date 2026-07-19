@@ -266,6 +266,37 @@ all earn `bilingual_mirror: true` via **hreflang** (each carries fr+en alternate
 the moat event fires on real sites. Two-of-three being translated-slug is the
 **dominant moat-customer shape**, not an edge case.
 
+### 2.6 Tier-mapping rules — decision batch #27 (founder-ratified 2026-07-19)
+
+**27. Tier mapping is a PURE function of the decision-#8 scan result + pricing config
+— no model call** ([src/tiermap/tiermap.ts](src/tiermap/tiermap.ts)). Output:
+`{bundle:{tier,addons[],modifiers[]}, indicative_total, review_required, reasons[]}`.
+**Supersedes §8's pseudocode** (which read Claude's `template_estimate`/
+`complexity_score`) — now scan-only, per the #25C two-stage split (the model assesses
+in **stage 2**, not here). Invariant #1 holds: code computes the price.
+
+- **27.2 shapes:** 1-2→Présence · 3-4→Standard · 5-6 (no heavy component)→Standard +
+  extra-page · **≥7→review, no auto-bundle** · "30+"→out-of-scope.
+- **27.3 cheapest valid bundle:** needs generate valid bundles → pick least expensive,
+  ties→fewer line items. **Pro only when actually cheapest** (never a default upsell).
+  Crossovers proven: bilingual-only→Standard+$690 beats Pro; bilingual+booking+5p→Pro.
+- **27.4 needs:** `bilingual_mirror`→bilingual; `bilingual_suspected`→review;
+  booking/listings→those needs (Pro includes them); Shopify/e-comm→`human_quote`
+  (#21)→review.
+- **27.5 blog:** `blog_posts` ≥ 5 → SEO migration ($390) auto-included; below →
+  suggestion in `reasons[]`.
+- **27.6 blocking → email-capture:** `review_required` / `needs_browser` /
+  `robots_blocked` / `partial` / parked|no_html|no_owned_site. Greenfield also skips
+  stage-2.
+- **27.7 constants in config** (`tiermap` block, loader-validated per #22): review ≥7,
+  blog ≥5, extra-page cap, tier capacities, Pro inclusions.
+- **27.8 rush + care plan:** rush = a form option (never detected) → #20 percent
+  modifier at render; care plan default (opt-out) at render. `indicative_total` = the
+  one-time build only.
+
+Tests **T-01…T-26** (expected totals from config) + golden bundles on 8 real sites.
+Report + candidate future decisions: [TIERMAP-REPORT.md](TIERMAP-REPORT.md).
+
 ---
 
 ## 3. What this service is (unchanged)
