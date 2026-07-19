@@ -1,0 +1,4 @@
+{
+  "https://parked.example/": { "status": 200, "body": "<html><body><h1>This domain is for sale</h1><p>Buy this domain</p></body></html>" },
+  "https://www.parked.example/": { "status": 404 }
+}

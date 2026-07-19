@@ -1,0 +1,5 @@
+{
+  "https://spa.example/": { "status": 200, "body": "<html><body><div id=\"root\"></div><script src=\"/bundle.js\"></script></body></html>" },
+  "https://www.spa.example/": { "status": 404 },
+  "https://spa.example/robots.txt": { "status": 404 }
+}
