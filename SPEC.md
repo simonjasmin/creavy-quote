@@ -191,6 +191,49 @@ API exposes "events since seq N" via polling first, SSE as fast-follow. This
 amendment fixes only *ordered, append-only, resumable by seq* — no endpoint/SSE/
 persistence in Phase 1.
 
+### 2.4 Endpoint hardening — amendment #25 (founder-initiated 2026-07-18)
+
+**Placement rule (governs Part A): the site renders, the endpoint decides.**
+Creavy-site owns only the honeypot field + Turnstile widget (presentation);
+**creavy-quote owns every check**, incl. server-side Turnstile verification. One
+wall at the door — a check that runs on the site is bypassed by not visiting it.
+
+**25A — Abuse control (Phase 2, spec-now).** Endpoint order, cheapest + most
+decisive first: (1) **resolve client IP** from the trusted proxy hop (never blind
+XFF; key IPv6 on /64); (2) **rate-limit → 429** (sliding window; in-memory MVP →
+Postgres/Redis multi-instance; first, zero I/O); (3) **honeypot → silent
+accept-and-drop** (plausible job id, never scan); (4) **payload validation**
+`normalize(url)` → 400, N-22/N-23 short-circuit to greenfield/human (no crawl);
+(5) **Turnstile siteverify → 403** (once at submit, never on poll; unreachable →
+**fail open** to rate-limit-only + review flag); (6) **daily global budget → degrade
+to email-capture mode** (blast-radius cap, not an error); (7) **cache by normalized
+URL (24 h)** → serve cached, zero spend; (8) **only now enqueue**. Config (per #9):
+5/IP/hr · 20/IP/day · 3/normalized-URL/day · a daily global ceiling. **Log which
+layer rejected each request.**
+
+**25B — SSRF protection (Phase 1, ✅ BUILT this tour).** The more serious risk.
+[src/crawl/ssrf.ts](src/crawl/ssrf.ts) blocks private/reserved destinations
+(loopback · 10/172.16/192.168 · 169.254 + cloud metadata · fc00::/7 · 0.0.0.0/8 ·
+multicast · localhost-by-name), **per-hop before connect** in both transports and
+across every redirect (D-01…D-08); the real transport resolves DNS then re-checks
+the IP. **N-21 amended:** public IP literals kept (`ip_literal` note),
+private/reserved + localhost **rejected** (the committed rule was a hole).
+Non-http(s) redirect targets rejected (D-39). **Uniform failure:** a blocked
+destination is indistinguishable from any dead host (D-40) — no internal
+port-scan oracle. Never attach credentials/cookies/auth to crawl requests. 2 MB
+ceiling unchanged. Tests **D-35…D-40** + N-21 ([test/crawl.ssrf.test.ts](test/crawl.ssrf.test.ts)).
+
+**25C — Two-stage flow [DECIDED 2026-07-18].** Scan is **free + ungated** (crawl +
+fingerprint, zero tokens, cached by normalized URL, streamed live per #24);
+**assessment + quote run behind email capture.** Stage 2 references a completed
+stage-1 scan by id and **never re-crawls** (the Part A cache is the bridge); same
+wall (Turnstile + rate limits + email syntax/MX); daily global ceiling is the hard
+token cap; click-to-verify email is Phase-2, not v1. **Capture ≠ sending** (store
+email with a purpose line; sending stays out of v1). Effect: **abuse costs
+bandwidth, never tokens.** Shapes the assessment tour — the model is invoked from
+**stage 2 only**; its input contract is the cached decision-#8 object + fetched page
+content, **never a live crawl.**
+
 ---
 
 ## 3. What this service is (unchanged)
@@ -535,6 +578,8 @@ itself (`creavy-site`, tracked as a separate phase but a separate repo).
    inherently polite; wiring is Phase-2 service assembly.
 7. **Soft-404 exclusion not wired into scan — crawl-mechanical, conservative.**
    `isSoft404` (D-18) exists + tested, but scan doesn't fetch each core page's body
-   to apply it, so `excluded.soft_404` stays 0. Conservative direction:
-   under-excluding slightly over-counts core → higher tier → **never underprices**.
-   Per-page soft-404 checks are a later refinement.
+   to apply it, so `excluded.soft_404` stays 0. Per-page soft-404 checks are a later
+   refinement.
+8. **DNS rebinding — residual risk accepted for MVP (#25 Part B).** The SSRF guard
+   resolves + checks the IP, then `fetch` re-resolves (TOCTOU). Hardening (resolve
+   once, connect to the validated IP) is deferred; not a Phase-1 task.

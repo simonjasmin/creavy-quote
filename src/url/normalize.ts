@@ -9,6 +9,8 @@
 //  - tracking params stripped, survivors sorted for a stable identity (N-09).
 //  - fragment always dropped (N-07, N-08).
 
+import { isBlockedHost, isIpLiteral } from "../crawl/ssrf.ts";
+
 export type NormalizeOk = {
   ok: true;
   identity: string;
@@ -17,7 +19,7 @@ export type NormalizeOk = {
   notes: string[];
   classification?: "no_owned_site" | "platform_profile";
 };
-export type NormalizeErr = { ok: false; error: "empty" | "too_long" | "invalid_host" | "unsupported_scheme" | "invalid_url" };
+export type NormalizeErr = { ok: false; error: "empty" | "too_long" | "invalid_host" | "unsupported_scheme" | "invalid_url" | "blocked_host" };
 export type NormalizeResult = NormalizeOk | NormalizeErr;
 
 const TRACKING = /^(utm_[a-z]+|fbclid|gclid|msclkid|mc_cid|mc_eid|ref)$/i;
@@ -67,7 +69,10 @@ export function normalize(input: string): NormalizeResult {
   let portPart = "";
   if (url.port) { portPart = ":" + url.port; notes.push("unusual_port"); }
 
-  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) notes.push("ip_literal"); // N-21
+  // N-21 (amended #25 Part B): public IP literals allowed with a note; private/
+  // reserved literals + localhost-by-name rejected (SSRF — the committed rule was a hole).
+  if (isBlockedHost(host).blocked) return err("blocked_host");
+  if (isIpLiteral(host)) notes.push("ip_literal");
 
   // Path (N-14 collapse, N-15 dot-segments via URL, N-16 index, N-06 trailing) ---
   let path = url.pathname.replace(/\/{2,}/g, "/"); // N-14

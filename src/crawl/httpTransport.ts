@@ -2,7 +2,9 @@
 // redirect chain, loops, and hop cap are observable (D1/D-05/D-06). Strips
 // Set-Cookie. UA per #15.
 
+import { lookup } from "node:dns/promises";
 import type { Transport, FetchResult, FetchOpts } from "./types.ts";
+import { isBlockedHost, isIpLiteral } from "./ssrf.ts";
 
 export const BOT_UA = "CreavyQuoteBot/1.0 (+https://creavy.com/bot)"; // #15
 
@@ -28,6 +30,20 @@ export class HttpTransport implements Transport {
     const visited = new Set<string>();
     let cur = url;
     while (true) {
+      // SSRF (#25 Part B), per-hop before connect. Uniform failure (kind "blocked").
+      let host = "";
+      try {
+        const u = new URL(cur);
+        if (!/^https?:$/.test(u.protocol)) return { url: cur, status: 0, headers: {}, body: "", chain, error: { kind: "blocked", message: "bad_scheme" } };
+        host = u.hostname;
+      } catch { return { url: cur, status: 0, headers: {}, body: "", chain, error: { kind: "blocked", message: "bad_url" } }; }
+      if (isBlockedHost(host).blocked) return { url: cur, status: 0, headers: {}, body: "", chain, error: { kind: "blocked", message: "ssrf" } };
+      if (!isIpLiteral(host)) {
+        try {
+          const addrs = await lookup(host, { all: true }); // resolve, then check the IP before connect
+          for (const a of addrs) if (isBlockedHost(a.address).blocked) return { url: cur, status: 0, headers: {}, body: "", chain, error: { kind: "blocked", message: "ssrf" } };
+        } catch (e) { return { url: cur, status: 0, headers: {}, body: "", chain, error: classify(e) }; }
+      }
       let res: Response;
       try {
         res = await fetch(cur, { redirect: "manual", headers: { "user-agent": BOT_UA, accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8" }, signal: AbortSignal.timeout(timeoutMs) });

@@ -82,7 +82,9 @@ export function classifyTransportError(kind: string): { flag: string; greenfield
   if (kind === "refused") return { flag: "host_down", greenfield: false };
   if (kind === "timeout") return { flag: "slow_host", greenfield: false };
   if (kind === "tls") return { flag: "tls_invalid", greenfield: false }; // D-26 (retry unverified elsewhere)
-  return { flag: "unreachable", greenfield: false };
+  // #25 D-40: a blocked private/reserved destination is indistinguishable from any
+  // other failed fetch — no internal-port-scan oracle. Shares the generic surface.
+  return { flag: "unreachable", greenfield: false }; // "blocked" | "other" | ...
 }
 export function decodeBody(bytes: Uint8Array, charset?: string): string { // D-27
   const cs = (charset || "utf-8").toLowerCase();

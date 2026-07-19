@@ -41,8 +41,12 @@ export async function resolveCanonical(transport: Transport, inputUrl: string): 
   let res = await transport.fetch(inputUrl, { maxHops: 5 });
   if (res.error) {
     const kind = res.error.kind;
-    const flag = kind === "redirect_loop" ? "redirect_loop" : kind === "too_many_redirects" ? "too_many_redirects" : kind;
-    return { origin: new URL(inputUrl).origin, final_url: inputUrl, html: "", headers: {}, status: 0, notes, review_flags: [flag], needs_browser: false, needs_browser_reasons: [], error: res.error }; // D-06
+    // Only meaningful canonical outcomes become review flags. Transport error KINDS
+    // (blocked/dns/refused/timeout/tls/other) are classified uniformly by the caller
+    // (classifyTransportError) so a blocked SSRF destination can't be told apart from
+    // any dead host (#25 D-40).
+    const flag = kind === "redirect_loop" ? "redirect_loop" : kind === "too_many_redirects" ? "too_many_redirects" : null;
+    return { origin: new URL(inputUrl).origin, final_url: inputUrl, html: "", headers: {}, status: 0, notes, review_flags: flag ? [flag] : [], needs_browser: false, needs_browser_reasons: [], error: res.error }; // D-06
   }
 
   // D-07 meta-refresh: treat as a redirect (one extra hop)

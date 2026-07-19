@@ -5,6 +5,7 @@ import { readFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 import type { Transport, Clock, FetchResult, FetchOpts } from "../../src/crawl/types.ts";
+import { isBlockedHost } from "../../src/crawl/ssrf.ts";
 
 export type ResponseSpec = {
   status?: number;
@@ -77,6 +78,13 @@ export class FakeTransport implements Transport {
     try {
       while (true) {
         this.requests.push(cur);
+        // SSRF (#25 Part B), per-hop before "connect": block non-http(s) schemes and
+        // private/reserved/localhost destinations. Uniform failure (kind "blocked").
+        try {
+          const u = new URL(cur);
+          if (!/^https?:$/.test(u.protocol)) return { url: cur, status: 0, headers: {}, body: "", chain, error: { kind: "blocked", message: "bad_scheme" } };
+          if (isBlockedHost(u.hostname).blocked) return { url: cur, status: 0, headers: {}, body: "", chain, error: { kind: "blocked", message: "ssrf" } };
+        } catch { return { url: cur, status: 0, headers: {}, body: "", chain, error: { kind: "blocked", message: "bad_url" } }; }
         const spec = this.scenario[cur];
         if (!spec) {
           if (this.opts.strict) throw new Error(`no fixture for ${cur}`);
