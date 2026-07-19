@@ -80,20 +80,82 @@ updates the persisted enum to match (§10). DB, config, and FR labels stay in sy
 | 21 | **E-commerce add-on ships as `human_quote` in v1.** (flat-with-scope-wall considered, declined — scope variance is exactly what flat can't hold; a human touch on the highest-ticket add-on is a feature.) Revisit if e-comm > ~1 in 5 quotes. | — |
 | 22 | **Placeholders are un-runnable.** Loader hard-fails on any `TODO(...)` at boot and in tests. No bypass flag; dev/CI run a complete fixture config. Gate E can't pass by accident; no environment can quote a $0 add-on. | — |
 
-**Collision flags (Phase 0 wins — not amended, founder's call):**
+**Collision flags — ✅ RESOLVED (thread 4, founder-ratified 2026-07-18).** All four
+adopt the batch #9 values (now live in §4.1); Phase 0's numbers predate the
+politeness/retry model and were sized for the old 20 s budget.
 
-Decision #9's caps table restates four numbers already fixed by **Phase 0 §2 #2** (and §4.1). Per the rule I kept Phase 0's values and did **not** amend them:
-
-| Cap | Phase 0 (kept) | Batch #9 wanted | Recommendation |
-|-----|----------------|-----------------|----------------|
-| Total fast-path / crawl budget | **20 s** (`CRAWL_BUDGET_MS`) | 25 s | Reconcile — pick one; both defensible. |
-| Per-fetch timeout | **5 s** (`FETCH_TIMEOUT_MS`) | 8 s (+1 retry, connect-errors only) | Adopt batch — 8 s + connect-retry suits slow Québec hosts. |
-| Fetch cap per scan | **30 URLs** (`CRAWL_URL_CAP`) | 60 fetches / 30 core counted | Adopt batch's split (fetch ≤60, count ≤30 core). |
-| Concurrency | **≥ 8** (`FETCH_CONCURRENCY`) | **2 / host** + ~300 ms spacing | **Adopt batch** — ≥8 to one small host contradicts invariant #4; 2/host is correct. |
+| Cap | Phase 0 (was) | **Adopted (batch #9)** | Why |
+|-----|---------------|------------------------|-----|
+| Total crawl budget | 20 s | **25 s** | coherent cap set; no regime-mixing |
+| Per-fetch timeout | 5 s | **8 s + 1 connect-retry** | D-32 slow-vs-down disambiguation |
+| Fetch cap | 30 URLs | **60 fetch / 30 core** | robots/sitemap/redirects/S-20 sample burn fetches ≠ pages |
+| Concurrency | ≥ 8 (intra-scan) | **2 / host + 300 ms** | 8-wide on a shared host earns our own `anti_bot` flags (#15) |
 
 Non-colliding caps from inventory §3 **were adopted** into §4.1 (crawl depth 3, redirect hops 5, HTML read 2 MB, robots parse 500 KB, sitemap index depth 2, child sitemaps 5, `"30+"` short-circuit, budget-as-governor).
 
 **UA example (not a collision):** Phase 0 §6 carried an illustrative UA on `creavy.ca`; ratified #15 uses `creavy.com`. Since §6's UA was an example, not a §2 decision, it's been updated to `.com` to match the ratified decision.
+
+### 2.2 Fingerprint adapter — amendment #23 (founder-ratified 2026-07-18)
+
+**23. Fingerprint adapter = hand-rolled passive signal table (spike Candidate A).**
+Supersedes the "maintained Wappalyzer-style core" language in decision #3 and
+**closes §14 thread 2**. On a 50-site real ICP corpus: platform **100 % @ high
+confidence**, 0 false-positives on 12 custom negatives, 0 platform-wrong-at-high,
+zero deps, zero extra network requests, ~1.7 ms/site. The Wappalyzer fork
+(enthec/webappanalyzer, **GPL-3.0**) scored 94.7 % / 40 % *passively* — its
+Duda/Beaver/WPBakery/Squarespace rules need `js`/`dom` (browser), forbidden by the
+HTTP-only constraint (#3) — while adding a GPL-3.0 dependency. Full spike report:
+`spikes/fingerprint-spike-report.md`.
+
+**Frozen interface (passive v1 — zero network requests):**
+```ts
+fingerprint(pages: FetchedPage[]) -> {
+  platform: string | "custom" | "unknown",
+  builder?: string,              // primary builder (WP): elementor|divi|wpbakery|beaver
+  builders_detected: string[],   // ALL builders present (dual-builder sites → [elementor, wpbakery])
+  theme?: string,                // WP theme slug when visible
+  version?: string,              // only when a signal exposes it; never guessed
+  confidence: "high" | "medium" | "low",
+  signals_matched: string[]
+}
+```
+**Confidence:** high = ≥1 deterministic signal; medium = supporting only; low =
+fallback (custom/unknown). Only **high**-confidence platform/builder claims reach
+prospects; medium/low route through human-review wording.
+
+**Rider (a) — coverage-capped confidence.** Any platform/builder with **zero
+labeled corpus fixtures cannot emit high confidence** — capped at medium until a
+real fixture lands. Zero-coverage today (→ medium cap): `webflow`, `godaddy`,
+`joomla`, `drupal`, `framer`, `carrd`. Covered (may emit high): wordpress, wix,
+squarespace, shopify, duda, weebly + all four builders.
+
+**Rider (b) — regression-by-fixture.** Every production scan logs
+`signals_matched` + `confidence`. Any misidentification (human review / client
+report) becomes a **new labeled fixture + signal patch before the fix ships**. The
+corpus only grows; production is the holdout the in-sample 100 % never was. A
+zero-coverage row's first production hit lands at medium → review → fixture → cap
+lifts.
+
+**Rider (c) — builder precedence (content > install).** Builder signals are typed
+`install` (site-kit markers present once a builder is merely *active* — Elementor's
+`elementor-(default|global|kit)`, `/plugins/elementor/`) vs `content` (the builder
+actually *built the page* — `elementor-(page|section|column|container|element|widget|button)`,
+`vc_row`/`js_composer`, `et_pb_`, `fl-builder`). **Primary `builder` = most
+content-level matches**; install-level alone **never** claims primary over another
+builder's content. Two content builders → primary = most content matches, **both**
+in `builders_detected`. Verified empirically (step 5): true-Elementor fixtures carry
+14–1003 content classes; the dual-builder fixture carries **0 content / 4 install**
+Elementor + WPBakery `vc_row` content → primary WPBakery.
+
+**Calibration definition (frozen — so the number can't drift):** *builder
+wrong-at-high* = asserting at high confidence a builder with **zero signals of any
+class present**. Post-fix under corrected labels: builder set-accuracy 10/10,
+primary 10/10, **0 wrong-at-high**.
+
+**DoD (brief §7):** the F-backlog (`spikes/fingerprint-tdd-backlog.md`, F-01…F-50,
+one case per fixture) is part of #23; the `src/` adapter is built red-green against
+it. A probe pack (`/wp-json/`, favicon hash) may be added by later amendment if
+passive accuracy degrades on a broader corpus.
 
 ---
 
@@ -113,10 +175,10 @@ price — and stores every quote. Stripe, email, and auth are out of scope for v
 | Constant | Value | Meaning |
 |----------|-------|---------|
 | `SYNC_HOLD_MS` | 8000 | Max time `POST /quote` holds the connection before returning `pending`. Also the p95 SLO for `completed` fast-path responses. |
-| `FETCH_TIMEOUT_MS` | 5000 | Per-URL fetch timeout. ⚑ batch #9 proposed 8000 (+1 connect-retry) — see §2.1 collision flags. |
-| `CRAWL_BUDGET_MS` | 20000 | Hard wall-clock ceiling for the whole crawl; the **universal governor** (#9) — exhaustion → `partial:true` + review. ⚑ batch #9 proposed 25000. |
-| `CRAWL_URL_CAP` | 30 | Max URLs fetched. ⚑ batch #9 proposed fetch ≤60 / count ≤30 core (`"30+"` short-circuit beyond). |
-| `FETCH_CONCURRENCY` | ≥ 8 | Concurrency pool. ⚑ batch #9 proposed **2 / host** + ~300 ms spacing (politeness) — see flags; recommend adopting. |
+| `FETCH_TIMEOUT_MS` | 8000 | Per-URL fetch timeout **+ 1 retry on connect errors only** (batch #9, thread 4). Enables D-32 slow-vs-down disambiguation. |
+| `CRAWL_BUDGET_MS` | 25000 | Hard wall-clock ceiling for the whole crawl; the **universal governor** (#9) — exhaustion → `partial:true` + review (batch #9, thread 4). |
+| `FETCH_CAP` / `CORE_CAP` | 60 / 30 | Max **fetches** per scan / max **core pages** counted precisely (`"30+"` short-circuit beyond). Separates fetches from pages (batch #9, thread 4). |
+| `FETCH_CONCURRENCY` | 2 / host | Concurrent fetches **per host** + ~300 ms spacing (batch #9, thread 4). Cross-job worker parallelism is a **separate Phase-2 scope**, not a crawl cap. |
 | `CRAWL_DEPTH` | 3 | Max crawl depth from root (inventory §3, adopted). |
 | `REDIRECT_HOPS` | 5 | Max redirect hops per URL, incl. robots.txt (adopted). |
 | `HTML_READ_CAP` | 2 MB | HTML bytes read per page; parse the truncated prefix (adopted). |
@@ -126,9 +188,13 @@ price — and stores every quote. Stripe, email, and auth are out of scope for v
 | `ASSESS_TIMEOUT_MS` | ~15000 | Claude call timeout (incl. one retry). |
 | `QUOTE_DEADLINE_MS` | ~45000 | Absolute per-quote deadline; on breach the worker writes `failed`. |
 
-⚑ = value collides with batch #9; **Phase 0 retained pending founder reconciliation** (§2.1 collision flags). Non-⚑ caps below `FETCH_CONCURRENCY` are the non-colliding inventory §3 caps, adopted.
+**Thread 4 (batch #9 cap reconciliation) — CLOSED, founder-ratified 2026-07-18.**
+All four contested caps adopt the batch #9 values above (§2.1 collision flags marked
+resolved). Concurrency reading: Phase 0's `≥8` was *intra-scan throughput math* for
+the old 20 s budget, so `2/host + 300 ms` replaces it; cross-job worker parallelism
+stays out of the crawl caps (Phase 2 service-assembly concern).
 
-`SYNC_HOLD_MS` (8 s) and `CRAWL_BUDGET_MS` (20 s) are **independent timers**. The
+`SYNC_HOLD_MS` (8 s) and `CRAWL_BUDGET_MS` (25 s) are **independent timers**. The
 fast path (~90 %) completes crawl+assess+price well inside 8 s and returns
 `completed` synchronously. A crawl-heavy site legitimately needing up to the crawl
 budget returns `pending` at 8 s; the in-process worker continues and the client polls.
@@ -231,9 +297,12 @@ the graceful message → "we couldn't fully analyze your site, book a call."
   posts→`blog_posts`, taxonomies/authors/dates→`excluded.archives`. If absent/invalid,
   capped concurrent link-crawl from the homepage. Fetch a **sample** sufficient to
   estimate distinct templates, not all 30. Bilingual mirrors pair-dedupe (#18).
-- **Fingerprint (#3):** HTTP-only, maintained Wappalyzer-style core; fingerprint
-  DB vendored + pinned; output → `detected_platform ∈ wordpress | wix | squarespace
-  | webflow | shopify | custom | unknown`.
+- **Fingerprint (#23, supersedes #3's "Wappalyzer-style core"):** HTTP-only,
+  **hand-rolled passive signal table** ([src/fingerprint/](src/fingerprint/)) —
+  zero deps, zero extra requests; content>install builder precedence; coverage-capped
+  confidence (rider a). Output → `detected_platform ∈ wordpress | wix | squarespace |
+  shopify | duda | weebly | webflow | godaddy | joomla | drupal | framer | carrd |
+  custom | unknown` + `builders_detected[]`.
 - **Browser trigger (#3):** *inconclusive* **AND** *mostly empty* (static body
   text `< ~500` chars OR known SPA root with no meaningful content). v1: no
   Playwright → `confidence:"low"`. v1.1: enqueue Playwright.
@@ -407,12 +476,11 @@ itself (`creavy-site`, tracked as a separate phase but a separate repo).
    [`src/pricing/pricing.config.ts`](src/pricing/pricing.config.ts) as integer cents
    per #20 (e-commerce → `human_quote`, #21); loader hard-fails on any `TODO(...)`
    per #22, proven by [`test/pricing.config.test.ts`](test/pricing.config.test.ts).
-2. **Fingerprint lib / adapter choice** — **OPEN, pending amendment #23**
-   (the fingerprint spike, this tour — gated on founder sign-off before #23 is
-   committed). Candidates A (hand-rolled signal table), B (Wappalyzer-fork
-   ruleset), C (generator-meta control) per the spike brief.
+2. **Fingerprint adapter choice** — **✅ CLOSED by amendment #23 (§2.2):**
+   hand-rolled passive signal table (Candidate A), with content>install builder
+   precedence and coverage-capped confidence. Built in [src/fingerprint/](src/fingerprint/).
 3. **Persona source** — `persona` (plumber|hvac|realtor…) comes from the landing-page
    source per architecture §8; wiring is a `creavy-site` concern (Phase 4).
-4. **Batch #9 numeric collisions (§2.1)** — four caps (budget 20 vs 25 s, per-fetch
-   5 vs 8 s, fetch 30 vs 60, concurrency ≥8 vs 2/host) retain Phase 0 values pending
-   founder reconciliation. Recommendations in §2.1.
+4. **Batch #9 cap reconciliation (§2.1)** — **✅ CLOSED (thread 4, §4.1):** all four
+   caps adopt batch #9 (budget 25 s, per-fetch 8 s + retry, fetch 60/30 core,
+   concurrency 2/host + 300 ms).

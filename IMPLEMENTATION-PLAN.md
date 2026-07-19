@@ -35,9 +35,11 @@ these are the units TDD is built for.
    private/loopback/link-local + redirects into them), canonicalization for the
    dedupe key.
 3. **robots.txt fetch + parse** — allow/deny evaluation, clear user-agent.
-4. **Platform fingerprint adapter** — spike + choose the maintained Wappalyzer-style
-   core ([SPEC.md](SPEC.md) §6/#3); vendor + pin the fingerprint DB; adapter
-   interface so the lib is swappable.
+4. **Platform fingerprint adapter** — **done via the spike + amendment #23**
+   ([SPEC.md](SPEC.md) §2.2): hand-rolled passive signal table in
+   [src/fingerprint/](src/fingerprint/), content>install builder precedence,
+   `builders_detected[]`, rider-(a) coverage cap; built red-green against the
+   F-backlog (`spikes/fingerprint-tdd-backlog.md`). Corpus in `fixtures/sites/`.
 5. **Sitemap parse + link-crawl bounder** — returns the **structured bounder object**
    (SPEC §2.1 #8), not a bare count; `/sitemap.xml` → `core_pages` with the trust
    rule (#19); bilingual pair-dedupe (#18); config-driven caps (#9, SPEC §4.1);
