@@ -41,6 +41,20 @@ results.forEach((r, i) => {
   });
 });
 
+// Rider (a) — coverage cap fires for zero-coverage platforms (no corpus fixture
+// exercises this, so prove it synthetically): Webflow deterministic signal must
+// cap high→medium; a covered platform stays high.
+test("rider (a): zero-coverage platform capped to medium", () => {
+  const wf = fingerprint([{ url: "https://x.example", status: 200, headers: {}, body: '<html data-wf-site="abc"><body>hi</body></html>' }]);
+  assert.equal(wf.platform, "webflow");
+  assert.equal(wf.confidence, "medium", "zero-coverage webflow must be capped to medium");
+});
+test("rider (a): covered platform stays high", () => {
+  const wp = fingerprint([{ url: "https://x.example", status: 200, headers: {}, body: '<link href="/wp-content/themes/foo/style.css">' }]);
+  assert.equal(wp.platform, "wordpress");
+  assert.equal(wp.confidence, "high");
+});
+
 // Calibration property across the whole corpus (rider c definition):
 // no HIGH-confidence answer may be wrong, and no builder asserted with zero signals.
 test("calibration: 0 wrong-at-high (platform) across all F-cases", () => {
