@@ -1,0 +1,23 @@
+{
+  "canonical_origin": "https://labarberie.com",
+  "core_pages": "30+",
+  "blog_posts": 0,
+  "excluded": {
+    "archives": 0,
+    "media": 0,
+    "external": 0,
+    "soft_404": 0
+  },
+  "languages": [
+    "en"
+  ],
+  "bilingual_mirror": false,
+  "needs_browser": false,
+  "needs_browser_reasons": [],
+  "review_flags": [
+    "sitemap_children_capped"
+  ],
+  "partial": true,
+  "detected_platform": "wordpress",
+  "builders_detected": []
+}

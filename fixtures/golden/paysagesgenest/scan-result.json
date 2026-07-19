@@ -1,0 +1,21 @@
+{
+  "canonical_origin": "https://paysagesgenest.com",
+  "core_pages": 16,
+  "blog_posts": 0,
+  "excluded": {
+    "archives": 0,
+    "media": 0,
+    "soft_404": 0,
+    "external": 5
+  },
+  "languages": [],
+  "bilingual_mirror": false,
+  "needs_browser": false,
+  "needs_browser_reasons": [],
+  "review_flags": [
+    "sitemap_absent"
+  ],
+  "partial": false,
+  "detected_platform": "custom",
+  "builders_detected": []
+}

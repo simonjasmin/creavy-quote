@@ -1,0 +1,19 @@
+{
+  "canonical_origin": "https://lasouche.ca",
+  "core_pages": 12,
+  "blog_posts": 54,
+  "excluded": {
+    "archives": 7,
+    "media": 0,
+    "external": 0,
+    "soft_404": 0
+  },
+  "languages": [],
+  "bilingual_mirror": false,
+  "needs_browser": false,
+  "needs_browser_reasons": [],
+  "review_flags": [],
+  "partial": false,
+  "detected_platform": "wordpress",
+  "builders_detected": []
+}

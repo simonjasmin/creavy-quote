@@ -1,0 +1,23 @@
+{
+  "canonical_origin": "https://itemconstruction.com",
+  "core_pages": "30+",
+  "blog_posts": 15,
+  "excluded": {
+    "archives": 3,
+    "media": 0,
+    "external": 0,
+    "soft_404": 0
+  },
+  "languages": [],
+  "bilingual_mirror": false,
+  "needs_browser": false,
+  "needs_browser_reasons": [],
+  "review_flags": [
+    "under_construction"
+  ],
+  "partial": false,
+  "detected_platform": "wordpress",
+  "builders_detected": [
+    "elementor"
+  ]
+}
