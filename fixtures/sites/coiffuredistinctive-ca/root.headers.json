@@ -1,0 +1,31 @@
+{
+  "requested": "https://coiffuredistinctive.ca/",
+  "final_url": "https://coiffuredistinctive.ca/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "access-control-allow-headers": "Content-Type, Authorization",
+    "access-control-allow-methods": "GET, POST, OPTIONS, DELETE, PUT",
+    "access-control-allow-origin": "https://coiffuredistinctive.ca https://connect.facebook.net https://www.googletagmanager.com https://www.google-analytics.com https://googleadservices.com https://www.clarity.ms https://www.clickcease.com https://illow.io",
+    "alt-svc": "h3=\":443\"; ma=86400",
+    "cache-control": "max-age=0",
+    "cf-cache-status": "DYNAMIC",
+    "cf-ray": "a1d56c46aae0a322-YUL",
+    "connection": "keep-alive",
+    "content-encoding": "br",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Sat, 18 Jul 2026 23:56:26 GMT",
+    "expires": "Sat, 18 Jul 2026 23:56:26 GMT",
+    "host-header": "6b7412fb82ca5edfd0917e3957f05d89",
+    "last-modified": "Thu, 16 Jul 2026 14:54:19 GMT",
+    "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+    "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=4X4tzIZlyJeTrPgIBhA19YIWGSBXTDorhshjvyeuabOVWd1R%2BH5Nf3kabujmiM88sCLWvvj%2BbNa6yAmg2nrTDesx9oqJMJfGOyvm0XTTj4sLf2vVl7EUa5z6sHRvwldfNrNfPeQMY4UX\"}]}",
+    "server": "cloudflare",
+    "server-timing": "cfCacheStatus;desc=\"DYNAMIC\", cfEdge;dur=10,cfOrigin;dur=196",
+    "transfer-encoding": "chunked",
+    "vary": "Accept-Encoding",
+    "x-httpd": "1",
+    "x-proxy-cache": "MISS",
+    "x-proxy-cache-info": "0 NC:000000 UP:"
+  }
+}

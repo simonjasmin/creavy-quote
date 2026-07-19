@@ -1,0 +1,11 @@
+{
+  "slug": "refrigerationeverest-com",
+  "requested_url": "https://www.refrigerationeverest.com/",
+  "final_url": "https://www.refrigerationeverest.com/",
+  "ground_truth": {
+    "platform": "wordpress",
+    "builder": "unknown",
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

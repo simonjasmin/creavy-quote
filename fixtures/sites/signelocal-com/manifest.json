@@ -1,0 +1,11 @@
+{
+  "slug": "signelocal-com",
+  "requested_url": "https://www.signelocal.com/",
+  "final_url": "https://www.signelocal.com/",
+  "ground_truth": {
+    "platform": "shopify",
+    "builder": null,
+    "bilingual": true
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

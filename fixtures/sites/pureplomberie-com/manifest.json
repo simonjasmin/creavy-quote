@@ -1,0 +1,11 @@
+{
+  "slug": "pureplomberie-com",
+  "requested_url": "https://pureplomberie.com/",
+  "final_url": "https://pureplomberie.com/",
+  "ground_truth": {
+    "platform": "wordpress",
+    "builder": "elementor",
+    "bilingual": true
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

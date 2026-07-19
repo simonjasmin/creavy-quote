@@ -1,0 +1,11 @@
+{
+  "slug": "csmelectrique-com",
+  "requested_url": "https://csmelectrique.com/",
+  "final_url": "https://csmelectrique.com/",
+  "ground_truth": {
+    "platform": "wordpress",
+    "builder": "unknown",
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

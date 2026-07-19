@@ -1,0 +1,11 @@
+{
+  "slug": "airclimatisationvs-ca",
+  "requested_url": "https://airclimatisationvs.ca/",
+  "final_url": "https://airclimatisationvs.ca/",
+  "ground_truth": {
+    "platform": "wordpress",
+    "builder": "unknown",
+    "bilingual": true
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

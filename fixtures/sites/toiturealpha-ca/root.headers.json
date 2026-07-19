@@ -1,0 +1,23 @@
+{
+  "requested": "https://toiturealpha.ca/",
+  "final_url": "https://toiturealpha.ca/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "cache-control": "max-age=0",
+    "connection": "keep-alive",
+    "content-encoding": "br",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Sat, 18 Jul 2026 23:54:14 GMT",
+    "expires": "Sat, 18 Jul 2026 23:54:14 GMT",
+    "link": "<https://toiturealpha.ca/>; rel=shortlink",
+    "server": "nginx",
+    "transfer-encoding": "chunked",
+    "vary": "Accept-Encoding",
+    "x-cache-enabled": "false",
+    "x-content-type-options": "nosniff",
+    "x-nginx-cache-status": "BYPASS",
+    "x-pingback": "https://toiturealpha.ca/wp/xmlrpc.php",
+    "x-xss-protection": "1; mode=block"
+  }
+}

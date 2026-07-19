@@ -1,0 +1,18 @@
+{
+  "requested": "https://pierrehamelin.ca/",
+  "final_url": "https://pierrehamelin.ca/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "connection": "Upgrade, Keep-Alive",
+    "content-encoding": "gzip",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Sat, 18 Jul 2026 23:54:17 GMT",
+    "keep-alive": "timeout=5",
+    "link": "<https://pierrehamelin.ca/wp-json/>; rel=\"https://api.w.org/\", <https://pierrehamelin.ca/wp-json/wp/v2/pages/11>; rel=\"alternate\"; title=\"JSON\"; type=\"application/json\", <https://pierrehamelin.ca/>; rel=shortlink",
+    "server": "Apache",
+    "transfer-encoding": "chunked",
+    "upgrade": "h2,h2c",
+    "vary": "Accept-Encoding"
+  }
+}

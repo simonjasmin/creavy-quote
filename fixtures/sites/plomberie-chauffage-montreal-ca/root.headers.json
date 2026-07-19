@@ -1,0 +1,28 @@
+{
+  "requested": "https://www.plomberie-chauffage-montreal.ca/",
+  "final_url": "https://www.plomberie-chauffage-montreal.ca/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "alt-svc": "h3=\":443\"; ma=86400",
+    "cf-cache-status": "DYNAMIC",
+    "cf-ray": "a1d569032ec6a316-YUL",
+    "connection": "keep-alive",
+    "content-encoding": "br",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Sat, 18 Jul 2026 23:54:13 GMT",
+    "link": "<https://www.plomberie-chauffage-montreal.ca/wp-json/>; rel=\"https://api.w.org/\", <https://www.plomberie-chauffage-montreal.ca/wp-json/wp/v2/pages/23>; rel=\"alternate\"; type=\"application/json\", <https://www.plomberie-chauffage-montreal.ca/>; rel=shortlink",
+    "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+    "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=k6WhJMDjU%2Fcu032joTR%2FmKV9yTi4yRrMXapl73Dj52Ml8WnLMy2odIm6s0VsCcaY36iu2ri5LSFRD2RetQwZUw%2BUUVJWHLiPR%2FUzdjkzv%2B70lvkuj%2B3vErsG0LZjPEKvR4ZkQfZD0XPckS6WFfjIeIEuLcHMTg%3D%3D\"}]}",
+    "server": "cloudflare",
+    "server-timing": "cfCacheStatus;desc=\"DYNAMIC\", cfEdge;dur=10,cfOrigin;dur=1175",
+    "strict-transport-security": "max-age=63072000; includeSubDomains",
+    "transfer-encoding": "chunked",
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "SAMEORIGIN",
+    "x-pingback": "https://www.plomberie-chauffage-montreal.ca/xmlrpc.php",
+    "x-powered-by": "PHP/7.4.33",
+    "x-turbo-charged-by": "LiteSpeed"
+  }
+}

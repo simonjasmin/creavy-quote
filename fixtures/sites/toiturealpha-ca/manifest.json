@@ -1,0 +1,11 @@
+{
+  "slug": "toiturealpha-ca",
+  "requested_url": "https://toiturealpha.ca/",
+  "final_url": "https://toiturealpha.ca/",
+  "ground_truth": {
+    "platform": "wordpress",
+    "builder": "unknown",
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

@@ -1,0 +1,11 @@
+{
+  "slug": "plomberie-chauffage-montreal-ca",
+  "requested_url": "https://www.plomberie-chauffage-montreal.ca/",
+  "final_url": "https://www.plomberie-chauffage-montreal.ca/",
+  "ground_truth": {
+    "platform": "wordpress",
+    "builder": "elementor",
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

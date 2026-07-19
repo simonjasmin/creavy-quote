@@ -1,0 +1,30 @@
+{
+  "requested": "https://www.l2toiture.com/",
+  "final_url": "https://www.l2toiture.com/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "alt-svc": "h3=\":443\"; ma=86400",
+    "cf-cache-status": "DYNAMIC",
+    "cf-ray": "a1d569119e64d866-YUL",
+    "connection": "keep-alive",
+    "content-encoding": "br",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Sat, 18 Jul 2026 23:54:14 GMT",
+    "link": "<https://www.l2toiture.com/>; rel=shortlink",
+    "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+    "permissions-policy": "geolocation=(), microphone=(), camera=()",
+    "referrer-policy": "strict-origin-when-cross-origin",
+    "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=1DM9Y0Lc2ZH%2BQP%2FWJpYYN6u5fUx4gWKwRfENvQ7VAS09eXkaaUg%2BuYVTTmkiw8mDFom4y3Ve6q6gbH%2BczqfS5jV5dO2MjLn0LdVMMOJGkvoXws2uq72DGiD41L9ZvzzCNEApPA%3D%3D\"}]}",
+    "server": "cloudflare",
+    "server-timing": "cfCacheStatus;desc=\"DYNAMIC\", cfEdge;dur=7,cfOrigin;dur=19",
+    "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+    "transfer-encoding": "chunked",
+    "vary": "Accept-Encoding,User-Agent",
+    "x-content-type-options": "nosniff",
+    "x-dns-prefetch-control": "on",
+    "x-frame-options": "SAMEORIGIN",
+    "x-litespeed-cache": "hit",
+    "x-turbo-charged-by": "LiteSpeed"
+  }
+}

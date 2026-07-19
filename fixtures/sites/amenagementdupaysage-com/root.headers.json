@@ -1,0 +1,20 @@
+{
+  "requested": "https://amenagementdupaysage.com/",
+  "final_url": "https://amenagementdupaysage.com/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "cache-control": "max-age=600",
+    "connection": "Upgrade, Keep-Alive",
+    "content-encoding": "gzip",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Sat, 18 Jul 2026 23:54:18 GMT",
+    "expires": "Sun, 19 Jul 2026 00:04:18 GMT",
+    "keep-alive": "timeout=5, max=100",
+    "last-modified": "Wed, 15 Jul 2026 20:15:51 GMT",
+    "server": "Apache",
+    "transfer-encoding": "chunked",
+    "upgrade": "h2",
+    "vary": "Accept-Encoding,User-Agent"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "requested": "https://www.beautemarc.com/",
+  "final_url": "https://www.beautemarc.com/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "accept-ranges": "bytes",
+    "age": "37147",
+    "alt-svc": "h3=\":443\"; ma=2592000",
+    "cache-control": "private,max-age=0,must-revalidate",
+    "content-encoding": "br",
+    "content-language": "en-US",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Sat, 18 Jul 2026 23:56:26 GMT",
+    "etag": "W/\"86ebafcea44c6c2eef6ce7b342483cad\"",
+    "glb-x-seen-by": "bS8wRlGzu0Hc+WrYuHB8QIg44yfcdCMJRkBoQ1h6Vjc=",
+    "link": "<https://static.parastorage.com/>; rel=preconnect; crossorigin;,<https://static.parastorage.com/>; rel=preconnect;,<https://static.wixstatic.com/>; rel=preconnect; crossorigin;,<https://static.wixstatic.com/>; rel=preconnect;,<https://siteassets.parastorage.com>; rel=preconnect; crossorigin;,",
+    "server": "Pepyaka",
+    "server-timing": "cache;desc=hit, varnish;desc=hit_miss, dc;desc=fastly_virginia-phy_g",
+    "strict-transport-security": "max-age=31556952",
+    "transfer-encoding": "chunked",
+    "vary": "Accept-Encoding",
+    "via": "1.1 google",
+    "x-cache": "MISS",
+    "x-cache-status": "HIT",
+    "x-content-type-options": "nosniff",
+    "x-seen-by": "yvSunuo/8ld62ehjr5B7kA==,VtqAe8Wu9wvSsl49B/X4+ewfbs+7qUVAqsIx00yI78k=,pmHZlB45NPy7b1VBAukQrewfbs+7qUVAqsIx00yI78k=,Ua1iSBCTq7qSXjmRCGE1N78Z7tyas5PXCBAxSAmlVxqeq9nh2RVG22fBejRJSb8EEpzrUii78VdYxnNKzUeyUYhIydfYCelFDfkrvUteY3ir5Nb4Q+Sj+JLes2wLLUgk,2d58ifebGbosy5xc+FRaloU5Z1v5pG2ZjiL/xaycf0LpCApcsUM2eVT8CDcdcfqqqdB/muy8W4xVdZyKL0M+VB+QmoTduQy303KBw2INeI0=,2UNV7KOq4oGjA5+PKsX47FtSaLg8IYZ7tWb3E4MS5QwFVd1lR1L8/yRoc88kq/ej,2UNV7KOq4oGjA5+PKsX47G86grxW7YVbTxNaQeYTCEMFVd1lR1L8/yRoc88kq/ej",
+    "x-served-by": "cache-yyz4556-YYZ",
+    "x-wix-request-id": "1784418986.3671642047411373"
+  }
+}

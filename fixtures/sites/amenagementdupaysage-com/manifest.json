@@ -1,0 +1,11 @@
+{
+  "slug": "amenagementdupaysage-com",
+  "requested_url": "https://amenagementdupaysage.com/",
+  "final_url": "https://amenagementdupaysage.com/",
+  "ground_truth": {
+    "platform": "wordpress",
+    "builder": "elementor",
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

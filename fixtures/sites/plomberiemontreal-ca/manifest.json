@@ -1,0 +1,11 @@
+{
+  "slug": "plomberiemontreal-ca",
+  "requested_url": "https://plomberiemontreal.ca/",
+  "final_url": "https://plomberiemontreal.ca/",
+  "ground_truth": {
+    "platform": "custom",
+    "builder": null,
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

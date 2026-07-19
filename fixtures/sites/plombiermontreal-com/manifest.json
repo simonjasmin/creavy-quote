@@ -1,0 +1,11 @@
+{
+  "slug": "plombiermontreal-com",
+  "requested_url": "https://www.plombiermontreal.com/",
+  "final_url": "https://www.plombiermontreal.com/",
+  "ground_truth": {
+    "platform": "wordpress",
+    "builder": "unknown",
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

@@ -1,0 +1,21 @@
+{
+  "requested": "https://www.myriamtphotographe.com/",
+  "final_url": "https://www.myriamtphotographe.com/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "accept-ranges": "bytes",
+    "age": "57032",
+    "content-encoding": "gzip",
+    "content-length": "40058",
+    "content-type": "text/html;charset=utf-8",
+    "date": "Sat, 18 Jul 2026 07:20:04 GMT",
+    "etag": "W/\"99a0fc1847a96eb160d64167084f4cc2\"",
+    "expires": "Thu, 01 Jan 1970 00:00:00 GMT",
+    "server": "Squarespace",
+    "strict-transport-security": "max-age=15552000",
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-contextid": "s7g7PJQT/sqSYvQeD"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "requested": "https://www.entreprisescardinal.com/",
+  "final_url": "https://www.entreprisescardinal.com/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "alt-svc": "h3=\":443\"; ma=2592000, h3-29=\":443\"; ma=2592000, h3-Q050=\":443\"; ma=2592000, h3-Q046=\":443\"; ma=2592000, h3-Q043=\":443\"; ma=2592000, quic=\":443\"; ma=2592000; v=\"43,46\"",
+    "connection": "Keep-Alive",
+    "content-encoding": "br",
+    "content-length": "10430",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Sat, 18 Jul 2026 23:56:28 GMT",
+    "keep-alive": "timeout=5, max=100",
+    "server": "LiteSpeed",
+    "vary": "Accept-Encoding,User-Agent",
+    "x-content-type-options": "nosniff",
+    "x-xss-protection": "1; mode=block"
+  }
+}

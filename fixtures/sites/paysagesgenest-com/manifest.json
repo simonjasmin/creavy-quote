@@ -1,0 +1,11 @@
+{
+  "slug": "paysagesgenest-com",
+  "requested_url": "https://paysagesgenest.com/",
+  "final_url": "https://paysagesgenest.com/index.html",
+  "ground_truth": {
+    "platform": "custom",
+    "builder": null,
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

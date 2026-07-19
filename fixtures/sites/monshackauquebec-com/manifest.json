@@ -1,0 +1,11 @@
+{
+  "slug": "monshackauquebec-com",
+  "requested_url": "https://monshackauquebec.com/",
+  "final_url": "https://monshackauquebec.com/",
+  "ground_truth": {
+    "platform": "shopify",
+    "builder": null,
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

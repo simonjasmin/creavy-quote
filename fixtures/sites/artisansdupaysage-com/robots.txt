@@ -1,0 +1,72 @@
+User-agent: *
+Disallow: /
+
+#Allow Good bots with a crawl delay of 30 seconds
+
+#Google
+User-agent: Googlebot
+Allow: /
+Disallow: /admin/
+Sitemap: https://www.artisansdupaysage.com/sitemap.xml
+Crawl-delay: 30
+
+User-agent: Googlebot-image
+Allow: /
+Disallow: /admin/
+Sitemap: https://www.artisansdupaysage.com/sitemap.xml
+Crawl-delay: 30
+
+#Bing
+User-agent: bingbot
+Allow: /
+Disallow: /admin/
+Sitemap: https://www.artisansdupaysage.com/sitemap.xml
+Crawl-delay: 30
+
+#Yahoo
+User-agent: Slurp
+Allow: /
+Disallow: /admin/
+Sitemap: https://www.artisansdupaysage.com/sitemap.xml
+Crawl-delay: 30
+
+
+#Disallow bad bots
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+#Not working. Need to contact hello@gnowit.com to block websites individually
+User-agent: GnowitNewsbot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: Semanticbot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: AspiegelBot
+Disallow: /
+
+User-agent: SiteCheckerBotCrawler
+Disallow: /
+
+User-agent: MJ12Bot
+Disallow: /
+
+User-agent: MauiBot
+Disallow: /
+

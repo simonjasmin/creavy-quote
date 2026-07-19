@@ -1,0 +1,11 @@
+{
+  "slug": "lempreintecoop-com",
+  "requested_url": "https://www.lempreintecoop.com/",
+  "final_url": "https://www.lempreintecoop.com/",
+  "ground_truth": {
+    "platform": "shopify",
+    "builder": null,
+    "bilingual": true
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

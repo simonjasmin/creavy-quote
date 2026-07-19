@@ -1,0 +1,11 @@
+{
+  "slug": "lespaceprive-square-site",
+  "requested_url": "https://lespaceprive.square.site/",
+  "final_url": "https://lespaceprive.square.site/",
+  "ground_truth": {
+    "platform": "square_online",
+    "builder": null,
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

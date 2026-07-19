@@ -1,0 +1,19 @@
+{
+  "requested": "https://lasouche.ca/",
+  "final_url": "https://lasouche.ca/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "accept-ranges": "bytes",
+    "age": "0",
+    "connection": "keep-alive",
+    "content-encoding": "gzip",
+    "content-length": "32953",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Sat, 18 Jul 2026 23:56:25 GMT",
+    "link": "<https://lasouche.ca/wp-json/>; rel=\"https://api.w.org/\", <https://lasouche.ca/wp-json/wp/v2/pages/8>; rel=\"alternate\"; title=\"JSON\"; type=\"application/json\", <https://lasouche.ca/>; rel=shortlink",
+    "server": "nginx",
+    "vary": "Accept-Encoding,User-Agent",
+    "x-cache": "MISS"
+  }
+}

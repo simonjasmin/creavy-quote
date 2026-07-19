@@ -1,0 +1,22 @@
+{
+  "requested": "https://www.vincentlabonte.com/",
+  "final_url": "https://www.vincentlabonte.com/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "accept-ranges": "bytes",
+    "age": "98805",
+    "content-encoding": "gzip",
+    "content-length": "21933",
+    "content-type": "text/html;charset=utf-8",
+    "date": "Fri, 17 Jul 2026 20:29:38 GMT",
+    "etag": "W/\"637e29a5e8aea663bed8a2a4073d5df0\"",
+    "expires": "Thu, 01 Jan 1970 00:00:00 GMT",
+    "server": "Squarespace",
+    "strict-transport-security": "max-age=15552000",
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-contextid": "M1WYGAhd/uMl6fgoh",
+    "x-frame-options": "SAMEORIGIN, SAMEORIGIN"
+  }
+}

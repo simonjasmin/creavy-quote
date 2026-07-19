@@ -1,0 +1,21 @@
+{
+  "requested": "https://plomberiemontreal.ca/",
+  "final_url": "https://plomberiemontreal.ca/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "age": "0",
+    "cache-control": "max-age=3600, no-cache, no-store, max-age=0, must-revalidate",
+    "connection": "keep-alive",
+    "content-encoding": "br",
+    "content-type": "text/html",
+    "date": "Sat, 18 Jul 2026 23:54:11 GMT",
+    "etag": "W/\"4a12-50ef03ca74bc1\"",
+    "expires": "Sun, 19 Jul 2026 00:54:11 GMT",
+    "last-modified": "Fri, 13 Feb 2015 03:57:36 GMT",
+    "pragma": "no-cache",
+    "transfer-encoding": "chunked",
+    "vary": "Accept-Encoding",
+    "x-request-id": "74b2e49f-3fb2-4f0c-a2fd-22039d391b38"
+  }
+}

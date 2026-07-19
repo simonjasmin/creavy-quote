@@ -1,0 +1,18 @@
+{
+  "requested": "https://salonjumbojumbo.com/",
+  "final_url": "https://salonjumbojumbo.com/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "connection": "keep-alive",
+    "content-encoding": "gzip",
+    "content-length": "21904",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Sat, 18 Jul 2026 23:56:27 GMT",
+    "last-modified": "Sat, 18 Jul 2026 23:56:27 GMT",
+    "link": "<https://salonjumbojumbo.com/wp-json/>; rel=\"https://api.w.org/\", <https://salonjumbojumbo.com/wp-json/wp/v2/pages/6>; rel=\"alternate\"; title=\"JSON\"; type=\"application/json\", <https://salonjumbojumbo.com/>; rel=shortlink",
+    "server": "nginx",
+    "vary": "Accept-Encoding",
+    "x-powered-by": "PHP/8.3.32, PleskLin"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "slug": "anniesimardphoto-com",
+  "requested_url": "https://anniesimardphoto.com/",
+  "final_url": "https://anniesimardphoto.com/",
+  "ground_truth": {
+    "platform": "wordpress",
+    "builder": "beaver",
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

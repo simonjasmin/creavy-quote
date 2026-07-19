@@ -1,0 +1,11 @@
+{
+  "slug": "estcequontecoiffe-com",
+  "requested_url": "https://www.estcequontecoiffe.com/",
+  "final_url": "https://www.estcequontecoiffe.com/",
+  "ground_truth": {
+    "platform": "wix",
+    "builder": null,
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

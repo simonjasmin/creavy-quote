@@ -1,0 +1,22 @@
+{
+  "requested": "https://labarberie.com/",
+  "final_url": "https://labarberie.com/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "accept-ranges": "bytes",
+    "age": "8312",
+    "cache-provider": "CLOUDWAYS-CACHE-DC",
+    "connection": "keep-alive",
+    "content-encoding": "gzip",
+    "content-length": "36881",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Sat, 18 Jul 2026 23:56:23 GMT",
+    "last-modified": "Sat, 18 Jul 2026 21:37:50 GMT",
+    "link": "<https://labarberie.com/wp-json/>; rel=\"https://api.w.org/\", <https://labarberie.com/wp-json/wp/v2/pages/242>; rel=\"alternate\"; title=\"JSON\"; type=\"application/json\", <https://labarberie.com/>; rel=shortlink",
+    "server": "nginx",
+    "vary": "Accept-Encoding",
+    "x-breeze-cache-write": "SUCCESS",
+    "x-cache": "HIT"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "slug": "quebecelectricien-ca",
+  "requested_url": "https://quebecelectricien.ca/",
+  "final_url": "https://quebecelectricien.ca/",
+  "ground_truth": {
+    "platform": "wordpress",
+    "builder": "wpbakery",
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

@@ -1,0 +1,11 @@
+{
+  "slug": "toiture-quebec-ca",
+  "requested_url": "https://www.toiture-quebec.ca/",
+  "final_url": "https://www.toiture-quebec.ca/",
+  "ground_truth": {
+    "platform": "custom",
+    "builder": null,
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

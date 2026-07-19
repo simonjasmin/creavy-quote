@@ -1,0 +1,6 @@
+# Sitemap URL
+Sitemap: https://www.entreprisescardinal.com/sitemap.xml
+
+# Fichiers bloqués pour tous les robots
+User-agent: *
+Disallow: /offline.php

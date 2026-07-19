@@ -1,0 +1,29 @@
+{
+  "requested": "https://www.artisansdupaysage.com/",
+  "final_url": "https://www.artisansdupaysage.com/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "access-control-allow-headers": "Origin, X-Requested-With, Content-Type, Accept",
+    "access-control-allow-methods": "GET, PUT, POST, DELETE, HEAD, OPTIONS",
+    "access-control-allow-origin": "*",
+    "alt-svc": "h3=\":443\"; ma=86400",
+    "cache-control": "private",
+    "cf-cache-status": "DYNAMIC",
+    "cf-ray": "a1d5692fdb7b1fde-YUL",
+    "connection": "keep-alive",
+    "content-encoding": "br",
+    "content-type": "text/html; charset=utf-8",
+    "date": "Sat, 18 Jul 2026 23:54:19 GMT",
+    "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+    "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=B8oG2qrb%2FwOYHCwFnanlOtJMXfGkRGD7sLLgtp%2FcyG3lv0CISi4YvBmKZxoUdi%2F50Wsgbq%2FnzsVJhn6J5cflpgRm2%2FC52i1TJkgHfrp02KFtzGEpDLgY34JuZQepU5Wt4%2FICUuLxL5Drc%2Bvh\"}]}",
+    "server": "cloudflare",
+    "server-timing": "cfCacheStatus;desc=\"DYNAMIC\", cfEdge;dur=7,cfOrigin;dur=76",
+    "transfer-encoding": "chunked",
+    "vary": "Accept-Encoding",
+    "x-aspnet-version": "4.0.30319",
+    "x-aspnetmvc-version": "5.2",
+    "x-powered-by": "ASP.NET",
+    "x-powered-by-plesk": "PleskWin"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "slug": "expair-ca",
+  "requested_url": "https://www.expair.ca/",
+  "final_url": "https://www.expair.ca/",
+  "ground_truth": {
+    "platform": "wordpress",
+    "builder": "unknown",
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

@@ -1,0 +1,25 @@
+{
+  "requested": "https://paysagistevilledequebec.ca/",
+  "final_url": "https://paysagistevilledequebec.ca/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "alt-svc": "h3=\":443\"; ma=86400",
+    "cache-control": "private, no-cache, no-store, must-revalidate",
+    "cf-cache-status": "BYPASS",
+    "cf-ray": "a1d569285e76a26c-YUL",
+    "connection": "keep-alive",
+    "content-encoding": "br",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Sat, 18 Jul 2026 23:54:18 GMT",
+    "link": "<https://paysagistevilledequebec.ca/wp-json/>; rel=\"https://api.w.org/\", <https://paysagistevilledequebec.ca/wp-json/wp/v2/pages/55>; rel=\"alternate\"; title=\"JSON\"; type=\"application/json\", <https://paysagistevilledequebec.ca/>; rel=shortlink",
+    "server": "cloudflare",
+    "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+    "transfer-encoding": "chunked",
+    "vary": "Accept-Encoding, Accept-Encoding,Cookie",
+    "x-cache": "HIT: 1",
+    "x-cache-group": "normal",
+    "x-cacheable": "SHORT",
+    "x-powered-by": "WP Engine"
+  }
+}

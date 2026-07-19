@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- This is the parent sitemap linking to additional sitemaps for products, collections and pages as shown below. The sitemap can not be edited manually, but is kept up to date in real time. -->
+  <sitemap>
+    <loc>https://www.signelocal.com/sitemap_agentic_discovery.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.signelocal.com/sitemap_products_1.xml?from=3787800215586&amp;to=10005030371607</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.signelocal.com/sitemap_products_2.xml?from=10005127889175&amp;to=10393144951063</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.signelocal.com/sitemap_pages_1.xml?from=51042058282&amp;to=174184661271</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.signelocal.com/sitemap_collections_1.xml?from=151828299810&amp;to=525506478359</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.signelocal.com/sitemap_blogs_1.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.signelocal.com/en/sitemap_products_1.xml?from=3787800215586&amp;to=10005030371607</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.signelocal.com/en/sitemap_products_2.xml?from=10005127889175&amp;to=10393144951063</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.signelocal.com/en/sitemap_pages_1.xml?from=51042058282&amp;to=174184661271</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.signelocal.com/en/sitemap_collections_1.xml?from=151828299810&amp;to=525506478359</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.signelocal.com/en/sitemap_blogs_1.xml</loc>
+  </sitemap>
+</sitemapindex>

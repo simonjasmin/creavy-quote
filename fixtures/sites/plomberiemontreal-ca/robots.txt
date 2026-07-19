@@ -1,0 +1,4 @@
+Sitemap: http://plomberiemontreal.ca/sitemap.xml
+
+User-agent: *
+Disallow: 

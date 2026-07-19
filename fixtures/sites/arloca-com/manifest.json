@@ -1,0 +1,11 @@
+{
+  "slug": "arloca-com",
+  "requested_url": "https://arloca.com/",
+  "final_url": "https://arloca.com/",
+  "ground_truth": {
+    "platform": "shopify",
+    "builder": null,
+    "bilingual": true
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

@@ -1,0 +1,8 @@
+User-Agent: *
+Disallow: 
+Disallow: /employes
+Disallow: /authentification
+Disallow: /recuperation-mot-passe
+Disallow: /acces-refuse
+
+Sitemap: https://www.lajoiecvac.com/sitemap.xml

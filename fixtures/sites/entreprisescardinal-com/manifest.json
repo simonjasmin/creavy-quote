@@ -1,0 +1,11 @@
+{
+  "slug": "entreprisescardinal-com",
+  "requested_url": "https://www.entreprisescardinal.com/",
+  "final_url": "https://www.entreprisescardinal.com/",
+  "ground_truth": {
+    "platform": "custom",
+    "builder": null,
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

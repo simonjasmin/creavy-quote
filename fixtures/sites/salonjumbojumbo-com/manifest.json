@@ -1,0 +1,11 @@
+{
+  "slug": "salonjumbojumbo-com",
+  "requested_url": "https://salonjumbojumbo.com/",
+  "final_url": "https://salonjumbojumbo.com/",
+  "ground_truth": {
+    "platform": "wordpress",
+    "builder": "unknown",
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

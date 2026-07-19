@@ -1,0 +1,11 @@
+{
+  "slug": "myriamtphotographe-com",
+  "requested_url": "https://www.myriamtphotographe.com/",
+  "final_url": "https://www.myriamtphotographe.com/",
+  "ground_truth": {
+    "platform": "squarespace",
+    "builder": null,
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

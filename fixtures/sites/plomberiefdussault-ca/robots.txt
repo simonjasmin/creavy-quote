@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /wcb/wcb
+Disallow: /*/wcb/wcb
+User-agent: googlebot
+Disallow: /admin/
+Sitemap: https://www.plomberiefdussault.ca/sitemap.xml

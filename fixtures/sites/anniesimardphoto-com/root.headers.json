@@ -1,0 +1,21 @@
+{
+  "requested": "https://anniesimardphoto.com/",
+  "final_url": "https://anniesimardphoto.com/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "accept-ranges": "bytes",
+    "cache-control": "max-age=0, no-cache, no-store, must-revalidate",
+    "connection": "Keep-Alive",
+    "content-encoding": "gzip",
+    "content-length": "39200",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Sat, 18 Jul 2026 23:56:23 GMT",
+    "expires": "Mon, 29 Oct 1923 20:30:00 GMT",
+    "keep-alive": "timeout=15, max=100",
+    "last-modified": "Wed, 08 Jul 2026 19:47:58 GMT",
+    "pragma": "no-cache",
+    "server": "Apache",
+    "vary": "User-Agent,Accept-Encoding"
+  }
+}

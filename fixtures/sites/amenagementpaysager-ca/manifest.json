@@ -1,0 +1,11 @@
+{
+  "slug": "amenagementpaysager-ca",
+  "requested_url": "https://www.amenagementpaysager.ca/",
+  "final_url": "https://www.amenagementpaysager.ca/",
+  "ground_truth": {
+    "platform": "custom",
+    "builder": null,
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

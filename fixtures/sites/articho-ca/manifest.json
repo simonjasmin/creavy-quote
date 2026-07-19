@@ -1,0 +1,11 @@
+{
+  "slug": "articho-ca",
+  "requested_url": "https://articho.ca/",
+  "final_url": "https://articho.ca/",
+  "ground_truth": {
+    "platform": "shopify",
+    "builder": null,
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

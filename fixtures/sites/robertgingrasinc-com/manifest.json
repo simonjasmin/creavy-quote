@@ -1,0 +1,11 @@
+{
+  "slug": "robertgingrasinc-com",
+  "requested_url": "https://www.robertgingrasinc.com/",
+  "final_url": "https://www.robertgingrasinc.com/",
+  "ground_truth": {
+    "platform": "custom",
+    "builder": null,
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

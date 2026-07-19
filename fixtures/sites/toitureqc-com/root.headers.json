@@ -1,0 +1,25 @@
+{
+  "requested": "https://toitureqc.com/",
+  "final_url": "https://toitureqc.com/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "alt-svc": "h3=\":443\"; ma=86400",
+    "cf-cache-status": "DYNAMIC",
+    "cf-ray": "a1d5690a780f2544-YUL",
+    "connection": "keep-alive",
+    "content-encoding": "br",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Sat, 18 Jul 2026 23:54:13 GMT",
+    "host-header": "8441280b0c35cbc1147f8ba998a563a7",
+    "link": "<https://toitureqc.com/wp-json/>; rel=\"https://api.w.org/\", <https://toitureqc.com/wp-json/wp/v2/pages/12>; rel=\"alternate\"; title=\"JSON\"; type=\"application/json\", <https://toitureqc.com/>; rel=shortlink",
+    "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+    "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=%2FmfGEYZ3b36HhiMB%2FwJCqsAwVIwjmJoq%2BAXCWOcGpvsM1NTDdvI6MPSPuPiz2DJclwC02s6F4UeFgqM7Tafq0GJgYXD9pzXH8eHug7OAvmj1jaJ%2B64N04Z0KGutSli7p\"}]}",
+    "server": "cloudflare",
+    "server-timing": "cfCacheStatus;desc=\"DYNAMIC\", cfEdge;dur=7,cfOrigin;dur=146",
+    "transfer-encoding": "chunked",
+    "vary": "Accept-Encoding",
+    "x-httpd-modphp": "1",
+    "x-proxy-cache": "HIT"
+  }
+}

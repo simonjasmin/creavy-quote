@@ -1,0 +1,11 @@
+{
+  "slug": "toitureqc-com",
+  "requested_url": "https://toitureqc.com/",
+  "final_url": "https://toitureqc.com/",
+  "ground_truth": {
+    "platform": "wordpress",
+    "builder": "unknown",
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

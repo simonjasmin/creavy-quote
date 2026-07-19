@@ -1,0 +1,11 @@
+{
+  "slug": "paysagistevilledequebec-ca",
+  "requested_url": "https://paysagistevilledequebec.ca/",
+  "final_url": "https://paysagistevilledequebec.ca/",
+  "ground_truth": {
+    "platform": "wordpress",
+    "builder": "elementor",
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

@@ -1,0 +1,11 @@
+{
+  "slug": "vincentlabonte-com",
+  "requested_url": "https://www.vincentlabonte.com/",
+  "final_url": "https://www.vincentlabonte.com/",
+  "ground_truth": {
+    "platform": "squarespace",
+    "builder": null,
+    "bilingual": false
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

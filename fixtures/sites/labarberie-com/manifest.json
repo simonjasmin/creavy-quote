@@ -1,0 +1,11 @@
+{
+  "slug": "labarberie-com",
+  "requested_url": "https://labarberie.com/",
+  "final_url": "https://labarberie.com/",
+  "ground_truth": {
+    "platform": "wordpress",
+    "builder": "unknown",
+    "bilingual": true
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

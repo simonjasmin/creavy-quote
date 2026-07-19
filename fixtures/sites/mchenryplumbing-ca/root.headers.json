@@ -1,0 +1,25 @@
+{
+  "requested": "https://www.mchenryplumbing.ca/",
+  "final_url": "https://www.mchenryplumbing.ca/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "cache-control": "no-cache, must-revalidate",
+    "content-encoding": "gzip",
+    "content-length": "31236",
+    "content-security-policy": "frame-ancestors 'self'",
+    "content-type": "text/html;charset=utf-8",
+    "d-cache": "from-cache",
+    "d-geo": "US",
+    "date": "Sat, 18 Jul 2026 23:54:12 GMT",
+    "etag": "\"-912868606\"",
+    "expires": "Thu, 01 Jan 1970 00:00:00 GMT",
+    "link": "<https://lirp.cdn-website.com/45e12774/dms3rep/multi/opt/homepage+banner-1920w.jpg>; rel=preload; as=image; fetchpriority=high",
+    "server": "nginx",
+    "speculation-rules": "\"https://static.cdn-website.com/speculations/rules/prerender-1.0.3.json\"",
+    "strict-transport-security": "max-age=31536000; preload",
+    "vary": "user-agent,accept-encoding",
+    "x-content-type-options": "nosniff",
+    "x-frame-options": "SAMEORIGIN"
+  }
+}

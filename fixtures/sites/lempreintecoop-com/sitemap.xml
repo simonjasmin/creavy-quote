@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- This is the parent sitemap linking to additional sitemaps for products, collections and pages as shown below. The sitemap can not be edited manually, but is kept up to date in real time. -->
+  <sitemap>
+    <loc>https://www.lempreintecoop.com/sitemap_agentic_discovery.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.lempreintecoop.com/sitemap_products_1.xml?from=5566423990428&amp;to=9156034953372</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.lempreintecoop.com/sitemap_pages_1.xml?from=65487241372&amp;to=111823880348</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.lempreintecoop.com/sitemap_collections_1.xml?from=215204364444&amp;to=326652362908</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.lempreintecoop.com/sitemap_blogs_1.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.lempreintecoop.com/en/sitemap_products_1.xml?from=5566423990428&amp;to=9156034953372</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.lempreintecoop.com/en/sitemap_pages_1.xml?from=65487241372&amp;to=111823880348</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.lempreintecoop.com/en/sitemap_collections_1.xml?from=215204364444&amp;to=326652362908</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.lempreintecoop.com/en/sitemap_blogs_1.xml</loc>
+  </sitemap>
+</sitemapindex>

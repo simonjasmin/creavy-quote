@@ -1,0 +1,24 @@
+{
+  "requested": "https://www.toituredelacapitale.com/",
+  "final_url": "https://www.toituredelacapitale.com/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "age": "6848849",
+    "alt-svc": "h3=\":443\"; ma=86400",
+    "cache-control": "public, max-age=0, s-maxage=31536000",
+    "connection": "keep-alive",
+    "content-encoding": "br",
+    "content-type": "text/html",
+    "date": "Thu, 30 Apr 2026 17:26:44 GMT",
+    "etag": "W/\"1a694aeade823145a99c6bbae36853af\"",
+    "last-modified": "Thu, 30 Apr 2026 17:24:02 GMT",
+    "server": "AmazonS3",
+    "transfer-encoding": "chunked",
+    "vary": "Accept-Encoding",
+    "via": "1.1 4698560343897987b5ef826f71e0fcb0.cloudfront.net (CloudFront)",
+    "x-amz-cf-id": "23ZsMlOH3UR_kl97WXvPYlh02ktCTbFrz0nNo9Z63_MBY1xnvEUSfg==",
+    "x-amz-cf-pop": "YUL62-P2",
+    "x-cache": "Hit from cloudfront"
+  }
+}

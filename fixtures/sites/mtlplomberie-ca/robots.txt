@@ -1,0 +1,4 @@
+# Sitemap is also available on /sitemap.xml
+Sitemap: https://www.mtlplomberie.ca/sitemap.xml
+User-agent: *
+

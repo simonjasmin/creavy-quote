@@ -1,0 +1,18 @@
+{
+  "requested": "http://toituresmarcelpouliot.com/",
+  "final_url": "http://toituresmarcelpouliot.com/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "connection": "Upgrade, Keep-Alive",
+    "content-encoding": "gzip",
+    "content-length": "4194",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Sat, 18 Jul 2026 23:54:15 GMT",
+    "keep-alive": "timeout=5",
+    "server": "Apache",
+    "upgrade": "h2,h2c",
+    "vary": "Accept-Encoding",
+    "x-powered-by": "PHP/7.4.33"
+  }
+}

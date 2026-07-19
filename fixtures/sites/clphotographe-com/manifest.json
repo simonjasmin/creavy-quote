@@ -1,0 +1,11 @@
+{
+  "slug": "clphotographe-com",
+  "requested_url": "https://www.clphotographe.com/",
+  "final_url": "https://www.clphotographe.com/",
+  "ground_truth": {
+    "platform": "wix",
+    "builder": null,
+    "bilingual": true
+  },
+  "labeled_by": "human (harvest inspection 2026-07-18)"
+}

@@ -1,0 +1,19 @@
+{
+  "requested": "https://coifferieinternationale.com/",
+  "final_url": "https://coifferieinternationale.com/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "connection": "keep-alive",
+    "content-encoding": "gzip",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Sat, 18 Jul 2026 23:56:26 GMT",
+    "link": "<https://coifferieinternationale.com/wp-json/>; rel=\"https://api.w.org/\", <https://coifferieinternationale.com/wp-json/wp/v2/pages/2>; rel=\"alternate\"; title=\"JSON\"; type=\"application/json\", <https://coifferieinternationale.com/>; rel=shortlink",
+    "server": "Apache",
+    "transfer-encoding": "chunked",
+    "x-pingback": "https://coifferieinternationale.com/xmlrpc.php",
+    "x-ws-origin": "available",
+    "x-ws-ratelimit-limit": "1000",
+    "x-ws-ratelimit-remaining": "999"
+  }
+}

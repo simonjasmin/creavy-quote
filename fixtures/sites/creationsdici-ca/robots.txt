@@ -1,0 +1,22 @@
+Sitemap: https://creationsdici.ca/sitemap.xml
+Sitemap: https://creationsdici.ca/sitemap-entreprises.xml
+Sitemap: https://creationsdici.ca/sitemap-produits.xml
+Sitemap: https://creationsdici.ca/sitemap-list-produits.xml
+Sitemap: https://creationsdici.ca/sitemap-services.xml
+Sitemap: https://creationsdici.ca/sitemap-produits.xml
+Sitemap: https://creationsdici.ca/sitemap-liste-services.xml
+
+
+
+
+
+User-agent: *
+
+Disallow: /php/
+Disallow: /php
+Disallow: /admcl/
+Disallow: /admcl
+
+
+
+

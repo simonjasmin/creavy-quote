@@ -1,0 +1,28 @@
+{
+  "requested": "https://xavierpaysagiste.com/",
+  "final_url": "https://xavierpaysagiste.com/",
+  "status": 200,
+  "truncated": false,
+  "headers": {
+    "alt-svc": "h3=\":443\"; ma=86400",
+    "cache-control": "max-age=0",
+    "cf-cache-status": "DYNAMIC",
+    "cf-edge-cache": "cache,platform=wordpress",
+    "cf-ray": "a1d5692cfec7a2ac-YUL",
+    "connection": "keep-alive",
+    "content-encoding": "br",
+    "content-type": "text/html; charset=UTF-8",
+    "date": "Sat, 18 Jul 2026 23:54:20 GMT",
+    "expires": "Sat, 18 Jul 2026 23:54:19 GMT",
+    "link": "<https://xavierpaysagiste.com/wp-json/>; rel=\"https://api.w.org/\", <https://xavierpaysagiste.com/wp-json/wp/v2/pages/1287>; rel=\"alternate\"; title=\"JSON\"; type=\"application/json\", <https://xavierpaysagiste.com/>; rel=shortlink",
+    "nel": "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}",
+    "report-to": "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s=nKtMiUmVDTihRcuyPDWNN%2FfgrzX1zROv3pNumxx8nHdyfhQNDMefsw07HyenENkPQPK4tkS8HEzN%2Fy9lbUFFdNWuDMMKpb09WJ7AlRXcEGenaYu6kXDIKQQ0I%2Bvls2tpNaaBvtb8SA%3D%3D\"}]}",
+    "server": "cloudflare",
+    "server-timing": "cfCacheStatus;desc=\"DYNAMIC\", cfEdge;dur=12,cfOrigin;dur=1195",
+    "transfer-encoding": "chunked",
+    "vary": "Accept-Encoding",
+    "x-content-type-options": "nosniff",
+    "x-powered-by": "PHP/8.3.31",
+    "x-ua-compatible": "IE=edge"
+  }
+}
