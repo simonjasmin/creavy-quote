@@ -44,7 +44,7 @@ export function classifyLoc(loc: string, hint?: LocClass): LocClass {
   try { const u = new URL(loc); path = u.pathname + u.search; } catch {}
   if (/\/wp-content\/uploads\//i.test(path) || /[?&]attachment_id=/i.test(path)) return "media"; // S-19
   if (hint) return hint;
-  if (/\/(?:category|categorie|tag|author|auteur|product-category|topic)s?\//i.test(path)) return "archive"; // S-17
+  if (/\/(?:category|categorie|tag|author|auteur|product-category|topic)s?\//i.test(path) || /\/(?:blog\/)?page\/\d+/i.test(path)) return "archive"; // S-17, pagination
   if (/\/\d{4}\/\d{2}\/[^/]+/.test(path)) return "blog"; // dated post permalink
   if (/\/\d{4}(?:\/\d{2})?\/?$/.test(path)) return "archive"; // bare date archive
   return "core";
