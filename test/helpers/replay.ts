@@ -73,6 +73,7 @@ export class FakeTransport implements Transport {
     this.inflight++; this.maxInflightSeen = Math.max(this.maxInflightSeen, this.inflight);
     this.perHostInflight[host] = (this.perHostInflight[host] || 0) + 1;
     this.perHostMaxSeen[host] = Math.max(this.perHostMaxSeen[host] || 0, this.perHostInflight[host]);
+    await Promise.resolve(); // yield so concurrent fetches genuinely overlap (D-34 measurement)
     try {
       while (true) {
         this.requests.push(cur);
