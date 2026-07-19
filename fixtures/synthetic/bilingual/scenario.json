@@ -1,0 +1,10 @@
+{
+  "https://bili-golden.example/": { "status": 200, "body": "<html><head><link rel=\"stylesheet\" href=\"/wp-content/themes/x/style.css\"><link href=\"/wp-content/plugins/elementor/frontend.min.js\"></head><body><a href=\"/fr/services\">s</a><a href=\"/en/services\">s</a></body></html>" },
+  "https://www.bili-golden.example/": { "status": 404 },
+  "https://bili-golden.example/robots.txt": { "status": 200, "body": "User-agent: *\nDisallow:\nSitemap: https://bili-golden.example/sitemap.xml" },
+  "https://bili-golden.example/sitemap.xml": { "status": 200, "body": "<urlset><url><loc>https://bili-golden.example/fr/services</loc></url><url><loc>https://bili-golden.example/en/services</loc></url><url><loc>https://bili-golden.example/fr/apropos</loc></url><url><loc>https://bili-golden.example/en/apropos</loc></url></urlset>" },
+  "https://bili-golden.example/fr/services": { "status": 200, "body": "ok" },
+  "https://bili-golden.example/en/services": { "status": 200, "body": "ok" },
+  "https://bili-golden.example/fr/apropos": { "status": 200, "body": "ok" },
+  "https://bili-golden.example/en/apropos": { "status": 200, "body": "ok" }
+}
