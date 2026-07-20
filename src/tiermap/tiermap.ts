@@ -2,6 +2,10 @@
 // config — NO model call (that's stage 2). Cheapest valid bundle (27.3); Pro only
 // when it is actually the cheapest way to cover the needs. Supersedes SPEC §8's
 // pseudocode. Invariant #1 holds: this computes the price; it never asks a model.
+//
+// #30.5 — `reasons` are STABLE snake_case codes (append-only, never renamed); the
+// human prose lives in `reason_text` and NEVER crosses the API.
+// #30.6 — `suggested_addons: [{id, amount}]`, amounts read from config at emit time.
 
 import type { PricingConfig } from "../pricing/loadPricingConfig.ts";
 
@@ -14,10 +18,19 @@ export type TierMapInput = {
   partial: boolean;
   review_flags: string[];
   components?: { booking?: boolean; listings?: boolean; ecommerce?: boolean };
+  has_brand_assets?: boolean; // answer signal (addon suggestion only, #27.4/30.6)
 };
 
 export type TierBundle = { tier: string; addons: string[]; modifiers: string[] };
-export type TierResult = { bundle: TierBundle | null; indicative_total: number | null; review_required: boolean; reasons: string[] };
+export type Suggestion = { id: string; amount: number };
+export type TierResult = {
+  bundle: TierBundle | null;
+  indicative_total: number | null;
+  review_required: boolean;
+  reasons: string[]; // #30.5 stable codes (append-only)
+  reason_text: string[]; // internal prose — never returned by the API
+  suggested_addons: Suggestion[]; // #30.6 {id, amount cents}
+};
 
 const flatCents = (config: PricingConfig, key: string): number => {
   const p = config.addons[key]?.price;
@@ -26,7 +39,9 @@ const flatCents = (config: PricingConfig, key: string): number => {
 
 export function mapTier(input: TierMapInput, config: PricingConfig): TierResult {
   const tm = config.tiermap;
-  const reasons: string[] = [];
+  const codes: string[] = [];
+  const text: string[] = [];
+  const say = (code: string, prose: string) => { codes.push(code); text.push(prose); };
   const flags = new Set(input.review_flags);
   const pages = input.core_pages;
 
@@ -36,59 +51,60 @@ export function mapTier(input: TierMapInput, config: PricingConfig): TierResult 
   const ecommerce = !!input.components?.ecommerce || input.detected_platform === "shopify"; // 27.4
   const blogHeavy = input.blog_posts >= tm.blog_seo_threshold; // 27.5
 
+  // suggested_addons (30.6) — independent of tier; only when a bundle is offered.
+  const suggestions = (): Suggestion[] => {
+    const out: Suggestion[] = [];
+    if (!blogHeavy && input.blog_posts > 0) out.push({ id: "seo_migration", amount: flatCents(config, "seo_migration") }); // 27.5 below-threshold
+    if (input.has_brand_assets === false) out.push({ id: "logo_refresh", amount: flatCents(config, "logo_refresh") }); // 30.6
+    return out;
+  };
+  const blocked = (code: string, prose: string): TierResult => {
+    say(code, prose);
+    return { bundle: null, indicative_total: null, review_required: true, reasons: codes, reason_text: text, suggested_addons: [] };
+  };
+
   // ---- 27.6 hard blockers → no auto-bundle, email-capture ----
-  if (flags.has("no_owned_site") || flags.has("parked") || flags.has("no_html")) {
-    reasons.push("greenfield — nothing to price; skip stage-2");
-    return { bundle: null, indicative_total: null, review_required: true, reasons };
-  }
-  if (pages === "30+") { reasons.push("30+ pages — out-of-scope path, book a call"); return { bundle: null, indicative_total: null, review_required: true, reasons }; }
-  if (typeof pages === "number" && pages >= tm.review_pages) { reasons.push(`${pages} core pages ≥ ${tm.review_pages} — unusual shape, a human decides`); return { bundle: null, indicative_total: null, review_required: true, reasons }; }
+  if (flags.has("no_owned_site") || flags.has("parked") || flags.has("no_html")) return blocked("greenfield_no_price", "greenfield — nothing to price; skip stage-2");
+  if (pages === "30+") return blocked("out_of_scope_30_plus", "30+ pages — out-of-scope path, book a call");
+  if (typeof pages === "number" && pages >= tm.review_pages) return blocked("review_unusual_size", `${pages} core pages ≥ ${tm.review_pages} — unusual shape, a human decides`);
 
   const n = typeof pages === "number" ? Math.max(1, pages) : 1;
 
   // ---- 27.6 soft review triggers (bundle still computed for the founder panel) ----
   let review = false;
-  const soft = (cond: boolean, why: string) => { if (cond) { review = true; reasons.push(why); } };
-  soft(flags.has("bilingual_suspected"), "bilingual suspected — human confirms scope (never silently priced)");
-  soft(ecommerce, "e-commerce → sur mesure (human_quote, #21)");
-  soft(input.needs_browser, "needs a closer look (JS-heavy)");
-  soft(flags.has("robots_blocked"), "robots blocked — limited view");
-  soft(input.partial, "partial scan");
-  soft(flags.has("anti_bot"), "anti-bot challenge");
+  const soft = (cond: boolean, code: string, prose: string) => { if (cond) { review = true; say(code, prose); } };
+  soft(flags.has("bilingual_suspected"), "bilingual_suspected_review", "bilingual suspected — human confirms scope (never silently priced)");
+  soft(ecommerce, "ecommerce_human_quote", "e-commerce → sur mesure (human_quote, #21)");
+  soft(input.needs_browser, "needs_closer_look", "needs a closer look (JS-heavy)");
+  soft(flags.has("robots_blocked"), "robots_blocked", "robots blocked — limited view");
+  soft(input.partial, "partial_scan", "partial scan");
+  soft(flags.has("anti_bot"), "anti_bot_challenge", "anti-bot challenge");
 
   // ---- 27.3 cheapest valid bundle ----
   const extra = flatCents(config, "extra_page"), biAdd = flatCents(config, "bilingual"), bkAdd = flatCents(config, "booking");
   const proInc = new Set(tm.pro_includes);
   const cands: { tier: string; total: number; addons: string[] }[] = [];
-
-  // Présence — 1-2 simple pages, no heavy component
   if (n <= tm.presence_max_pages && !bilingual && !booking && !listings)
     cands.push({ tier: "presence", total: config.tiers.presence.price_cents, addons: [] });
-  // Standard — bilingual/booking as add-ons, extra pages stacked; no listings add-on exists
   if (n <= tm.pro_base_pages && !listings) {
     const ep = Math.max(0, n - tm.standard_base_pages);
-    if (ep <= tm.extra_page_cap) {
-      const addons = [...Array(ep).fill("extra_page"), ...(bilingual ? ["bilingual"] : []), ...(booking ? ["booking"] : [])];
-      cands.push({ tier: "standard", total: config.tiers.standard.price_cents + ep * extra + (bilingual ? biAdd : 0) + (booking ? bkAdd : 0), addons });
-    }
+    if (ep <= tm.extra_page_cap) cands.push({ tier: "standard", total: config.tiers.standard.price_cents + ep * extra + (bilingual ? biAdd : 0) + (booking ? bkAdd : 0), addons: [...Array(ep).fill("extra_page"), ...(bilingual ? ["bilingual"] : []), ...(booking ? ["booking"] : [])] });
   }
-  // Pro — includes bilingual/booking/listings flat
-  if (n <= tm.pro_base_pages) {
-    const addons = [...(bilingual && !proInc.has("bilingual") ? ["bilingual"] : []), ...(booking && !proInc.has("booking") ? ["booking"] : [])];
-    cands.push({ tier: "pro", total: config.tiers.pro.price_cents, addons });
-  }
+  if (n <= tm.pro_base_pages)
+    cands.push({ tier: "pro", total: config.tiers.pro.price_cents, addons: [...(bilingual && !proInc.has("bilingual") ? ["bilingual"] : []), ...(booking && !proInc.has("booking") ? ["booking"] : [])] });
 
-  if (cands.length === 0) { reasons.push("no clean bundle covers this shape — review"); return { bundle: null, indicative_total: null, review_required: true, reasons }; }
+  if (cands.length === 0) return blocked("review_no_clean_bundle", "no clean bundle covers this shape — review");
   cands.sort((a, b) => a.total - b.total || a.addons.length - b.addons.length); // cheapest; tie → simpler
   const best = cands[0];
-  reasons.push(`cheapest bundle: ${best.tier} (${(best.total / 100).toFixed(0)} CAD)${best.addons.length ? " + " + best.addons.join(", ") : ""}`);
-  if (best.tier === "pro" && bilingual) reasons.push("bilingual included in Pro");
+  say("cheapest_bundle", `cheapest bundle: ${best.tier} (${(best.total / 100).toFixed(0)} CAD)${best.addons.length ? " + " + best.addons.join(", ") : ""}`);
+  if (listings && best.tier === "pro") say("listings_needs_pro", "listings has no Standard add-on — only Pro covers it");
+  if (bilingual) best.tier === "pro" ? say("bilingual_included_pro", "bilingual included in Pro") : say("bilingual_addon", "bilingual priced as an add-on");
 
   const addons = [...best.addons];
   let total = best.total;
-  if (blogHeavy) { addons.push("seo_migration"); total += flatCents(config, "seo_migration"); reasons.push("blog ≥ threshold: SEO migration audit included — rankings worth preserving"); }
-  else if (input.blog_posts > 0) reasons.push(`${input.blog_posts} blog posts — SEO migration suggested (below the ${tm.blog_seo_threshold} auto-threshold)`);
+  if (blogHeavy) { addons.push("seo_migration"); total += flatCents(config, "seo_migration"); say("blog_migration_included", "blog ≥ threshold: SEO migration audit included — rankings worth preserving"); }
+  else if (input.blog_posts > 0) say("blog_migration_suggested", `${input.blog_posts} blog posts — SEO migration suggested (below the ${tm.blog_seo_threshold} auto-threshold)`);
   if (ecommerce) addons.push("ecommerce"); // human_quote line; contributes nothing to indicative_total
 
-  return { bundle: { tier: best.tier, addons, modifiers: [] }, indicative_total: total, review_required: review, reasons };
+  return { bundle: { tier: best.tier, addons, modifiers: [] }, indicative_total: total, review_required: review, reasons: codes, reason_text: text, suggested_addons: suggestions() };
 }

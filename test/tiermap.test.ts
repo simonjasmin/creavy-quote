@@ -7,6 +7,7 @@ import { pricingConfig as P } from "../src/pricing/index.ts";
 const PRESENCE = P.tiers.presence.price_cents, STANDARD = P.tiers.standard.price_cents, PRO = P.tiers.pro.price_cents;
 const EXTRA = (P.addons.extra_page.price as any).cents, BILINGUAL = (P.addons.bilingual.price as any).cents;
 const BOOKING = (P.addons.booking.price as any).cents, SEO = (P.addons.seo_migration.price as any).cents;
+const LOGO = (P.addons.logo_refresh.price as any).cents;
 
 const base = (o: Partial<TierMapInput> = {}): TierMapInput => ({ core_pages: 3, blog_posts: 0, bilingual_mirror: false, detected_platform: "wordpress", needs_browser: false, partial: false, review_flags: [], components: {}, ...o });
 const run = (o: Partial<TierMapInput> = {}) => mapTier(base(o), P);
@@ -31,8 +32,10 @@ test("T-14 e-commerce (Shopify) → review + ecommerce line", () => { const r = 
 test("T-15 bilingual+booking+listings (6p) → Pro (all included)", () => { const r = run({ core_pages: 6, bilingual_mirror: true, components: { booking: true, listings: true } }); assert.equal(r.bundle?.tier, "pro"); assert.equal(r.indicative_total, PRO); });
 
 // ---- 27.5 blog rule ----
-test("T-16 blog ≥ 5 → SEO migration auto-included", () => { const r = run({ core_pages: 3, blog_posts: 5 }); assert.ok(r.bundle?.addons.includes("seo_migration")); assert.equal(r.indicative_total, STANDARD + SEO); assert.ok(r.reasons.some((x) => /rankings worth preserving/.test(x))); });
-test("T-17 blog < 5 → not included, suggested in reasons", () => { const r = run({ core_pages: 3, blog_posts: 4 }); assert.ok(!r.bundle?.addons.includes("seo_migration")); assert.ok(r.reasons.some((x) => /suggested/.test(x))); });
+test("T-16 blog ≥ 5 → SEO migration auto-included (code)", () => { const r = run({ core_pages: 3, blog_posts: 5 }); assert.ok(r.bundle?.addons.includes("seo_migration")); assert.equal(r.indicative_total, STANDARD + SEO); assert.ok(r.reasons.includes("blog_migration_included")); });
+test("T-17 blog < 5 → suggestion emitted with price (30.6) + code (30.5)", () => { const r = run({ core_pages: 3, blog_posts: 4 }); assert.ok(!r.bundle?.addons.includes("seo_migration")); assert.ok(r.reasons.includes("blog_migration_suggested")); assert.deepEqual(r.suggested_addons.find((s) => s.id === "seo_migration"), { id: "seo_migration", amount: SEO }); });
+test("T-27 has_brand_assets:false → logo_refresh suggestion with config price (30.6)", () => { const r = run({ core_pages: 3, has_brand_assets: false }); assert.deepEqual(r.suggested_addons.find((s) => s.id === "logo_refresh"), { id: "logo_refresh", amount: LOGO }); });
+test("T-28 reasons are stable snake_case codes; prose stays in reason_text (30.5)", () => { const r = run({ core_pages: 3, bilingual_mirror: true }); assert.ok(r.reasons.every((c) => /^[a-z0-9_]+$/.test(c)), "codes are snake_case"); assert.ok(r.reasons.includes("cheapest_bundle") && r.reasons.includes("bilingual_addon")); assert.ok(r.reason_text.length === r.reasons.length && r.reason_text.some((t) => /add-on/.test(t)), "prose parallels codes"); });
 
 // ---- 27.6 blocking conditions ----
 test("T-18 needs_browser → review", () => assert.equal(run({ needs_browser: true }).review_required, true));

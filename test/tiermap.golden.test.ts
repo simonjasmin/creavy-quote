@@ -28,7 +28,7 @@ for (const [slug, exp] of Object.entries(EXPECT)) {
     const res = JSON.parse(readFileSync(path, "utf8"));
     const t = mapTier({ core_pages: res.core_pages, blog_posts: res.blog_posts, bilingual_mirror: res.bilingual_mirror, detected_platform: res.detected_platform, needs_browser: res.needs_browser, partial: res.partial, review_flags: res.review_flags }, P);
     assert.equal(t.review_required, exp.review, `${slug} review_required`);
-    if (exp.tier) { assert.equal(t.bundle?.tier, exp.tier); assert.equal(t.indicative_total, exp.total); }
+    if (exp.tier) { assert.equal(t.bundle?.tier, exp.tier); assert.equal(t.indicative_total, exp.total); assert.deepEqual(t.suggested_addons, [], `${slug}: no suggestions (blog 0, no brand-asset signal)`); assert.ok(t.reasons.includes("cheapest_bundle"), `${slug}: stable code`); }
     else assert.equal(t.bundle, null, `${slug} expected no bundle`);
   });
 }
