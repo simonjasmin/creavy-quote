@@ -67,10 +67,10 @@ test("A5 model throws → model_error (graceful, price still renders elsewhere)"
   assert.equal((r as any).reason, "model_error");
 });
 
-test("assess with no model configured and no id → model_error (pending gate)", async () => {
+test("assess falls back to the config model when no modelId is given (post-gate: opus-4-8)", async () => {
   const model = scriptedModel(transcript(PROSE, validMeta()));
-  const r = await assess(fakeScan(), { lang: "fr", model }); // modelId omitted, config.model is null
-  assert.equal((r as any).reason, "model_error");
+  const r = await assess(fakeScan(), { lang: "fr", model }); // modelId omitted → uses assessConfig.model
+  assert.ok(isAssessment(r), "config model default drives the call");
 });
 
 // ---- Firewall (money-touching) — injection is inert by construction ----
@@ -117,6 +117,19 @@ test("FW-05 Assessment carries no price/tier/total field (mapper owns the number
   assert.ok(isAssessment(r));
   for (const k of ["price", "tier", "total", "indicative_total", "amount", "cents"]) {
     assert.ok(!(k in (r as any)), `Assessment must not carry ${k}`);
+  }
+});
+
+// ---- soft length guard (#32 gate addition) ----
+test("length_over_cap — over-long prose logs an internal note, never rejects", async () => {
+  const longProse = Array.from({ length: 130 }, (_, i) => `mot${i}`).join(" ") + ".";
+  const model = scriptedModel(transcript(longProse, validMeta({ review_note: "base note" })));
+  const r = await assess(fakeScan(), { lang: "fr", model, modelId: "test" });
+  assert.ok(isAssessment(r), "output is NOT rejected");
+  if (isAssessment(r)) {
+    assert.match(r.review_note, /length_over_cap/, "internal note logged");
+    assert.equal(r.flagged_for_review, true, "flagged for a human look");
+    assert.equal(r.assessment, longProse, "prose preserved verbatim");
   }
 });
 

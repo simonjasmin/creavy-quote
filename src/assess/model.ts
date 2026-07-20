@@ -10,7 +10,7 @@ export type AssessRequest = {
   system: string;
   user: string; // the untrusted-data payload (facts + delimited page content)
   max_tokens: number;
-  temperature: number;
+  temperature?: number; // omitted for models that deprecate it (e.g. opus-4-8); retry layer covers drift
 };
 
 export interface AssessmentModel {

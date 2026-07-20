@@ -74,16 +74,19 @@ function parseTranscript(raw: string, lang: AssessLang): AssessResult {
   if (typeof meta.review_note !== "string") return { ok: false, reason: "invalid_output", detail: "review_note not a string" };
 
   const factors = [...new Set(meta.complexity_factors as ComplexityFactor[])];
-  // Soft voice signal — over-long prose isn't a hard failure, but nudge a human look.
-  const overLong = wordCount(prose) > assessConfig.prose_max_words * 1.5;
+  // Soft length guard (#32 gate addition): prose over the cap LOGS an internal
+  // `length_over_cap` note and flags for a human look — it NEVER rejects the output.
+  const words = wordCount(prose);
+  const over = words > assessConfig.prose_max_words;
+  const review_note = over ? `${meta.review_note} [length_over_cap: ${words}w > ${assessConfig.prose_max_words}]`.trim() : meta.review_note;
   return {
     ok: true,
     complexity: meta.complexity,
     complexity_factors: factors,
     assessment: prose,
-    review_note: meta.review_note,
+    review_note,
     confidence: meta.confidence,
-    flagged_for_review: meta.flagged_for_review || overLong,
+    flagged_for_review: meta.flagged_for_review || over,
     lang,
   };
 }
@@ -105,7 +108,7 @@ export async function assess(scan: ScanResult, opts: AssessOpts): Promise<Assess
   emitter.emit("assessment_started", { lang: opts.lang });
   let raw = "";
   try {
-    for await (const chunk of opts.model.stream({ model: modelId, system, user, max_tokens: assessConfig.max_tokens, temperature: assessConfig.temperature })) {
+    for await (const chunk of opts.model.stream({ model: modelId, system, user, max_tokens: assessConfig.max_tokens })) {
       raw += chunk;
       forward(chunk);
     }

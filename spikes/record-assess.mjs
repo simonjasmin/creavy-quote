@@ -31,7 +31,7 @@ for (const g of goldens) {
   for (const lang of g.langs) {
     const client = anthropicModel(key);
     let transcript = "";
-    for await (const chunk of client.stream({ model, system: buildSystem(lang), user: buildUser(g.scan), max_tokens: assessConfig.max_tokens, temperature: assessConfig.temperature })) transcript += chunk;
+    for await (const chunk of client.stream({ model, system: buildSystem(lang), user: buildUser(g.scan), max_tokens: assessConfig.max_tokens })) transcript += chunk;
     // validate by replaying through the real pipeline
     const r = await assess(g.scan, { lang, model: replayModel(transcript), modelId: model });
     const rec = { slug: g.slug, lang, model, transcript, provisional: false };
