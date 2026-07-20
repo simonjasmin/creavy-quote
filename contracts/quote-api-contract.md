@@ -1,4 +1,4 @@
-# Creavy Quote API — contract v0.4
+# Creavy Quote API — contract v0.5
 
 > **Canonical home:** this file (`contracts/quote-api-contract.md` in `creavy-quote`).
 > creavy-site keeps a **synced copy** and never reads `SPEC.md`. Machine enums only;
@@ -12,7 +12,11 @@
 
 ## 1. Header / traceability
 
-- **Version:** 0.4 (2026-07-20). **Status:** draft for creavy-site E1; indicative only.
+- **Version:** 0.5 (2026-07-20). **Status:** draft for creavy-site E1; indicative only.
+- **Changelog v0.4 → v0.5 (#33 CORS, ratified):**
+  - §7 rewritten to **#33 as implemented**: the exact production origin **plus** the anchored,
+    **https-only** deploy-preview pattern `^https://[a-z0-9-]+--creavy\.netlify\.app$` (live —
+    no mock adapter). **Supersedes #30.4.** No other changes. Site re-syncs its copy.
 - **Changelog v0.3 → v0.4 (amendment #31, consumer-driven « Détails de l'analyse » panel):**
   - New optional `analysis_details: [{item, value}]` on **completed** quotes (§4d-bis) —
     a **narrow whitelisted exception** to stored-never-returned (#31). Whitelist:
@@ -292,12 +296,19 @@ ratified outcomes. Every terminal state is renderable — no dead ends (Phase 0 
   last `pending` as a graceful "still working / book a call" — never a hang.
 - Stage 1½ price is deterministic and fast once the scan completes; no second poll phase.
 
-## 7. CORS
+## 7. CORS (#33 — ratified, supersedes #30.4)
 
-- **Production:** `Access-Control-Allow-Origin` = the **single production origin** from
-  env (`ALLOWED_ORIGIN`, the Netlify domain). [#25A placement rule; Phase-2 env]
-- **Deploy previews (30.4, ratified):** **production origin only**; deploy previews use
-  the site's **mock adapter** (no live cross-origin).
+- **Production:** `Access-Control-Allow-Origin` = the **exact production origin** from env
+  (`ALLOWED_ORIGIN`, the Netlify domain) — exact string match. [#33; #25A placement]
+- **Deploy previews (#33):** origins matching the anchored, **https-only** pattern
+  `^https://[a-z0-9-]+--creavy\.netlify\.app$` are allowed **live** — Netlify per-deploy
+  previews (`deploy-preview-N--creavy.netlify.app`) hit the real staging service; **no mock
+  adapter**. Safe because the `*--creavy.netlify.app` namespace is Netlify-controlled — no
+  third party can mint one. Fully anchored (start **and** end): lookalikes such as
+  `https://…creavy.netlify.app.evil.com` are rejected.
+- **Config-driven:** production origin from `ALLOWED_ORIGIN`; the preview pattern is a
+  documented constant. Any other origin → **no `Access-Control-Allow-Origin` header** (the
+  browser blocks it).
 
 ## 8. Not in this contract
 
