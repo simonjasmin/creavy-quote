@@ -7,6 +7,11 @@
     "node": ">=22.6"
   },
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "migrate": "node --env-file=.env src/service/migrate.ts",
+    "start": "node --env-file-if-exists=.env src/service/index.ts"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
   }
 }

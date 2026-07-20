@@ -478,6 +478,28 @@ adapter / production origin only"). Safe because the `*--creavy.netlify.app` nam
 controlled by the Netlify site — no third party can mint one. Recorded with the reasoning so
 it isn't re-litigated at E2.
 
+### 2.12 Runtime-dependency allowlist — amendment #34 (founder-ratified 2026-07-20)
+
+**34. The service's runtime dependency allowlist is `pg` ONLY.** Postgres needs a driver;
+nothing else does. Phase 2a deliberately ends the zero-dependency run *here* and nowhere
+further:
+
+- **`pg`** — the Postgres client. The one runtime dependency.
+- **Everything else stays native:** `node:http` for the server (three routes, JSON only, a
+  hand-rolled router — no framework); `fetch` for Turnstile siteverify; `node:crypto` for
+  ids; a plain `Map` for the in-memory sliding-window rate limiter; numbered `.sql` files +
+  a ~40-line runner for migrations (no ORM, no migration library).
+
+**Rule:** any dependency beyond `pg` **stops the run** — surface it with the case for it and
+wait for ratification. The zero-dep discipline (native test runner, type-stripping, injected
+Transport/Clock) is the moat that keeps the service auditable; `pg` is the single, necessary
+exception because a hand-rolled wire protocol is not a good use of the budget.
+
+**Config discipline (extends #22):** the loader hard-fail now covers **service** config — a
+missing required env var makes the service **refuse to boot** with a named error, never start
+half-configured. No `ANTHROPIC_API_KEY` in this service or any of its environments — 2a makes
+**no model call** (assess() stays library-only; the model enters in 2b).
+
 ---
 
 ## 3. What this service is (unchanged)
