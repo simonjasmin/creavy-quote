@@ -15,7 +15,7 @@ const EXPECT: Record<string, { review: boolean; tier?: string; total?: number; w
   labarberie: { review: true, why: "30+ core (bilingual, but page count blocks first)" },
   mchenryplumbing: { review: true, why: "30+ core" },
   lasouche: { review: true, why: "12 core ≥ 7" },
-  mtlplomberie: { review: true, why: "18 core ≥ 7" },
+  mtlplomberie: { review: true, why: "10 core ≥ 7 (was 18 — RUNG 1 over-count, corrected)" },
   paysagesgenest: { review: true, why: "16 core ≥ 7" },
   pierrehamelin: { review: true, why: "27 core ≥ 7" },
   protectoit: { review: true, why: "27 core ≥ 7" },

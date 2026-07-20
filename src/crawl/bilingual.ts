@@ -115,13 +115,23 @@ function mono(urls: string[], suspected: boolean): BilingualResolved {
 export function resolveBilingual(coreUrls: string[], opts: { rootLang?: Lang; hreflangGroups?: HreflangGroup[]; sampledLangByUrl?: Record<string, string>; thresholds: BilingualThresholds }): BilingualResolved {
   const deduped = dedupByIdentity(coreUrls);
 
-  // RUNG 1 — hreflang (authoritative). fr+en alternate groups pair exactly, translated slugs and all.
+  // RUNG 1 — hreflang (authoritative). fr+en alternate groups pair exactly, translated slugs
+  // and all. PRICING-CRITICAL: per-URL hreflang (Duda/WPML) emits the SAME pair from both the
+  // fr and the en <url> block, so `groups` holds duplicate groups per pair — dedup the reps by
+  // language-agnostic key (one rep per mirrored pair, matching pairBilingual's line above), or
+  // a small bilingual site's core count doubles and mis-tiers. Bug found 2026-07-20, #28 note.
   const groups = (opts.hreflangGroups || []).filter((g) => { const ls = new Set(g.map((a) => a.lang)); return ls.has("fr") && ls.has("en"); });
   if (groups.length >= 1) {
     const inGroup = new Set<string>();
-    for (const g of groups) for (const a of g) inGroup.add(normId(a.url));
+    const repByKey = new Map<string, string>(); // pair-key → one representative url
+    const langsSeen = new Set<string>();
+    for (const g of groups) {
+      for (const a of g) { inGroup.add(normId(a.url)); if (a.lang === "fr" || a.lang === "en") langsSeen.add(a.lang); }
+      const key = langKey(g[0].url).key;
+      if (!repByKey.has(key)) repByKey.set(key, g[0].url);
+    }
     const unpaired = deduped.filter((u) => !inGroup.has(normId(u)));
-    return { core_urls: [...groups.map((g) => g[0].url), ...unpaired], languages: ["en", "fr"], bilingual_mirror: true, suspected: false, pairing_evidence: "hreflang" };
+    return { core_urls: [...repByKey.values(), ...unpaired], languages: [...langsSeen].sort(), bilingual_mirror: true, suspected: false, pairing_evidence: "hreflang" };
   }
 
   // RUNG 2 — path correspondence (labarberie's rung).

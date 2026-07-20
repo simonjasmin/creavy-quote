@@ -85,3 +85,30 @@ test("extractHeadHreflang pulls fr/en, ignores x-default", () => {
   const g = extractHeadHreflang(html);
   assert.equal(g.length, 2); assert.deepEqual(g.map((x) => x.lang).sort(), ["en", "fr"]);
 });
+
+// ---- PRICED-PATH counting: an assessable-scale mirror must count ONE per pair on every
+// rung (bug found 2026-07-20: RUNG 1 double-counted per-URL hreflang; #28 note). The three
+// real bilingual goldens are all 30+, so this cell was never exercised on a priced result.
+test("BC-01 RUNG 1 — per-URL hreflang (Duda/WPML) 2-pair mirror → core 2 (regression)", () => {
+  const grpHome = [{ lang: "fr", url: O + "/" }, { lang: "en", url: O + "/en/" }];
+  const grpServ = [{ lang: "fr", url: O + "/services" }, { lang: "en", url: O + "/en/services" }];
+  const groups = [grpHome, grpHome, grpServ, grpServ]; // fr-block AND en-block each emit the pair
+  const urls = [O + "/", O + "/en/", O + "/services", O + "/en/services"];
+  const r = resolveBilingual(urls, { rootLang: "fr", hreflangGroups: groups as any, thresholds: TH });
+  assert.equal(r.pairing_evidence, "hreflang");
+  assert.equal(r.core_urls.length, 2, "one core per mirrored pair, not per hreflang group");
+  assert.deepEqual(r.languages, ["en", "fr"]); // derived from the actual groups
+});
+test("BC-02 RUNG 2 — path-mirror 2-pair → core 2", () => {
+  const urls = [O + "/", O + "/services", O + "/en", O + "/en/services"];
+  const r = resolveBilingual(urls, { rootLang: "fr", thresholds: TH });
+  assert.equal(r.pairing_evidence, "path");
+  assert.equal(r.core_urls.length, 2, "path mirror counts one per pair");
+});
+test("BC-03 RUNG 3 — twin translated-slug trees (3+3) → larger-tree count 3", () => {
+  const fr = [O + "/", O + "/accueil", O + "/services"];
+  const en = [O + "/en", O + "/en/home", O + "/en/plumbing"]; // translated slugs → tree rung, not path
+  const r = resolveBilingual([...fr, ...en], { rootLang: "fr", thresholds: TH });
+  assert.equal(r.pairing_evidence, "tree");
+  assert.equal(r.core_urls.length, 3, "count the larger tree, never the sum (#18)");
+});
