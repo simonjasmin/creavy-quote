@@ -8,6 +8,7 @@ import { pairBilingual, dedupByIdentity, type HreflangGroup } from "./bilingual.
 import { type ScanEventEmitter, NOOP_EMITTER } from "./events.ts";
 import type { PoliteScheduler } from "./scheduler.ts";
 import { detectLang, visibleText } from "./langDetect.ts";
+import { extractPageContent, type PageContent } from "./pageContent.ts";
 import { normalize } from "../url/normalize.ts";
 
 const normId = (u: string): string => { const n = normalize(u); return n.ok ? n.identity : u; };
@@ -83,6 +84,7 @@ export type SitemapCrawl = {
   alternates: HreflangGroup[]; // #28 hreflang groups (sitemap xhtml:link)
   sampledLangs: Record<string, string>; // #28 content-detected lang of sampled pages (normId → fr|en|unknown)
   coreRaw: string[]; // #28 deduped core BEFORE bilingual collapse (scan runs the full ladder on this)
+  sampledContent: PageContent[]; // #32 A1 Option-C content of every sampled page (soft-404s excluded)
 };
 
 async function sequentialFetch(transport: Transport, urls: string[]) {
@@ -98,7 +100,7 @@ async function fetchParse(transport: Transport, url: string): Promise<ParsedSite
 }
 
 export async function crawlSitemaps(transport: Transport, origin: string, robotsSitemaps: string[] = [], emitter: ScanEventEmitter = NOOP_EMITTER, rootLang?: "fr" | "en", scheduler?: PoliteScheduler): Promise<SitemapCrawl> {
-  const empty: SitemapCrawl = { found: false, core: [], blog: 0, excluded: { archives: 0, media: 0, external: 0, soft_404: 0 }, languages: [], bilingual_mirror: false, review_flags: [], partial: false, overflow: false, alternates: [], sampledLangs: {}, coreRaw: [] };
+  const empty: SitemapCrawl = { found: false, core: [], blog: 0, excluded: { archives: 0, media: 0, external: 0, soft_404: 0 }, languages: [], bilingual_mirror: false, review_flags: [], partial: false, overflow: false, alternates: [], sampledLangs: {}, coreRaw: [], sampledContent: [] };
   const candidates = dedupByIdentity([...robotsSitemaps, origin + "/sitemap.xml", origin + "/sitemap_index.xml", origin + "/wp-sitemap.xml"]); // S-01
 
   const robotsSet = new Set(robotsSitemaps);
@@ -162,7 +164,7 @@ export async function crawlSitemaps(transport: Transport, origin: string, robots
   if (bi.suspected) flags.push("bilingual_suspected");
 
   // S-23 huge → 30+ short-circuit
-  if (coreUrls.length > CORE_CAP) return { found: true, core: coreUrls.slice(0, CORE_CAP), coreRaw: deduped, blog, excluded: ex, languages: bi.languages, bilingual_mirror: bi.bilingual_mirror, review_flags: flags, partial, overflow: true, alternates: allAlternates, sampledLangs: {} };
+  if (coreUrls.length > CORE_CAP) return { found: true, core: coreUrls.slice(0, CORE_CAP), coreRaw: deduped, blog, excluded: ex, languages: bi.languages, bilingual_mirror: bi.bilingual_mirror, review_flags: flags, partial, overflow: true, alternates: allAlternates, sampledLangs: {}, sampledContent: [] };
 
   // S-20 stale-sitemap trust: sample-verify min(core,10)
   const sample = coreUrls.slice(0, Math.min(coreUrls.length, 10));
@@ -171,16 +173,20 @@ export async function crawlSitemaps(transport: Transport, origin: string, robots
   const results = scheduler ? (await scheduler.fetchAll(sample)).results : await sequentialFetch(transport, sample);
   let bad = 0, n = 0, soft = 0;
   const sampledLangs: Record<string, string> = {};
+  const sampledContent: PageContent[] = []; // #32 A1: retain Option-C content of real (non-soft-404) pages
   for (const r of results) {
     const isBad = !!r.error || r.status >= 400;
     const soft404 = !isBad && isSoft404(r.body); // Thread 7 / D-18
     if (isBad || soft404) bad++;
     if (soft404) soft++;
-    if (!isBad && r.body) sampledLangs[normId(r.url)] = detectLang(visibleText(r.body)); // #28 tree-rung content guard
+    if (!isBad && r.body) {
+      sampledLangs[normId(r.url)] = detectLang(visibleText(r.body)); // #28 tree-rung content guard
+      if (!soft404) sampledContent.push(extractPageContent(r.url, r.body)); // #32 real core page → keep content
+    }
     emitter.emit("page_fetched", { n: ++n, approx: coreUrls.length }); // #24
   }
   if (sample.length > 0 && bad / sample.length > 0.30) return { ...empty, review_flags: [...flags, "stale_sitemap"] }; // distrust → link-crawl fallback
   ex.soft_404 = soft; // sample-detected soft-404s excluded from the core count (scan subtracts)
 
-  return { found: true, core: coreUrls, coreRaw: deduped, blog, excluded: ex, languages: bi.languages, bilingual_mirror: bi.bilingual_mirror, review_flags: flags, partial, overflow: false, alternates: allAlternates, sampledLangs };
+  return { found: true, core: coreUrls, coreRaw: deduped, blog, excluded: ex, languages: bi.languages, bilingual_mirror: bi.bilingual_mirror, review_flags: flags, partial, overflow: false, alternates: allAlternates, sampledLangs, sampledContent };
 }

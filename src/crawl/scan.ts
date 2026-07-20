@@ -17,12 +17,24 @@ import { type ScanEventEmitter, NOOP_EMITTER } from "./events.ts";
 import { inferRootLang } from "./langDetect.ts";
 import { PoliteScheduler } from "./scheduler.ts";
 import { resolveBilingual, extractHeadHreflang } from "./bilingual.ts";
+import { extractPageContent, type PageContent } from "./pageContent.ts";
 import { pricingConfig } from "../pricing/index.ts";
 
-export type ScanResult = BounderResult & { detected_platform: string; builders_detected: string[] };
+// #32 A1 — retained Option-C content rides the scan result (never a pricing input).
+export type ScanResult = BounderResult & { detected_platform: string; builders_detected: string[]; page_content: PageContent[] };
+
+const normId = (u: string): string => { const nn = normalize(u); return nn.ok ? nn.identity : u; };
+
+// Dedup retained pages by normalized identity, keeping the first (homepage-first).
+function dedupContent(pages: PageContent[]): PageContent[] {
+  const seen = new Set<string>();
+  const out: PageContent[] = [];
+  for (const p of pages) { const id = normId(p.url); if (seen.has(id)) continue; seen.add(id); out.push(p); }
+  return out;
+}
 
 function finalize(base: BounderResult, extra: Partial<ScanResult>): ScanResult {
-  const merged = { ...base, ...extra } as ScanResult;
+  const merged = { page_content: [] as PageContent[], ...base, ...extra } as ScanResult;
   merged.review_flags = [...new Set(merged.review_flags)];
   merged.needs_browser_reasons = [...new Set(merged.needs_browser_reasons)];
   merged.needs_browser = merged.needs_browser || merged.needs_browser_reasons.length > 0;
@@ -78,6 +90,7 @@ export async function scan(transport: Transport, clock: Clock, inputUrl: string,
   let partial = false;
   let sitemapFound = false;
   let pairingEvidence: string | undefined;
+  let sampled: PageContent[] = []; // #32 A1: sitemap-sample page content (link-crawl retains homepage only)
 
   if (robots.source === "disallow_all" || !robots.allows("/")) { // #12/R-10 full block → homepage only
     base.review_flags.push("robots_blocked");
@@ -89,6 +102,7 @@ export async function scan(transport: Transport, clock: Clock, inputUrl: string,
     if (sm.found) emitter.emit("sitemap_found", { count: sm.overflow ? "30+" : sm.core.length }); else emitter.emit("sitemap_absent", {});
     if (smTrusted) {
       sitemapFound = true;
+      sampled = sm.sampledContent; // #32 A1: full-core content on the sitemap path
       // #28 evidence ladder: homepage-head hreflang + sitemap xhtml:link alternates → path → tree.
       const hreflangGroups = [extractHeadHreflang(html), ...sm.alternates].filter((g) => g.length >= 2);
       const bi = resolveBilingual(sm.coreRaw, { rootLang, hreflangGroups, sampledLangByUrl: sm.sampledLangs, thresholds: pricingConfig.bilingual });
@@ -122,8 +136,12 @@ export async function scan(transport: Transport, clock: Clock, inputUrl: string,
   if (partial) emitter.emit("scan_partial", {});
   emitter.emit("scan_complete", {});
 
+  // #32 A1: homepage content always retained; sitemap path adds the sampled core pages.
+  // For an assessable site (≤6 core, all sampled), this is 100 % core-page coverage.
+  const page_content = dedupContent([extractPageContent(canon.final_url, html), ...sampled]);
+
   return finalize(base, {
     core_pages: core, blog_posts: blog, excluded, languages, bilingual_mirror: bilingual,
-    partial, detected_platform: fp.platform, builders_detected: fp.builders_detected,
+    partial, detected_platform: fp.platform, builders_detected: fp.builders_detected, page_content,
   });
 }
