@@ -266,6 +266,24 @@ all earn `bilingual_mirror: true` via **hreflang** (each carries fr+en alternate
 the moat event fires on real sites. Two-of-three being translated-slug is the
 **dominant moat-customer shape**, not an edge case.
 
+**28.1 Priced-path counting defect — found + fixed 2026-07-20 (during #32).**
+RUNG 1 emitted **one core page per hreflang group**, not per mirrored pair. Root cause:
+per-URL hreflang (Duda/WPML) lists the *same* fr+en alternate set in **both** the fr and
+the en `<url>` block, so `parseSitemap` produced **two groups per pair** and RUNG 1
+double-counted — a small bilingual site's `core_pages` (and thus tier/price) roughly
+doubled. Fix: dedup group reps by language-agnostic `langKey.key` (one rep per pair,
+matching `pairBilingual`'s existing rule); `languages[]` now derived from the actual
+groups. Regression + class-closing count tests **BC-01…BC-03** cover all three rungs on a
+priced scale.
+- **Coverage lesson:** the *bilingual × assessable* cell was **empty** — every real
+  bilingual golden is ≥7-core (labarberie/mchenry are 30+), so the ladder's **labels**
+  were verified but its **priced counts** never were. #32's small-site synthetics close
+  that cell permanently.
+- **Golden impact:** the two genuine 30+ goldens (labarberie, mchenry) **stay `"30+"` —
+  correct, no relabel** (overflow short-circuits before RUNG 1). `mtlplomberie` was itself
+  a silent victim: its recorded `core_pages` was the **doubled 18**; corrected to **10**
+  (still ≥7 → review, so **no tier change**).
+
 ### 2.6 Tier-mapping rules — decision batch #27 (founder-ratified 2026-07-19)
 
 **27. Tier mapping is a PURE function of the decision-#8 scan result + pricing config
