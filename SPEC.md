@@ -350,6 +350,32 @@ Report + candidate future decisions: [TIERMAP-REPORT.md](TIERMAP-REPORT.md).
 - **30.8 Answers schema founder-verified** against the creavy-site object (with 30.2
   applied).
 
+### 2.9 Analysis-details panel — amendment #31 (founder-ratified 2026-07-20)
+
+**31. A narrow, whitelisted exception to stored-never-returned** (#24/#8), consumer-driven
+(creavy-site's collapsed « Détails de l'analyse » panel). `analysis_details` on
+**completed** quotes: optional array of `{item, value}`, **machine enums/typed values
+only** (site owns FR/EN labels).
+
+- **Whitelist (ratified):** `platform | pages | language | ecommerce | https`. **`booking`
+  dropped** — no scan-side detector (it is a *declared answer*, not a detected fact;
+  TIERMAP-REPORT §3.6). Re-add in a later bump only if a booking-widget detector ships.
+- **Inclusion rule:** an item appears **only at high detection confidence** (#23); below →
+  **omitted**, and **no confidence field crosses the wire — absence IS the signal**.
+- **`https` is true-only** — emitted only when HTTPS is present (a positive fact); omitted
+  when absent, so a `false` never reads as critique (#24 "findings phrased as facts, never
+  negatives").
+- **`ecommerce`** = Shopify platform detection (the fingerprint has no WooCommerce
+  *platform*, so WooCommerce e-comm stays silent).
+- **Absent entirely** on `no_site` quotes and when nothing qualifies (site renders nothing).
+- **Explicitly out:** theme/generator id, version numbers, scores, recommendations, anything
+  requiring the Claude assessment — **detection-adapter facts only, ~zero tokens**.
+- Mostly **re-packages already-public #8 fields** (platform/pages/language) + the fetched
+  URL scheme (https) + the Shopify flag — the exception is narrow by construction. Engine
+  population is a follow-up build.
+
+Contract: [contracts/quote-api-contract.md](contracts/quote-api-contract.md) v0.4.
+
 ---
 
 ## 3. What this service is (unchanged)
