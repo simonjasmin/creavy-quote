@@ -1,5 +1,5 @@
 # Keep the build context lean + never ship local secrets or test data into the image.
-# The runtime needs only src/ + package.json (config is code, not files; no fixtures at runtime).
+# The runtime needs src/ + package.json + the contract file (/health reads its version).
 .git
 .gitignore
 node_modules
@@ -14,5 +14,7 @@ memory
 .vscode
 *.md
 !package.json
+# The contract file MUST ship — the service sources its version from it at boot (contractVersion.ts).
+!contracts/quote-api-contract.md
 .DS_Store
 Thumbs.db

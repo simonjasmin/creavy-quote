@@ -5,6 +5,7 @@
 
 import { createServer as httpCreateServer, type IncomingMessage, type ServerResponse, type Server } from "node:http";
 import { corsHeaders } from "./cors.ts";
+import { readContractVersion } from "./contractVersion.ts";
 import { runWall, type WallDeps } from "./wall.ts";
 import { processJob, type WorkerDeps } from "./worker.ts";
 import { projectPublic, type Lang } from "../crawl/eventProjection.ts";
@@ -24,6 +25,7 @@ export type ServerDeps = {
   clock: Clock;
   fetchImpl?: FetchLike; // Turnstile fetch (injectable)
   syncHoldMs?: number; // #1 (default 8000)
+  contractVersion?: string; // sourced at boot from the contract file; defaults to reading it
   log?: (layer: string, detail?: Record<string, unknown>) => void;
 };
 
@@ -57,6 +59,7 @@ function jobToBody(job: Job): Record<string, unknown> {
 export function createServer(deps: ServerDeps): Server {
   const { config, store } = deps;
   const syncHoldMs = deps.syncHoldMs ?? 8000;
+  const contractVersion = deps.contractVersion ?? readContractVersion(); // single source: the contract file
   const wallDeps: WallDeps = { config, pricing: deps.pricing, store, rateLimiter: deps.rateLimiter, clock: deps.clock, fetchImpl: deps.fetchImpl, log: deps.log };
   const workerDeps: WorkerDeps = { store, transport: deps.transport, clock: deps.clock, pricing: deps.pricing };
 
@@ -68,8 +71,8 @@ export function createServer(deps: ServerDeps): Server {
     try {
       if (req.method === "OPTIONS") { res.writeHead(204, cors); res.end(); return; }
 
-      // GET /health
-      if (req.method === "GET" && url.pathname === "/health") return send(res, 200, { status: "ok", env: config.env }, cors);
+      // GET /health — includes contract_version so a consumer can detect version skew
+      if (req.method === "GET" && url.pathname === "/health") return send(res, 200, { status: "ok", env: config.env, contract_version: contractVersion }, cors);
 
       // POST /quote
       if (req.method === "POST" && url.pathname === "/quote") {

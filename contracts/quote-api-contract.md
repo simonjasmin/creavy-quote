@@ -5,6 +5,10 @@
 > all FR/EN labels are **site-owned**. Amounts are **integer cents, `currency:"CAD"`**
 > (#20) — the site divides for display.
 >
+> **A version bump is complete only when this file is copied into `creavy-site/design/` AND
+> the staging `/health` reports the matching `contract_version`.** (E2 incident: site copy was
+> v0.1 while staging served v0.5 — the skew was silent because the treaty had no transport.)
+>
 > **Sole authority:** the ratified decisions in `SPEC.md` (§2 #1–#29) + the pricing
 > config. Consumer requirements from creavy-site are inputs to validate, not authority.
 > Every field cites a decision ID; anything unsettled is **⚠ FOUNDER DECISION** or

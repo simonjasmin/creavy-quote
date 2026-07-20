@@ -13,6 +13,10 @@ This is the payload for the creavy-site session to begin E2 (staging integration
   blocked.
 - **Contract:** `contracts/quote-api-contract.md` **v0.5** — site should re-sync its copy
   (only delta from v0.4 is §7 CORS → #33, already implemented in staging).
+- **Version sync rule (E2 incident):** a version bump is complete only when the contract file
+  is copied into `creavy-site/design/` **and** staging `/health` reports the matching
+  `contract_version`. `/health` now returns `contract_version` (single-sourced from the
+  contract file at boot) — the site can assert its synced copy matches before wiring.
 
 ## Routes (per contract v0.5)
 
@@ -21,7 +25,7 @@ This is the payload for the creavy-site session to begin E2 (staging integration
 | `POST` | `/quote` | create a quote → `{quote_id, status}` (sync-hold ≤ 8 s, else `pending`) |
 | `GET` | `/quote/:id` | poll — `pending` \| `completed` \| `failed` (contract §4/§5 shapes) |
 | `GET` | `/quote/:id/events?since=N&lang=fr` | #24 public event lines (`{seq, type, text}`) |
-| `GET` | `/health` | `{status:"ok", env:"staging"}` |
+| `GET` | `/health` | `{status:"ok", env:"staging", contract_version:"0.5"}` — assert your synced copy matches |
 
 - **Polling:** interval **1500 ms**, terminal states `completed`/`failed`, client ceiling ~35 s
   (contract §6). `429` carries `Retry-After` (seconds).

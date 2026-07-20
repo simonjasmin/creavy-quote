@@ -7,6 +7,7 @@ import { loadServiceConfig } from "../src/service/config.ts";
 import { MemoryStore } from "../src/service/store/memoryStore.ts";
 import { RateLimiter } from "../src/service/rateLimiter.ts";
 import { pricingConfig as P } from "../src/pricing/index.ts";
+import { readContractVersion } from "../src/service/contractVersion.ts";
 import { FakeTransport, FakeClock, type Scenario } from "./helpers/replay.ts";
 
 // Contract v0.4 conformance. Prices are read FROM config (a drifted literal must fail).
@@ -147,6 +148,15 @@ test("HTTP /health → ok", async () => {
     const r = await fetch(`${base}/health`);
     assert.equal(r.status, 200);
     assert.equal((await r.json()).status, "ok");
+  });
+});
+
+test("HTTP /health reports contract_version single-sourced from the contract file", async () => {
+  const fileVersion = readContractVersion(); // parsed live from contracts/quote-api-contract.md
+  assert.match(fileVersion, /^\d+\.\d+$/, "version parses from the file header (no literal)");
+  await withServer(new FakeTransport({}), async (base) => {
+    const h = await (await fetch(`${base}/health`)).json();
+    assert.equal(h.contract_version, fileVersion, "/health matches the contract file's version — version skew is now detectable");
   });
 });
 
