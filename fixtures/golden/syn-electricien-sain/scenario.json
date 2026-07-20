@@ -1,0 +1,54 @@
+{
+  "https://syn-electricien-sain.example/": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>Accueil — Électrique Néovolt</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"></head><body><h1>Électrique Néovolt</h1><h2>Maître électricien à Laval</h2><p>Installation électrique résidentielle et commerciale, borne de recharge pour véhicule électrique, mise aux normes de panneau et éclairage DEL. Équipe certifiée, travail garanti.</p><a href=\"/services\">x</a><a href=\"/a-propos\">x</a><a href=\"/realisations\">x</a><a href=\"/contact\">x</a><p>© 2025 Électrique Néovolt inc. — Membre de la Corporation des maîtres électriciens du Québec. Licence RBQ 5678-1234-01.</p></body></html>"
+  },
+  "https://www.syn-electricien-sain.example/": {
+    "status": 404
+  },
+  "https://syn-electricien-sain.example/robots.txt": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/plain"
+    },
+    "body": "User-agent: *\nDisallow:\nSitemap: https://syn-electricien-sain.example/sitemap.xml"
+  },
+  "https://syn-electricien-sain.example/sitemap.xml": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/xml"
+    },
+    "body": "<urlset xmlns:xhtml=\"http://www.w3.org/1999/xhtml\"><url><loc>https://syn-electricien-sain.example/</loc></url><url><loc>https://syn-electricien-sain.example/services</loc></url><url><loc>https://syn-electricien-sain.example/a-propos</loc></url><url><loc>https://syn-electricien-sain.example/realisations</loc></url><url><loc>https://syn-electricien-sain.example/contact</loc></url></urlset>"
+  },
+  "https://syn-electricien-sain.example/services": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>Services — Électrique Néovolt</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"></head><body><h1>Nos services</h1><h2>Bornes de recharge</h2><p>Installation de bornes de recharge résidentielles et commerciales, compatibles avec tous les véhicules électriques.</p><h3>Mise aux normes</h3><p>Remplacement de panneau électrique, inspection et correction selon le Code électrique du Québec.</p></body></html>"
+  },
+  "https://syn-electricien-sain.example/a-propos": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>À propos — Électrique Néovolt</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"></head><body><h1>À propos de nous</h1><p>Fondée en 2016, Électrique Néovolt regroupe des maîtres électriciens certifiés au service des propriétaires et entreprises de Laval et des Laurentides.</p></body></html>"
+  },
+  "https://syn-electricien-sain.example/realisations": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>Réalisations — Électrique Néovolt</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"></head><body><h1>Nos réalisations</h1><p>Projets récents : bornes de recharge en copropriété, éclairage DEL commercial, mise aux normes résidentielle.</p></body></html>"
+  },
+  "https://syn-electricien-sain.example/contact": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>Contact — Électrique Néovolt</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"></head><body><h1>Nous joindre</h1><p>Téléphone : 450-555-0199. Soumission en ligne disponible. Nous répondons en moins d'une journée ouvrable.</p><p>© 2025 Électrique Néovolt inc. — Membre de la Corporation des maîtres électriciens du Québec. Licence RBQ 5678-1234-01.</p></body></html>"
+  }
+}

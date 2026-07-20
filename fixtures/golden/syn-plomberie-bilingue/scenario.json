@@ -1,0 +1,61 @@
+{
+  "https://syn-plomberie-bilingue.example/": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>Accueil — Plomberie Rive-Sud</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"><link rel=\"alternate\" hreflang=\"fr\" href=\"https://syn-plomberie-bilingue.example/\"/><link rel=\"alternate\" hreflang=\"en\" href=\"https://syn-plomberie-bilingue.example/en/\"/></head><body><h1>Plomberie Rive-Sud</h1><h2>Plombier résidentiel et commercial</h2><p>Débouchage de drain, réparation de chauffe-eau, détection de fuite et rénovation de salle de bain sur la Rive-Sud de Montréal. Service d'urgence 24/7.</p><a href=\"/services\">x</a><a href=\"/contact\">x</a><a href=\"/en/\">x</a></body></html>"
+  },
+  "https://www.syn-plomberie-bilingue.example/": {
+    "status": 404
+  },
+  "https://syn-plomberie-bilingue.example/robots.txt": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/plain"
+    },
+    "body": "User-agent: *\nDisallow:\nSitemap: https://syn-plomberie-bilingue.example/sitemap.xml"
+  },
+  "https://syn-plomberie-bilingue.example/sitemap.xml": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/xml"
+    },
+    "body": "<urlset xmlns:xhtml=\"http://www.w3.org/1999/xhtml\"><url><loc>https://syn-plomberie-bilingue.example/</loc><xhtml:link rel=\"alternate\" hreflang=\"fr\" href=\"https://syn-plomberie-bilingue.example/\"/><xhtml:link rel=\"alternate\" hreflang=\"en\" href=\"https://syn-plomberie-bilingue.example/en/\"/></url><url><loc>https://syn-plomberie-bilingue.example/en/</loc><xhtml:link rel=\"alternate\" hreflang=\"fr\" href=\"https://syn-plomberie-bilingue.example/\"/><xhtml:link rel=\"alternate\" hreflang=\"en\" href=\"https://syn-plomberie-bilingue.example/en/\"/></url><url><loc>https://syn-plomberie-bilingue.example/services</loc><xhtml:link rel=\"alternate\" hreflang=\"fr\" href=\"https://syn-plomberie-bilingue.example/services\"/><xhtml:link rel=\"alternate\" hreflang=\"en\" href=\"https://syn-plomberie-bilingue.example/en/services\"/></url><url><loc>https://syn-plomberie-bilingue.example/en/services</loc><xhtml:link rel=\"alternate\" hreflang=\"fr\" href=\"https://syn-plomberie-bilingue.example/services\"/><xhtml:link rel=\"alternate\" hreflang=\"en\" href=\"https://syn-plomberie-bilingue.example/en/services\"/></url><url><loc>https://syn-plomberie-bilingue.example/contact</loc><xhtml:link rel=\"alternate\" hreflang=\"fr\" href=\"https://syn-plomberie-bilingue.example/contact\"/><xhtml:link rel=\"alternate\" hreflang=\"en\" href=\"https://syn-plomberie-bilingue.example/en/contact\"/></url><url><loc>https://syn-plomberie-bilingue.example/en/contact</loc><xhtml:link rel=\"alternate\" hreflang=\"fr\" href=\"https://syn-plomberie-bilingue.example/contact\"/><xhtml:link rel=\"alternate\" hreflang=\"en\" href=\"https://syn-plomberie-bilingue.example/en/contact\"/></url></urlset>"
+  },
+  "https://syn-plomberie-bilingue.example/en/": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>Home — Plomberie Rive-Sud</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"><link rel=\"alternate\" hreflang=\"fr\" href=\"https://syn-plomberie-bilingue.example/\"/><link rel=\"alternate\" hreflang=\"en\" href=\"https://syn-plomberie-bilingue.example/en/\"/></head><body><h1>Plomberie Rive-Sud</h1><h2>Residential and commercial plumber</h2><p>Drain cleaning, water heater repair, leak detection and bathroom renovation on Montreal's South Shore. 24/7 emergency service.</p><a href=\"/en/services\">x</a><a href=\"/en/contact\">x</a><a href=\"/\">x</a></body></html>"
+  },
+  "https://syn-plomberie-bilingue.example/services": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>Services — Plomberie Rive-Sud</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"><link rel=\"alternate\" hreflang=\"fr\" href=\"https://syn-plomberie-bilingue.example/services\"/><link rel=\"alternate\" hreflang=\"en\" href=\"https://syn-plomberie-bilingue.example/en/services\"/></head><body><h1>Nos services</h1><h2>Débouchage et drain</h2><p>Nettoyage de drain à haute pression, inspection par caméra, réparation de tuyauterie.</p><h3>Chauffe-eau</h3><p>Installation et remplacement de chauffe-eau électrique et au gaz.</p></body></html>"
+  },
+  "https://syn-plomberie-bilingue.example/en/services": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>Services — Plomberie Rive-Sud</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"><link rel=\"alternate\" hreflang=\"fr\" href=\"https://syn-plomberie-bilingue.example/services\"/><link rel=\"alternate\" hreflang=\"en\" href=\"https://syn-plomberie-bilingue.example/en/services\"/></head><body><h1>Our services</h1><h2>Drain cleaning</h2><p>High-pressure drain cleaning, camera inspection, pipe repair.</p><h3>Water heaters</h3><p>Installation and replacement of electric and gas water heaters.</p></body></html>"
+  },
+  "https://syn-plomberie-bilingue.example/contact": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>Contact — Plomberie Rive-Sud</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"><link rel=\"alternate\" hreflang=\"fr\" href=\"https://syn-plomberie-bilingue.example/contact\"/><link rel=\"alternate\" hreflang=\"en\" href=\"https://syn-plomberie-bilingue.example/en/contact\"/></head><body><h1>Nous joindre</h1><p>Téléphone : 450-555-0173. Service d'urgence disponible en tout temps.</p></body></html>"
+  },
+  "https://syn-plomberie-bilingue.example/en/contact": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>Contact — Plomberie Rive-Sud</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"><link rel=\"alternate\" hreflang=\"fr\" href=\"https://syn-plomberie-bilingue.example/contact\"/><link rel=\"alternate\" hreflang=\"en\" href=\"https://syn-plomberie-bilingue.example/en/contact\"/></head><body><h1>Contact us</h1><p>Phone: 450-555-0173. Emergency service available at all times.</p></body></html>"
+  }
+}

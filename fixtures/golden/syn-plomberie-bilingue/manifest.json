@@ -1,0 +1,12 @@
+{
+  "slug": "syn-plomberie-bilingue",
+  "synthetic": true,
+  "purpose": "small bilingual mirror (fr/en via per-URL hreflang, Duda-style) → multilingual_content; exercises the fixed RUNG 1 priced-count path",
+  "composed_from": "corpus trades content (plumbing)",
+  "expected": {
+    "core_pages": 3,
+    "bilingual_mirror": true,
+    "platform": "wordpress"
+  },
+  "input": "https://syn-plomberie-bilingue.example/"
+}

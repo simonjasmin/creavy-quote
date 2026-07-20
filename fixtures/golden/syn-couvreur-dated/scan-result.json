@@ -1,0 +1,59 @@
+{
+  "page_content": [
+    {
+      "url": "https://syn-couvreur-dated.example/",
+      "text": " Accueil — Couvreur Réno-Vieux Couvreur Réno-Vieux inc. Toiture résidentielle depuis 1998 Réfection de toiture, réparation de bardeaux et installation de membrane à Trois-Rivières. Nous desservons toute la Mauricie. Estimation gratuite sur demande. x x x © 2009 Couvreur Réno-Vieux inc. — Tous droits réservés. Site optimisé pour Internet Explorer 6. Nécessite Adobe Flash Player. ",
+      "title": "Accueil — Couvreur Réno-Vieux",
+      "headings": [
+        "Couvreur Réno-Vieux inc.",
+        "Toiture résidentielle depuis 1998"
+      ]
+    },
+    {
+      "url": "https://syn-couvreur-dated.example/services",
+      "text": " Services — Couvreur Réno-Vieux Nos services Toiture en bardeaux d'asphalte Installation et réfection complète de toitures en bardeaux. Réparation de fuites, remplacement de solins, ventilation de toiture. Membrane élastomère Toitures plates commerciales et résidentielles. Garantie sur les travaux. © 2009 Couvreur Réno-Vieux inc. — Tous droits réservés. Site optimisé pour Internet Explorer 6. Nécessite Adobe Flash Player. ",
+      "title": "Services — Couvreur Réno-Vieux",
+      "headings": [
+        "Nos services",
+        "Toiture en bardeaux d'asphalte",
+        "Membrane élastomère"
+      ]
+    },
+    {
+      "url": "https://syn-couvreur-dated.example/realisations",
+      "text": " Réalisations — Couvreur Réno-Vieux Nos réalisations Consultez quelques-uns de nos chantiers récents de réfection de toiture dans la région. Photos avant et après. © 2009 Couvreur Réno-Vieux inc. — Tous droits réservés. Site optimisé pour Internet Explorer 6. Nécessite Adobe Flash Player. ",
+      "title": "Réalisations — Couvreur Réno-Vieux",
+      "headings": [
+        "Nos réalisations"
+      ]
+    },
+    {
+      "url": "https://syn-couvreur-dated.example/contact",
+      "text": " Contact — Couvreur Réno-Vieux Nous joindre Téléphone : 819-555-0142. Courriel : info@reno-vieux.example. Nous répondons sous 24 heures ouvrables. © 2009 Couvreur Réno-Vieux inc. — Tous droits réservés. Site optimisé pour Internet Explorer 6. Nécessite Adobe Flash Player. ",
+      "title": "Contact — Couvreur Réno-Vieux",
+      "headings": [
+        "Nous joindre"
+      ]
+    }
+  ],
+  "detected_platform_confidence": "high",
+  "canonical_origin": "https://syn-couvreur-dated.example",
+  "core_pages": 4,
+  "blog_posts": 0,
+  "excluded": {
+    "archives": 0,
+    "media": 0,
+    "external": 0,
+    "soft_404": 0
+  },
+  "languages": [
+    "fr"
+  ],
+  "bilingual_mirror": false,
+  "needs_browser": false,
+  "needs_browser_reasons": [],
+  "review_flags": [],
+  "partial": false,
+  "detected_platform": "wordpress",
+  "builders_detected": []
+}

@@ -1,0 +1,47 @@
+{
+  "https://syn-couvreur-dated.example/": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>Accueil — Couvreur Réno-Vieux</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"></head><body><h1>Couvreur Réno-Vieux inc.</h1><h2>Toiture résidentielle depuis 1998</h2><p>Réfection de toiture, réparation de bardeaux et installation de membrane à Trois-Rivières. Nous desservons toute la Mauricie. Estimation gratuite sur demande.</p><a href=\"/services\">x</a><a href=\"/realisations\">x</a><a href=\"/contact\">x</a><p>© 2009 Couvreur Réno-Vieux inc. — Tous droits réservés. Site optimisé pour Internet Explorer 6. Nécessite Adobe Flash Player.</p></body></html>"
+  },
+  "https://www.syn-couvreur-dated.example/": {
+    "status": 404
+  },
+  "https://syn-couvreur-dated.example/robots.txt": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/plain"
+    },
+    "body": "User-agent: *\nDisallow:\nSitemap: https://syn-couvreur-dated.example/sitemap.xml"
+  },
+  "https://syn-couvreur-dated.example/sitemap.xml": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/xml"
+    },
+    "body": "<urlset xmlns:xhtml=\"http://www.w3.org/1999/xhtml\"><url><loc>https://syn-couvreur-dated.example/</loc></url><url><loc>https://syn-couvreur-dated.example/services</loc></url><url><loc>https://syn-couvreur-dated.example/realisations</loc></url><url><loc>https://syn-couvreur-dated.example/contact</loc></url></urlset>"
+  },
+  "https://syn-couvreur-dated.example/services": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>Services — Couvreur Réno-Vieux</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"></head><body><h1>Nos services</h1><h2>Toiture en bardeaux d'asphalte</h2><p>Installation et réfection complète de toitures en bardeaux. Réparation de fuites, remplacement de solins, ventilation de toiture.</p><h3>Membrane élastomère</h3><p>Toitures plates commerciales et résidentielles. Garantie sur les travaux.</p><p>© 2009 Couvreur Réno-Vieux inc. — Tous droits réservés. Site optimisé pour Internet Explorer 6. Nécessite Adobe Flash Player.</p></body></html>"
+  },
+  "https://syn-couvreur-dated.example/realisations": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>Réalisations — Couvreur Réno-Vieux</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"></head><body><h1>Nos réalisations</h1><p>Consultez quelques-uns de nos chantiers récents de réfection de toiture dans la région. Photos avant et après.</p><p>© 2009 Couvreur Réno-Vieux inc. — Tous droits réservés. Site optimisé pour Internet Explorer 6. Nécessite Adobe Flash Player.</p></body></html>"
+  },
+  "https://syn-couvreur-dated.example/contact": {
+    "status": 200,
+    "headers": {
+      "content-type": "text/html; charset=utf-8"
+    },
+    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>Contact — Couvreur Réno-Vieux</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"></head><body><h1>Nous joindre</h1><p>Téléphone : 819-555-0142. Courriel : info@reno-vieux.example. Nous répondons sous 24 heures ouvrables.</p><p>© 2009 Couvreur Réno-Vieux inc. — Tous droits réservés. Site optimisé pour Internet Explorer 6. Nécessite Adobe Flash Player.</p></body></html>"
+  }
+}

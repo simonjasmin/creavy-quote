@@ -1,0 +1,12 @@
+{
+  "slug": "syn-couvreur-dated",
+  "synthetic": true,
+  "purpose": "findings — dated_design (ancient copyright + IE/Flash notice observable in retained text)",
+  "composed_from": "corpus trades content (roofing)",
+  "expected": {
+    "core_pages": 4,
+    "bilingual_mirror": false,
+    "platform": "wordpress"
+  },
+  "input": "https://syn-couvreur-dated.example/"
+}

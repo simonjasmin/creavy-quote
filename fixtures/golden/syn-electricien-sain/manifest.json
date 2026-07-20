@@ -1,0 +1,12 @@
+{
+  "slug": "syn-electricien-sain",
+  "synthetic": true,
+  "purpose": "healthy calibration site — voice must NOT manufacture alarm",
+  "composed_from": "corpus trades content (electrical)",
+  "expected": {
+    "core_pages": 5,
+    "bilingual_mirror": false,
+    "platform": "wordpress"
+  },
+  "input": "https://syn-electricien-sain.example/"
+}

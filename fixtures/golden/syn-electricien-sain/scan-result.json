@@ -1,0 +1,67 @@
+{
+  "page_content": [
+    {
+      "url": "https://syn-electricien-sain.example/",
+      "text": " Accueil — Électrique Néovolt Électrique Néovolt Maître électricien à Laval Installation électrique résidentielle et commerciale, borne de recharge pour véhicule électrique, mise aux normes de panneau et éclairage DEL. Équipe certifiée, travail garanti. x x x x © 2025 Électrique Néovolt inc. — Membre de la Corporation des maîtres électriciens du Québec. Licence RBQ 5678-1234-01. ",
+      "title": "Accueil — Électrique Néovolt",
+      "headings": [
+        "Électrique Néovolt",
+        "Maître électricien à Laval"
+      ]
+    },
+    {
+      "url": "https://syn-electricien-sain.example/services",
+      "text": " Services — Électrique Néovolt Nos services Bornes de recharge Installation de bornes de recharge résidentielles et commerciales, compatibles avec tous les véhicules électriques. Mise aux normes Remplacement de panneau électrique, inspection et correction selon le Code électrique du Québec. ",
+      "title": "Services — Électrique Néovolt",
+      "headings": [
+        "Nos services",
+        "Bornes de recharge",
+        "Mise aux normes"
+      ]
+    },
+    {
+      "url": "https://syn-electricien-sain.example/a-propos",
+      "text": " À propos — Électrique Néovolt À propos de nous Fondée en 2016, Électrique Néovolt regroupe des maîtres électriciens certifiés au service des propriétaires et entreprises de Laval et des Laurentides. ",
+      "title": "À propos — Électrique Néovolt",
+      "headings": [
+        "À propos de nous"
+      ]
+    },
+    {
+      "url": "https://syn-electricien-sain.example/realisations",
+      "text": " Réalisations — Électrique Néovolt Nos réalisations Projets récents : bornes de recharge en copropriété, éclairage DEL commercial, mise aux normes résidentielle. ",
+      "title": "Réalisations — Électrique Néovolt",
+      "headings": [
+        "Nos réalisations"
+      ]
+    },
+    {
+      "url": "https://syn-electricien-sain.example/contact",
+      "text": " Contact — Électrique Néovolt Nous joindre Téléphone : 450-555-0199. Soumission en ligne disponible. Nous répondons en moins d'une journée ouvrable. © 2025 Électrique Néovolt inc. — Membre de la Corporation des maîtres électriciens du Québec. Licence RBQ 5678-1234-01. ",
+      "title": "Contact — Électrique Néovolt",
+      "headings": [
+        "Nous joindre"
+      ]
+    }
+  ],
+  "detected_platform_confidence": "high",
+  "canonical_origin": "https://syn-electricien-sain.example",
+  "core_pages": 5,
+  "blog_posts": 0,
+  "excluded": {
+    "archives": 0,
+    "media": 0,
+    "external": 0,
+    "soft_404": 0
+  },
+  "languages": [
+    "fr"
+  ],
+  "bilingual_mirror": false,
+  "needs_browser": false,
+  "needs_browser_reasons": [],
+  "review_flags": [],
+  "partial": false,
+  "detected_platform": "wordpress",
+  "builders_detected": []
+}

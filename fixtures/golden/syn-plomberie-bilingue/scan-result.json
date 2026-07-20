@@ -1,0 +1,54 @@
+{
+  "page_content": [
+    {
+      "url": "https://syn-plomberie-bilingue.example/",
+      "text": " Accueil — Plomberie Rive-Sud Plomberie Rive-Sud Plombier résidentiel et commercial Débouchage de drain, réparation de chauffe-eau, détection de fuite et rénovation de salle de bain sur la Rive-Sud de Montréal. Service d'urgence 24/7. x x x ",
+      "title": "Accueil — Plomberie Rive-Sud",
+      "headings": [
+        "Plomberie Rive-Sud",
+        "Plombier résidentiel et commercial"
+      ]
+    },
+    {
+      "url": "https://syn-plomberie-bilingue.example/services",
+      "text": " Services — Plomberie Rive-Sud Nos services Débouchage et drain Nettoyage de drain à haute pression, inspection par caméra, réparation de tuyauterie. Chauffe-eau Installation et remplacement de chauffe-eau électrique et au gaz. ",
+      "title": "Services — Plomberie Rive-Sud",
+      "headings": [
+        "Nos services",
+        "Débouchage et drain",
+        "Chauffe-eau"
+      ]
+    },
+    {
+      "url": "https://syn-plomberie-bilingue.example/contact",
+      "text": " Contact — Plomberie Rive-Sud Nous joindre Téléphone : 450-555-0173. Service d'urgence disponible en tout temps. ",
+      "title": "Contact — Plomberie Rive-Sud",
+      "headings": [
+        "Nous joindre"
+      ]
+    }
+  ],
+  "detected_platform_confidence": "high",
+  "canonical_origin": "https://syn-plomberie-bilingue.example",
+  "core_pages": 3,
+  "blog_posts": 0,
+  "excluded": {
+    "archives": 0,
+    "media": 0,
+    "external": 0,
+    "soft_404": 0
+  },
+  "languages": [
+    "en",
+    "fr"
+  ],
+  "bilingual_mirror": true,
+  "needs_browser": false,
+  "needs_browser_reasons": [],
+  "review_flags": [
+    "pairing_evidence:hreflang"
+  ],
+  "partial": false,
+  "detected_platform": "wordpress",
+  "builders_detected": []
+}
