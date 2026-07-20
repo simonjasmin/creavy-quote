@@ -21,7 +21,12 @@ import { extractPageContent, type PageContent } from "./pageContent.ts";
 import { pricingConfig } from "../pricing/index.ts";
 
 // #32 A1 — retained Option-C content rides the scan result (never a pricing input).
-export type ScanResult = BounderResult & { detected_platform: string; builders_detected: string[]; page_content: PageContent[] };
+export type ScanResult = BounderResult & {
+  detected_platform: string;
+  detected_platform_confidence: "high" | "medium" | "low"; // #23: gates naming the platform in prose
+  builders_detected: string[];
+  page_content: PageContent[];
+};
 
 const normId = (u: string): string => { const nn = normalize(u); return nn.ok ? nn.identity : u; };
 
@@ -34,7 +39,7 @@ function dedupContent(pages: PageContent[]): PageContent[] {
 }
 
 function finalize(base: BounderResult, extra: Partial<ScanResult>): ScanResult {
-  const merged = { page_content: [] as PageContent[], ...base, ...extra } as ScanResult;
+  const merged = { page_content: [] as PageContent[], detected_platform_confidence: "low" as const, ...base, ...extra } as ScanResult;
   merged.review_flags = [...new Set(merged.review_flags)];
   merged.needs_browser_reasons = [...new Set(merged.needs_browser_reasons)];
   merged.needs_browser = merged.needs_browser || merged.needs_browser_reasons.length > 0;
@@ -142,6 +147,7 @@ export async function scan(transport: Transport, clock: Clock, inputUrl: string,
 
   return finalize(base, {
     core_pages: core, blog_posts: blog, excluded, languages, bilingual_mirror: bilingual,
-    partial, detected_platform: fp.platform, builders_detected: fp.builders_detected, page_content,
+    partial, detected_platform: fp.platform, detected_platform_confidence: fp.confidence,
+    builders_detected: fp.builders_detected, page_content,
   });
 }
