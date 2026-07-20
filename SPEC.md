@@ -450,6 +450,16 @@ value); prose is length-capped; every assessment is human-gated before a prospec
   > ou ajouter la prise de rendez-vous en ligne, voici ce que ça donnerait — l'estimation
   > est juste en dessous. »
 
+### 2.11 CORS preview-origin pattern — amendment #33 (founder-ratified 2026-07-20)
+
+**33. CORS allows the exact production origin PLUS deploy-preview origins** matching the
+anchored pattern `^https://[a-z0-9-]+--creavy\.netlify\.app$` — **https-only**, fully
+anchored (start + end), **config-driven** (production origin from env; the preview pattern a
+documented constant). This **supersedes #30.4's** preview line ("previews use the mock
+adapter / production origin only"). Safe because the `*--creavy.netlify.app` namespace is
+controlled by the Netlify site — no third party can mint one. Recorded with the reasoning so
+it isn't re-litigated at E2.
+
 ---
 
 ## 3. What this service is (unchanged)
