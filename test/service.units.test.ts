@@ -72,6 +72,21 @@ test("RL-01 sliding window: allows max, then blocks with Retry-After, then slide
   assert.ok(blocked.retryAfterSec >= 1);
   assert.equal(rl.check("k", 61_001).allowed, true, "window slid past the first hit");
 });
+test("RL-02 exactly MAX allowed per key, the very next blocked (pins the arithmetic)", () => {
+  const rl = new RateLimiter(60_000, 10); // == the deployed default
+  for (let i = 1; i <= 10; i++) assert.equal(rl.check("client-A", 0).allowed, true, `#${i} within max`);
+  assert.equal(rl.check("client-A", 0).allowed, false, "the 11th is blocked");
+});
+test("RL-03 distinct keys hold independent buckets — N keys → N×MAX (explains the live 429-at-~20)", () => {
+  // ONE burst source that resolves to TWO keys (a dual-stack client sending over v4+v6, or a
+  // proxy-IP spread when TRUSTED_PROXY_HOPS ≠ Railway's depth) gets 2×10 = 20 through before a
+  // 429 — exactly the 20-allowed (429 at burst #19 + 2 prior POSTs) seen on staging. The limiter
+  // is correct; the effective ceiling is per RESOLVED key. A real single-address browser gets 10.
+  const rl = new RateLimiter(60_000, 10);
+  let allowed = 0;
+  for (let i = 0; i < 30; i++) if (rl.check(i % 2 === 0 ? "keyA" : "keyB", 0).allowed) allowed++;
+  assert.equal(allowed, 20, "two keys each allow 10 → 20 total, then both block");
+});
 
 // ---- CORS #33 ----
 test("CORS-01 exact production origin allowed", () => assert.equal(corsOriginAllowed(ORIGIN, ORIGIN, PREVIEW_ORIGIN_PATTERN), true));

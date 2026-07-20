@@ -49,9 +49,14 @@ export async function runWall(input: WallInput, deps: WallDeps): Promise<WallDec
   const ip = clientIp(input.remoteAddr, input.headers["x-forwarded-for"], config.trustedProxyHops);
   const key = ipRateKey(ip);
 
-  // 2. rate limit
+  // 2. rate limit. On a block, log the RESOLVED key + the raw chain so the effective ceiling
+  // is diagnosable: if bursts get ~N×MAX through, the source resolved to N keys — either a
+  // dual-stack client (v4+v6) or TRUSTED_PROXY_HOPS ≠ the platform's real proxy depth.
   const rl = rateLimiter.check(key, now);
-  if (!rl.allowed) { log("rate_limit", { key }); return { kind: "rate_limited", retryAfterSec: rl.retryAfterSec }; }
+  if (!rl.allowed) {
+    log("rate_limit", { key, resolved_ip: ip, xff: input.headers["x-forwarded-for"] ?? null, hops: config.trustedProxyHops });
+    return { kind: "rate_limited", retryAfterSec: rl.retryAfterSec };
+  }
 
   // 3. honeypot → silent accept-and-drop (plausible id, no job, no scan)
   if (isHoneypotTripped(input.body)) { const quoteId = randomId(); log("honeypot", { quoteId }); return { kind: "honeypot", quoteId }; }

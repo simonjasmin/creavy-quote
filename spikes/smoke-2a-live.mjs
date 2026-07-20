@@ -10,9 +10,15 @@
 // No secrets, no ANTHROPIC_API_KEY (2a makes no model call). Run this AFTER `railway up` +
 // `/health` is green; relay the transcript + URL + ALLOWED_ORIGIN to the gate.
 import { writeFileSync } from "node:fs";
+import { normalize } from "../src/url/normalize.ts";
 
 const base = (process.argv[2] || "").replace(/\/+$/, "");
-const scanUrl = process.argv[3] || "https://toituresmarcelpouliot.com/"; // a real small ICP site; override as needed
+// Normalize the scan URL exactly like the engine (scheme-less → https, etc.) so a bare
+// "plombier-test.ca" works the same here as inside the service.
+const rawScan = process.argv[3] || "toituresmarcelpouliot.com";
+const nScan = normalize(rawScan);
+const scanUrl = nScan.ok ? nScan.identity : rawScan;
+if (!nScan.ok) console.warn(`warning: could not normalize "${rawScan}" (${nScan.error}); sending as-is`);
 const PROD_ORIGIN_HINT = "https://creavy.netlify.app"; // for the CORS check; the service's ALLOWED_ORIGIN must match
 if (!base) { console.error("usage: node spikes/smoke-2a-live.mjs <staging-base-url> [real-icp-url]"); process.exit(2); }
 
