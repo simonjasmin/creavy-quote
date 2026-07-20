@@ -165,7 +165,7 @@ and `answers.pages` are present:
     "currency": "CAD",
     "suggested_addons": [{ "id": "logo_refresh", "amount": 49000 }], // unpriced upsells, cents (30.3)
     "care_plan_monthly": 5900,        // cents, [cfg] (attached at render, #27.8)
-    "reasons": ["cheapest_bundle"],   // machine codes (opaque/optional until 30.5)
+    "reasons": ["cheapest_bundle"],   // stable codes (§2a); optional to render (30.5)
     "core_pages": 4,                  // #8 (int | "30+")
     "detected_platform": "wordpress", // high-conf only, else "unknown" (#23)
     "confidence": "high"              // #23
