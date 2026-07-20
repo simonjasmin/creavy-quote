@@ -4,7 +4,7 @@
     "headers": {
       "content-type": "text/html; charset=utf-8"
     },
-    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>Accueil — Électrique Néovolt</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"></head><body><h1>Électrique Néovolt</h1><h2>Maître électricien à Laval</h2><p>Installation électrique résidentielle et commerciale, borne de recharge pour véhicule électrique, mise aux normes de panneau et éclairage DEL. Équipe certifiée, travail garanti.</p><a href=\"/services\">x</a><a href=\"/a-propos\">x</a><a href=\"/realisations\">x</a><a href=\"/contact\">x</a><p>© 2025 Électrique Néovolt inc. — Membre de la Corporation des maîtres électriciens du Québec. Licence RBQ 5678-1234-01.</p></body></html>"
+    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>Accueil — Électrique Néovolt</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"></head><body><nav><a href=\"/services\">Services</a> <a href=\"/a-propos\">À propos</a> <a href=\"/realisations\">Réalisations</a> <a href=\"/contact\">Contact</a></nav><h1>Électrique Néovolt</h1><h2>Maître électricien à Laval</h2><p>Installation électrique résidentielle et commerciale, borne de recharge pour véhicule électrique, mise aux normes de panneau et éclairage DEL. Équipe certifiée, travail garanti.</p><p>© 2025 Électrique Néovolt inc. — Membre de la Corporation des maîtres électriciens du Québec. Licence RBQ 5678-1234-01.</p></body></html>"
   },
   "https://www.syn-electricien-sain.example/": {
     "status": 404

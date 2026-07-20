@@ -1,0 +1,7 @@
+{
+  "slug": "syn-couvreur-dated",
+  "lang": "fr",
+  "model": "claude-opus-4-8",
+  "transcript": "Votre site a quatre pages qui présentent clairement vos services de toiture en Mauricie. Le problème : la conception date des années 2000. On voit encore « optimisé pour Internet Explorer 6 » et « nécessite Adobe Flash Player » — deux technologies abandonnées qui ne fonctionnent plus sur les navigateurs et cellulaires d'aujourd'hui. Vos clients potentiels risquent de tomber sur une page brisée ou vide. La bonne nouvelle : votre contenu est solide et réutilisable. On repart sur une base moderne, propre et lisible sur mobile — même information, présentée comme il faut. L'estimation est juste en dessous.\n\n===ASSESSMENT-META===\n{\"complexity\":\"standard\",\"complexity_factors\":[\"dated_design\",\"thin_but_clean\"],\"review_note\":\"WordPress site, 4 pages. Content references IE6 and Flash — likely broken/legacy front end despite WP backend. Copyright 2009. Rebuild recommended. Content thin but clean and reusable.\",\"confidence\":\"high\",\"flagged_for_review\":false}",
+  "provisional": false
+}

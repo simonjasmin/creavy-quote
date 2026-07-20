@@ -4,7 +4,7 @@
     "headers": {
       "content-type": "text/html; charset=utf-8"
     },
-    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>Accueil — Couvreur Réno-Vieux</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"></head><body><h1>Couvreur Réno-Vieux inc.</h1><h2>Toiture résidentielle depuis 1998</h2><p>Réfection de toiture, réparation de bardeaux et installation de membrane à Trois-Rivières. Nous desservons toute la Mauricie. Estimation gratuite sur demande.</p><a href=\"/services\">x</a><a href=\"/realisations\">x</a><a href=\"/contact\">x</a><p>© 2009 Couvreur Réno-Vieux inc. — Tous droits réservés. Site optimisé pour Internet Explorer 6. Nécessite Adobe Flash Player.</p></body></html>"
+    "body": "<!doctype html><html lang=\"fr\"><head><meta charset=\"utf-8\"><title>Accueil — Couvreur Réno-Vieux</title><link rel=\"stylesheet\" href=\"/wp-content/themes/creavy/style.css\"></head><body><nav><a href=\"/services\">Services</a> <a href=\"/realisations\">Réalisations</a> <a href=\"/contact\">Contact</a></nav><h1>Couvreur Réno-Vieux inc.</h1><h2>Toiture résidentielle depuis 1998</h2><p>Réfection de toiture, réparation de bardeaux et installation de membrane à Trois-Rivières. Nous desservons toute la Mauricie. Estimation gratuite sur demande.</p><p>© 2009 Couvreur Réno-Vieux inc. — Tous droits réservés. Site optimisé pour Internet Explorer 6. Nécessite Adobe Flash Player.</p></body></html>"
   },
   "https://www.syn-couvreur-dated.example/": {
     "status": 404

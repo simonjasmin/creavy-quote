@@ -1,0 +1,7 @@
+{
+  "slug": "syn-plomberie-bilingue",
+  "lang": "fr",
+  "model": "claude-opus-4-8",
+  "transcript": "Votre site compte trois pages claires — accueil, services, contact — offertes en français et en anglais, chaque version bien en miroir. Le contenu est net et va droit au but : services de plomberie, urgence 24/7, numéro pour vous joindre. Rien d'alarmant ici, la base est saine. C'est une belle fondation si vous voulez moderniser l'image, étoffer les services ou ajouter la prise de rendez-vous en ligne. Voici ce que ça donnerait — l'estimation est juste en dessous.\n\n===ASSESSMENT-META===\n{\"complexity\":\"low\",\"complexity_factors\":[\"minimal_content\",\"thin_but_clean\",\"multilingual_content\"],\"review_note\":\"3-page bilingual plumbing site, clean FR/EN mirror. No booking or shop detected. Healthy, thin content.\",\"confidence\":\"high\",\"flagged_for_review\":false}",
+  "provisional": false
+}

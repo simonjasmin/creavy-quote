@@ -1,0 +1,7 @@
+{
+  "slug": "syn-plomberie-bilingue",
+  "lang": "en",
+  "model": "claude-opus-4-8",
+  "transcript": "Your site has three clean pages, fully mirrored in English and French, covering your plumbing services and contact details clearly. It's in good shape: the structure is sound, the content is tidy, and the bilingual setup already reaches both audiences on the Rive-Sud. A rebuild isn't urgent. The content is thin, though — mostly a summary — so if you'd like to expand on each service, add customer reviews, or make the emergency line more prominent, here's what that would look like. The estimate is just below.\n\n===ASSESSMENT-META===\n{\"complexity\":\"standard\",\"complexity_factors\":[\"thin_but_clean\",\"multilingual_content\"],\"review_note\":\"3 core pages, bilingual mirror en/fr, WordPress high confidence. Content thin but clean, no ecommerce or booking. Healthy site, optional expansion.\",\"confidence\":\"high\",\"flagged_for_review\":false}",
+  "provisional": false
+}

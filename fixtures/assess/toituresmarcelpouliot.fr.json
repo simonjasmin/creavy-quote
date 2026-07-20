@@ -1,0 +1,7 @@
+{
+  "slug": "toituresmarcelpouliot",
+  "lang": "fr",
+  "model": "claude-opus-4-8",
+  "transcript": "Votre site compte quatre pages bien organisées : services, réalisations et contact, avec un contenu clair qui met de l'avant vos 40 ans d'expérience, vos certifications RBQ et vos secteurs d'activité. Par contre, le pied de page marque 2017, et la page Réalisations affiche les catégories sans photos derrière : votre meilleur argument de vente, vos toits faits, reste invisible pour le client qui magasine. La bonne nouvelle : toute votre base textuelle est solide et réutilisable. On rafraîchit l'image, on met vos réalisations en valeur et on branche le formulaire proprement. L'estimation est juste en dessous.\n\n===ASSESSMENT-META===\n{\"complexity\":\"standard\",\"complexity_factors\":[\"dated_design\",\"thin_but_clean\"],\"review_note\":\"Host ambiguous per scan flag. .php pages, no high-confidence platform. Réalisations page shows empty gallery categories — likely dynamic image gallery not captured; do not price on it. Contact form present.\",\"confidence\":\"medium\",\"flagged_for_review\":true}",
+  "provisional": false
+}
