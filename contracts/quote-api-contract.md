@@ -1,4 +1,4 @@
-# Creavy Quote API — contract v0.3
+# Creavy Quote API — contract v0.4
 
 > **Canonical home:** this file (`contracts/quote-api-contract.md` in `creavy-quote`).
 > creavy-site keeps a **synced copy** and never reads `SPEC.md`. Machine enums only;
@@ -12,7 +12,15 @@
 
 ## 1. Header / traceability
 
-- **Version:** 0.3 (2026-07-20). **Status:** draft for creavy-site E1; indicative only.
+- **Version:** 0.4 (2026-07-20). **Status:** draft for creavy-site E1; indicative only.
+- **Changelog v0.3 → v0.4 (amendment #31, consumer-driven « Détails de l'analyse » panel):**
+  - New optional `analysis_details: [{item, value}]` on **completed** quotes (§4d-bis) —
+    a **narrow whitelisted exception** to stored-never-returned (#31). Whitelist:
+    `platform | pages | language | ecommerce | https`.
+  - **`https` is true-only** (omit when absent — a `false` never reads as critique);
+    **`booking` is not in the whitelist** (no scan-side detector).
+  - Inclusion rule: high detection confidence only; below → omitted, **no confidence field
+    on the wire**. Field **absent entirely** on `no_site` quotes and when nothing qualifies.
 - **Changelog v0.2 → v0.3 (30.5 / 30.6, now live in the engine):**
   - `reasons[]` are now a **stable, append-only `reason_code` enum** (§2a) — **still
     optional to render** (the site owns FR/EN labels). Prose moved to internal
@@ -58,7 +66,7 @@
 | Indicative flag | `indicative: true` on every response | #29.5 |
 | Basis | `"scanned"` (URL crawled) · `"declared"` (answers-only, `no_site`) | #29.3 |
 | Register | `"flat"` (single `indicative_total`) · `"estimation"` (`range{min,max}`+`confidence`) | #29.4 |
-| Never returned | `crawl_facts`, `claude_assessment`, `signals_matched`, review flags, scoring, event-log content — **stored, never returned** | #24, #8 |
+| Never returned | `crawl_facts`, `claude_assessment`, `signals_matched`, review flags, scoring, event-log content — **stored, never returned** (sole exception: the `analysis_details` whitelist, §4e) | #24, #8, #31 |
 
 **Add-on IDs (from config, verbatim — not retyped from memory):** `extra_page`,
 `copywriting_per_page`, `logo_refresh`, `bilingual`, `booking`, `ecommerce`
@@ -215,6 +223,40 @@ and `answers.pages` are present:
 }
 ```
 
+### 4e. `analysis_details` — optional detection-facts panel (#31)
+
+On **completed** quotes, an optional `analysis_details: [{item, value}]` may accompany
+`result`, feeding the site's collapsed « Détails de l'analyse » panel. **Machine
+enums/typed values only** (site owns FR/EN labels). A **narrow whitelisted exception** to
+the stored-never-returned rule (§8) — detection-adapter facts only, ~zero tokens.
+
+- **Inclusion:** an item appears **only at high detection confidence** (#23). Below that →
+  **omitted**; **no confidence field crosses the wire — absence IS the signal.**
+- **`https` is true-only** — present only when HTTPS is confirmed; omitted otherwise (a
+  `false` never reads as critique, #24). **`booking` is not whitelisted** (no detector).
+- **Absent entirely** on `no_site` quotes and when nothing qualifies — the site renders
+  nothing (absent-tolerant).
+- **Never** carries theme/generator, versions, scores, recommendations, or anything from
+  the Claude assessment (#24, #31).
+
+| item | value type | source |
+|---|---|---|
+| `platform` | string enum (`wordpress`\|`wix`\|`shopify`\|`squarespace`\|`duda`\|…) | #8 `detected_platform`, high-conf (#23) |
+| `pages` | integer | #8 `core_pages` |
+| `language` | enum `fr`\|`fr_en` | #8 `languages` / `bilingual_mirror` |
+| `ecommerce` | boolean `true` | Shopify platform (no WooCommerce) |
+| `https` | boolean `true` | fetched URL scheme (**true-only**) |
+
+Example (fragment appended to a `completed` `result`):
+```json
+"analysis_details":[
+  {"item":"platform","value":"wordpress"},
+  {"item":"pages","value":4},
+  {"item":"language","value":"fr_en"},
+  {"item":"https","value":true}
+]
+```
+
 ## 5. Failure semantics
 
 `failed` and hard-blocks carry a **machine `reason` / `reason_code` enum** drawn from
@@ -267,6 +309,8 @@ ratified outcomes. Every terminal state is renderable — no dead ends (Phase 0 
   #25A, endpoint-layer, not request/response shape. §P.
 - **Never returned:** `crawl_facts`, `claude_assessment`, `signals_matched`, review flags,
   scoring, `pairing_evidence`, raw event data. Stored, never on the wire. [#24, #8]
+  **Sole exception:** the `analysis_details` whitelist (§4e) — five detection facts only,
+  high-confidence, `https` true-only. [#31]
 
 ## 9. Examples (six complete cases, real config prices)
 
@@ -281,10 +325,14 @@ ratified outcomes. Every terminal state is renderable — no dead ends (Phase 0 
     "indicative_total":348000,"currency":"CAD",
     "suggested_addons":[{"id":"logo_refresh","amount":49000}],"care_plan_monthly":5900,
     "reasons":["cheapest_bundle","bilingual_addon"],
-    "core_pages":4,"detected_platform":"wordpress","confidence":"high" } }
+    "core_pages":4,"detected_platform":"wordpress","confidence":"high",
+    "analysis_details":[{"item":"platform","value":"wordpress"},{"item":"pages","value":4},
+      {"item":"language","value":"fr_en"},{"item":"https","value":true}] } }
 ```
 *(Standard 279000 + bilingual 69000 = 348000; Standard+bilingual beats Pro 429000 — #27.3.
-`has_brand_assets:false` → `logo_refresh` suggestion at config price, 30.6.)*
+`has_brand_assets:false` → `logo_refresh` suggestion at config price, 30.6. `analysis_details`
+(#31): four high-confidence facts; `https` present so it appears; no `booking` line — not
+whitelisted, no detector.)*
 
 **E3 — scanned estimation (5-page, JS-heavy → softened):**
 ```json
