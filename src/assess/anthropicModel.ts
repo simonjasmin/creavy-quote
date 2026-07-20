@@ -14,14 +14,18 @@ export function anthropicModel(apiKey: string, stats?: { last?: LiveStats }): As
   return {
     async *stream(req: AssessRequest) {
       const started = Date.now();
-      const res = await fetch(API, {
-        method: "POST",
-        headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-        body: JSON.stringify({
-          model: req.model, max_tokens: req.max_tokens, temperature: req.temperature,
-          system: req.system, messages: [{ role: "user", content: req.user }], stream: true,
-        }),
-      });
+      const base = { model: req.model, max_tokens: req.max_tokens, system: req.system, messages: [{ role: "user", content: req.user }], stream: true };
+      const headers = { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" };
+      const post = (extra: Record<string, unknown>) => fetch(API, { method: "POST", headers, body: JSON.stringify({ ...base, ...extra }) });
+
+      // Newer models (e.g. claude-opus-4-8) deprecate `temperature` and 400 on it — they
+      // manage sampling internally. Retry once without it (model-agnostic, no hardcoded list).
+      let res = await post({ temperature: req.temperature });
+      if (res.status === 400) {
+        const t = await res.text();
+        if (/temperature.*deprecat/i.test(t)) res = await post({});
+        else throw new Error(`anthropic 400: ${t}`);
+      }
       if (!res.ok || !res.body) throw new Error(`anthropic ${res.status}: ${await res.text().catch(() => "")}`);
 
       let inTok = 0, outTok = 0;

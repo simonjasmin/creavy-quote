@@ -40,7 +40,7 @@ for (const g of goldens) {
         prose: r.ok ? r.assessment : `(unavailable: ${r.reason})`, words: prose.trim().split(/\s+/).filter(Boolean).length,
         ms: s.ms, in_tok: s.input_tokens, out_tok: s.output_tokens,
       });
-      console.log(`${g.slug} [${lang}] ${model}: ${r.ok ? r.complexity + "/" + r.confidence : r.reason} — ${s.ms}ms, ${s.out_tok} out-tok, ${rows.at(-1).words}w`);
+      console.log(`${g.slug} [${lang}] ${model}: ${r.ok ? r.complexity + "/" + r.confidence : r.reason} — ${s.ms}ms, ${s.output_tokens} out-tok, ${rows.at(-1).words}w`);
     }
   }
 }
