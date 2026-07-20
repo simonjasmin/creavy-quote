@@ -10,6 +10,7 @@ import { assessConfig } from "./config.ts";
 import { buildSystem } from "./prompt/system.ts";
 import { buildUser } from "./prompt/payload.ts";
 import type { AssessmentModel } from "./model.ts";
+import { type ScanEventEmitter, NOOP_EMITTER } from "../crawl/events.ts";
 import {
   COMPLEXITY, CONFIDENCE, COMPLEXITY_FACTORS,
   type AssessResult, type AssessLang, type ComplexityFactor,
@@ -20,6 +21,7 @@ export type AssessOpts = {
   model: AssessmentModel; // injected (replay in tests, live in prod/benchmark)
   modelId?: string; // overrides config.model (the benchmark passes ids explicitly)
   onProse?: (chunk: string) => void; // A4: prose streams here, meta never does
+  emitter?: ScanEventEmitter; // A4: assessment_started/chunk/complete onto the #24 spine
 };
 
 // Forward only the PROSE side of the stream to onProse, stopping cleanly at the delimiter
@@ -93,10 +95,14 @@ export async function assess(scan: ScanResult, opts: AssessOpts): Promise<Assess
   const modelId = opts.modelId ?? assessConfig.model;
   if (!modelId) return { ok: false, reason: "model_error", detail: "no model configured (pending gate) and none injected" };
 
+  const emitter = opts.emitter ?? NOOP_EMITTER;
   const system = buildSystem(opts.lang);
   const user = buildUser(scan);
-  const forward = proseForwarder(assessConfig.delimiter, opts.onProse);
+  // A4: the prose streams onto the #24 spine as it generates; meta NEVER does.
+  const onProse = (c: string) => { emitter.emit("assessment_chunk", { text: c }); opts.onProse?.(c); };
+  const forward = proseForwarder(assessConfig.delimiter, onProse);
 
+  emitter.emit("assessment_started", { lang: opts.lang });
   let raw = "";
   try {
     for await (const chunk of opts.model.stream({ model: modelId, system, user, max_tokens: assessConfig.max_tokens, temperature: assessConfig.temperature })) {
@@ -104,8 +110,14 @@ export async function assess(scan: ScanResult, opts: AssessOpts): Promise<Assess
       forward(chunk);
     }
   } catch (e) {
-    return { ok: false, reason: "model_error", detail: String((e as Error)?.message ?? e) }; // A5
+    emitter.emit("assessment_unavailable", {}); // honest terminal event (A5)
+    return { ok: false, reason: "model_error", detail: String((e as Error)?.message ?? e) };
   }
 
-  return parseTranscript(raw, opts.lang);
+  const parsed = parseTranscript(raw, opts.lang);
+  // Terminal event carries INTERNALS for the founder panel only — the public projection
+  // ignores the data and renders a fixed string, so nothing internal ever ships (A4).
+  if (parsed.ok) emitter.emit("assessment_complete", { complexity: parsed.complexity, confidence: parsed.confidence, flagged_for_review: parsed.flagged_for_review, factor_count: parsed.complexity_factors.length });
+  else emitter.emit("assessment_unavailable", {});
+  return parsed;
 }

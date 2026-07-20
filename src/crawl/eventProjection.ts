@@ -24,6 +24,16 @@ export const PUBLIC_TEMPLATES: Record<string, Entry> = {
   blog_classified: { fr: (d) => `${d.count} articles de blogue — comptés séparément de vos pages`, en: (d) => `${d.count} blog posts — counted separately from your pages` },
   core_count_progress: { fr: (d) => `${d.count} pages principales…`, en: (d) => `${d.count} core pages…` },
   scan_complete: { fr: () => "Analyse terminée", en: () => "Analysis complete" },
+
+  // #32 A4 — the stage-2 assessment streams on the same spine. `assessment_chunk` carries
+  // real model prose ALREADY in the prospect's language (the honest "watch it think"); the
+  // template passes it through. start/complete/unavailable are fixed FR/EN strings — the
+  // complete event's internal data (complexity/confidence/flag) is IGNORED here, so no
+  // internal ever ships (projectPublic returns only the rendered text, never raw data).
+  assessment_started: { fr: () => "Analyse détaillée de votre site…", en: () => "Detailed analysis of your site…" },
+  assessment_chunk: { fr: (d) => String(d.text ?? ""), en: (d) => String(d.text ?? "") },
+  assessment_complete: { fr: () => "Analyse détaillée prête", en: () => "Detailed analysis ready" },
+  assessment_unavailable: { fr: () => "Notre équipe prépare votre analyse détaillée.", en: () => "Our team is preparing your detailed analysis." },
 };
 
 export const PUBLIC_WHITELIST: ReadonlySet<string> = new Set(Object.keys(PUBLIC_TEMPLATES));
