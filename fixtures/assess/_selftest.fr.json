@@ -1,0 +1,8 @@
+{
+  "slug": "_selftest",
+  "lang": "fr",
+  "model": "provisional",
+  "provisional": true,
+  "note": "Harness self-test transcript — NOT a live model recording. It proves replayModel + assess() work offline (deterministic, zero live calls). Per-site recordings (fixtures/assess/<slug>.<lang>.json) are produced by spikes/record-assess.mjs with the chosen model AFTER the gate.",
+  "transcript": "Votre site compte quatre pages sur WordPress. Le pied de page affiche encore un copyright de 2009 et mentionne Internet Explorer : la présentation a vieilli et inspire moins confiance aujourd'hui. Bonne nouvelle, le contenu reste solide et réutilisable. On moderniserait la base sans repartir de zéro. L'estimation est juste en dessous.\n===ASSESSMENT-META===\n{\"complexity\":\"standard\",\"complexity_factors\":[\"dated_design\",\"thin_but_clean\"],\"review_note\":\"Footer text shows a 2009 copyright and an Internet Explorer mention; content reusable — a straightforward rebuild.\",\"confidence\":\"high\",\"flagged_for_review\":false}"
+}
