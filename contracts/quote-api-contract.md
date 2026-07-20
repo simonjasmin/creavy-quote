@@ -1,4 +1,4 @@
-# Creavy Quote API — contract v0.2
+# Creavy Quote API — contract v0.3
 
 > **Canonical home:** this file (`contracts/quote-api-contract.md` in `creavy-quote`).
 > creavy-site keeps a **synced copy** and never reads `SPEC.md`. Machine enums only;
@@ -12,7 +12,14 @@
 
 ## 1. Header / traceability
 
-- **Version:** 0.2 (2026-07-19). **Status:** draft for creavy-site E1; indicative only.
+- **Version:** 0.3 (2026-07-20). **Status:** draft for creavy-site E1; indicative only.
+- **Changelog v0.2 → v0.3 (30.5 / 30.6, now live in the engine):**
+  - `reasons[]` are now a **stable, append-only `reason_code` enum** (§2a) — **still
+    optional to render** (the site owns FR/EN labels). Prose moved to internal
+    `reason_text`, never on the API (30.5).
+  - `suggested_addons` is now **populated** `[{id, amount}]` (was present-and-empty):
+    `has_brand_assets:false` → `logo_refresh`; blog below threshold → `seo_migration`
+    (30.6).
 - **Changelog v0.1 → v0.2 (amendment #30):**
   - `component: none|booking|listings|both` replaces the `needs_booking_or_listings`
     boolean (30.2).
@@ -43,7 +50,7 @@
 | Money | integer **cents**, `currency:"CAD"` always explicit | #20 |
 | Enums | machine values only; **no localized strings in any response** | #24 default-deny; site owns FR/EN |
 | Priced bundle | `bundle:{tier, addons[]}` — the #27 mapper output; `addons[]` are **priced** (reflected in `indicative_total`) | #27 |
-| Suggested add-ons | `suggested_addons: [{id, amount}]` — **unpriced upsells** with the config price in **integer cents** (30.3); site renders labels + formats money, **never hardcodes a price**. `id` = verbatim config add-on ID | [cfg], #20/#22, #27.4/27.5 · 30.6 emits it next tour |
+| Suggested add-ons | `suggested_addons: [{id, amount}]` — **unpriced upsells** with the config price in **integer cents**; site renders labels + formats money, **never hardcodes a price**. `id` = verbatim config add-on ID. **Populated by the engine** (30.6): `has_brand_assets:false`→`logo_refresh`, blog<threshold→`seo_migration` | [cfg], #20/#22, #27.4/27.5, 30.3/30.6 |
 | Price kinds | `flat` (cents) · `percent_modifier` · `human_quote` | #20 |
 | Tiers | `presence` · `standard` · `pro` · `pro_custom` | [cfg], naming §2 |
 | Confidence | `platform` appears **only at high confidence**, else `"unknown"` | #23 |
@@ -58,10 +65,33 @@
 (human_quote), `photo_sourcing`, `seo_migration`, `rush_delivery` (percent_modifier),
 `extra_revision`. [cfg]
 
-**Reason codes (30.5).** `reasons[]` in responses are **machine codes** (site renders
-FR/EN). The #27 engine emits **English prose** today; the stable `reason_code` enum lands
-**next quote-side tour** (prose → internal `reason_text`, never on the API). Until then
-the site treats `reasons[]` as **opaque/optional**.
+### 2a. `reason_code` enum (30.5 — stable, append-only, live in the engine)
+
+`reasons[]` are **stable snake_case codes**; **still optional to render** (the site owns
+FR/EN labels). Prose lives in the engine's internal `reason_text` and **never crosses the
+API**. **Append-only:** a code is never renamed once published — renaming is a breaking
+change; **deprecation is a changelog line**, not an edit. The site must **tolerate unknown
+codes** (render a generic line or nothing).
+
+| code | meaning |
+|---|---|
+| `cheapest_bundle` | the selected least-expensive valid bundle (27.3) |
+| `bilingual_addon` | bilingual priced as a Standard add-on |
+| `bilingual_included_pro` | bilingual covered flat by Pro |
+| `listings_needs_pro` | listings has no Standard add-on → only Pro covers it |
+| `blog_migration_included` | blog ≥ threshold → SEO migration audit in the bundle (27.5) |
+| `blog_migration_suggested` | blog below threshold (but present) → SEO migration suggested |
+| `ecommerce_human_quote` | e-commerce → sur mesure (human_quote, #21) → review |
+| `bilingual_suspected_review` | bilingual suspected — human confirms scope |
+| `needs_closer_look` | JS-heavy / `needs_browser` → review |
+| `robots_blocked` | robots `Disallow: /` — limited view → review |
+| `partial_scan` | scan hit the budget → partial → review |
+| `anti_bot_challenge` | anti-bot challenge encountered → review |
+| `review_unusual_size` | ≥ 7 core pages — a human decides (no auto-bundle) |
+| `out_of_scope_30_plus` | `core_pages == "30+"` — out of scope |
+| `greenfield_no_price` | greenfield (parked / no_html / no_owned_site) — nothing to price |
+| `review_no_clean_bundle` | no clean bundle covers the shape |
+| `declared_scan_conflict` | declared vs scanned page-band disagreement (30.1, reconciliation layer — not the #27 mapper) |
 
 **Flag line (contracts must not collide):** this "no localized strings" rule does **not**
 apply to the #24 **event-stream** endpoint, whose server-side FR/EN templates are
@@ -243,17 +273,18 @@ ratified outcomes. Every terminal state is renderable — no dead ends (Phase 0 
 **E1 — POST accepted (pending):** `POST /quote {url, answers}` → `{ "quote_id":"qt_1",
 "status":"pending" }`.
 
-**E2 — scanned flat (4-page WordPress, wants bilingual):**
+**E2 — scanned flat (4-page WordPress, wants bilingual, no brand assets):**
 ```json
 { "quote_id":"qt_2","status":"completed","indicative":true,"basis":"scanned",
   "register":"flat","review_required":false,
   "result":{ "bundle":{"tier":"standard","addons":["bilingual"]},
     "indicative_total":348000,"currency":"CAD",
-    "suggested_addons":[],"care_plan_monthly":5900,
+    "suggested_addons":[{"id":"logo_refresh","amount":49000}],"care_plan_monthly":5900,
     "reasons":["cheapest_bundle","bilingual_addon"],
     "core_pages":4,"detected_platform":"wordpress","confidence":"high" } }
 ```
-*(Standard 279000 + bilingual 69000 = 348000; Standard+bilingual beats Pro 429000 — #27.3.)*
+*(Standard 279000 + bilingual 69000 = 348000; Standard+bilingual beats Pro 429000 — #27.3.
+`has_brand_assets:false` → `logo_refresh` suggestion at config price, 30.6.)*
 
 **E3 — scanned estimation (5-page, JS-heavy → softened):**
 ```json
@@ -295,7 +326,7 @@ ratified outcomes. Every terminal state is renderable — no dead ends (Phase 0 
 { "quote_id":"qt_7","status":"completed","indicative":true,"basis":"scanned",
   "register":"estimation","review_required":true,
   "result":{ "range":{"min":279000,"max":429000},"currency":"CAD","confidence":"low",
-    "suggested_addons":[],"reasons":["declared_scanned_disagreement"],
+    "suggested_addons":[],"reasons":["declared_scan_conflict"],
     "core_pages":3,"detected_platform":"wordpress","confidence_platform":"high" } }
 ```
 *(Bounds = Standard 279000 … Pro 429000 across the union of the 3-page and 5+-page
@@ -327,11 +358,13 @@ v0.1's eight flags + the missed ninth (suggestion prices), ratified:
   erase evidence.
 - **(ninth) suggestion prices** → ✅ **30.3**: `suggested_addons: [{id, amount}]`, cents
   from config.
-- **§P-1 reason codes** → ⏳ **30.5**: stable `reason_code` enum lands next quote-side
-  tour; `reasons[]` stay opaque/optional until a contract bump.
-- **§P-5 `suggested_addons` emission** → ⏳ **30.6**: engine emits next tour; the field is
-  **present + empty** (`[]`) until then — the site must tolerate `[]`.
-- **§P-4 honeypot/Turnstile fields** → ⏳ **30.7**: Phase 2 (#25A).
+- **§P-1 reason codes** → ✅ **30.5 (v0.3)**: stable append-only `reason_code` enum live
+  (§2a); prose in internal `reason_text`. Still **optional** to render.
+- **§P-5 `suggested_addons` emission** → ✅ **30.6 (v0.3)**: engine populates `[{id,
+  amount}]` (logo when no brand assets, SEO below blog threshold). Site must still
+  tolerate `[]`.
+- **§P-4 honeypot/Turnstile fields** → ⏳ **30.7**: Phase 2 (#25A) — the only remaining
+  deferral.
 
-**No open flags block v0.2.** The ⏳ items are ratified deferrals to the next quote-side
-tour, not open questions.
+**No open flags block v0.3.** The one ⏳ item is a ratified Phase-2 deferral, not an open
+question.
