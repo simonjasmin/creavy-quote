@@ -58,8 +58,10 @@ export function loadServiceConfig(env: Env): ServiceConfig {
   const turnstileEnabled = bool("TURNSTILE_ENABLED", false);
   const turnstileSecret = turnstileEnabled ? required("TURNSTILE_SECRET") : (env.TURNSTILE_SECRET?.trim() || null);
 
+  // Staging + production use real Postgres (the tour posture). A missing DATABASE_URL in a
+  // deployed env is a boot error — loud, not a silent fall-through to the in-memory store.
   const databaseUrl = env.DATABASE_URL?.trim() || null;
-  if (environment === "production" && !databaseUrl) throw new ConfigError("missing required env: DATABASE_URL (required in production)");
+  if (deployed && !databaseUrl) throw new ConfigError("missing required env: DATABASE_URL (required in staging/production)");
 
   return {
     env: environment,

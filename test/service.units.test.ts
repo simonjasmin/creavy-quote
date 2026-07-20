@@ -11,12 +11,17 @@ const ORIGIN = "https://creavy.netlify.app";
 test("CFG-01 missing ALLOWED_ORIGIN → refuses to boot", () => {
   assert.throws(() => loadServiceConfig({ NODE_ENV: "staging" }), ConfigError);
 });
-test("CFG-02 valid minimal staging config loads with defaults", () => {
-  const c = loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "staging" });
+test("CFG-02 valid staging config (with DATABASE_URL) loads with defaults", () => {
+  const c = loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "staging", DATABASE_URL: "postgres://x" });
   assert.equal(c.allowedOrigin, ORIGIN);
   assert.equal(c.turnstile.enabled, false); // staging starts disabled
-  assert.equal(c.databaseUrl, null); // memory fallback allowed off-production
+  assert.equal(c.databaseUrl, "postgres://x");
   assert.equal(c.dailyCeilings.scans, 200);
+});
+test("CFG-02b development allows no DATABASE_URL (in-memory fallback)", () => {
+  const c = loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "development" });
+  assert.equal(c.env, "development");
+  assert.equal(c.databaseUrl, null);
 });
 test("CFG-03 ANTHROPIC_API_KEY in a deployed env → boot error (#34)", () => {
   assert.throws(() => loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "staging", ANTHROPIC_API_KEY: "sk-x" }), ConfigError);
@@ -25,8 +30,9 @@ test("CFG-04 ANTHROPIC_API_KEY ignored in development (local spikes)", () => {
   const c = loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "development", ANTHROPIC_API_KEY: "sk-x" });
   assert.equal(c.env, "development");
 });
-test("CFG-05 production without DATABASE_URL → boot error", () => {
+test("CFG-05 deployed env without DATABASE_URL → boot error (staging + production)", () => {
   assert.throws(() => loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "production" }), ConfigError);
+  assert.throws(() => loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "staging" }), ConfigError);
 });
 test("CFG-06 TURNSTILE_ENABLED without secret → boot error", () => {
   assert.throws(() => loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "staging", TURNSTILE_ENABLED: "true" }), ConfigError);

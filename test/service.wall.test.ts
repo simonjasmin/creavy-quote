@@ -15,7 +15,7 @@ const T0 = 1_700_000_000_000;
 function mkDeps(envOver: Record<string, string> = {}, fetchImpl?: any) {
   const clock = new FakeClock(T0);
   const store = new MemoryStore();
-  const config = loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "staging", RATE_LIMIT_MAX: "5", ...envOver });
+  const config = loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "staging", DATABASE_URL: "postgres://test", RATE_LIMIT_MAX: "5", ...envOver });
   const rateLimiter = new RateLimiter(config.rateLimit.windowMs, config.rateLimit.maxPerWindow);
   const logs: string[] = [];
   const deps = { config, pricing: pricingConfig, store, rateLimiter, clock, fetchImpl, log: (l: string) => logs.push(l) };

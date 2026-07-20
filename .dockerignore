@@ -1,0 +1,18 @@
+# Keep the build context lean + never ship local secrets or test data into the image.
+# The runtime needs only src/ + package.json (config is code, not files; no fixtures at runtime).
+.git
+.gitignore
+node_modules
+.env
+.env.*
+test
+fixtures
+spikes
+docs
+memory
+.claude
+.vscode
+*.md
+!package.json
+.DS_Store
+Thumbs.db

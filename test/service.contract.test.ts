@@ -88,7 +88,7 @@ test("E8 listings → Pro flat", () => {
 const ORIGIN = "https://creavy.netlify.app";
 async function withServer(transport: FakeTransport, fn: (base: string, store: MemoryStore) => Promise<void>, over: Record<string, string> = {}) {
   const store = new MemoryStore();
-  const config = loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "staging", RATE_LIMIT_MAX: "50", ...over });
+  const config = loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "staging", DATABASE_URL: "postgres://test", RATE_LIMIT_MAX: "50", ...over });
   const server = createServer({ config, pricing: P, store, rateLimiter: new RateLimiter(config.rateLimit.windowMs, config.rateLimit.maxPerWindow), transport, clock: new FakeClock(1_700_000_000_000), syncHoldMs: 4000 });
   await new Promise<void>((r) => server.listen(0, () => r()));
   const port = (server.address() as any).port;

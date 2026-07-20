@@ -15,11 +15,15 @@ CLI / token and no `DATABASE_URL`**, so the actual staging deploy + the live-URL
 
 1. **Create the Railway project + Postgres plugin** (staging environment). Railway injects
    `DATABASE_URL`.
-2. **Set service variables** (from `.env.example`) — staging posture:
+2. **Set service variables.** `NODE_ENV=staging` is **already baked into the Dockerfile** —
+   you only set these two required vars (the loader **refuses to boot** without either, #22):
    - `ALLOWED_ORIGIN=https://<the-netlify-production-origin>`  ← **the value the site's Q3 needs**
-   - `NODE_ENV=staging`
+   - `DATABASE_URL=${{Postgres.DATABASE_URL}}`  ← reference the Railway Postgres plugin (its
+     **internal** URL needs no SSL config). **Required on staging** — the service will not
+     silently run in-memory.
+   Optional (defaults are fine for staging):
    - `TURNSTILE_ENABLED=false`  (staging starts disabled; production flips it on)
-   - leave the tunables at defaults (permissive-but-present ceilings)
+   - the tunables (permissive-but-present ceilings)
    - **do NOT set `ANTHROPIC_API_KEY`** — the loader refuses to boot if it's present (#34).
 3. **Deploy.** The Dockerfile build runs; on boot `index.ts` applies migrations
    (`migrated 0001_quotes`) then listens. `/health` turns green.
