@@ -44,6 +44,8 @@ test("E3 scanned estimation (needs_browser) → range, medium confidence", () =>
   assert.equal(res.confidence, "medium");
   assert.ok(res.reasons.includes("needs_closer_look"));
   assert.equal(res.detected_platform, "unknown");
+  // #31 on estimation: pages + language + https present; platform omitted (below high conf, #23)
+  assert.deepEqual(res.analysis_details, [{ item: "pages", value: 5 }, { item: "language", value: "fr" }, { item: "https", value: true }]);
 });
 
 // ---- E4 declared no_site: booking + bilingual ----
@@ -97,6 +99,8 @@ test("E-band scanned clean 8-page → #35 size_estimation_band range", () => {
   assert.ok(res.reasons.includes("size_estimation_band"));
   assert.equal(res.core_pages, 8);
   assert.equal(res.detected_platform, "wordpress");
+  // #31 analysis_details now rides the estimation register too (same whitelist + #23 gating)
+  assert.deepEqual(res.analysis_details, [{ item: "platform", value: "wordpress" }, { item: "pages", value: 8 }, { item: "language", value: "fr" }, { item: "https", value: true }]);
 });
 
 // ---- §8 review-copy variants: limited-view causes carry a public-safe reason code so the

@@ -85,6 +85,11 @@ latency = POST → terminal state. Corpus = the 9 golden real sites + the 2 live
 |---|--:|--:|--:|--:|:--:|
 | 1 | 11 | 3447 ms | **7710 ms** | 7710 ms | ✅ PASS |
 | 2 | 11 | 3236 ms | **7163 ms** | 7163 ms | ✅ PASS |
+| 3 (post-2b deploy, + sltoiture seed) | 12 | 2852 ms | **7116 ms** | 7116 ms | ✅ PASS |
+
+- **Post-2b re-measure (run 3) confirms no stage-1 regression** from the assessment deploy
+  (staging now `contract_version 0.7`) — assessments are a separate path. Seed `sltoiture.com`
+  (30+, overflow short-circuits after the homepage) = **543 ms**, the fastest in the set.
 
 - **p95 ≈ 7.2–7.7 s < 8 s → PASS**, stable across two runs. The p95 driver is
   **toitureshogue.com (31 core)** — the largest, out-of-ICP-size site; the ≤6-core ICP subset

@@ -79,13 +79,10 @@ export function buildQuoteResponse(args: { scan: ScanResult | null; answers: Ans
 
   // #35 size-estimation band → estimation register with the config-derived range (7..size_band_max)
   if (t.range) {
-    return {
-      status: "completed",
-      body: {
-        indicative: true, basis: "scanned", register: "estimation", review_required: true,
-        result: { range: t.range, currency: "CAD", confidence: "medium", suggested_addons: t.suggested_addons, reasons: t.reasons, core_pages: scan.core_pages, ...platformField },
-      },
-    };
+    const result: Record<string, unknown> = { range: t.range, currency: "CAD", confidence: "medium", suggested_addons: t.suggested_addons, reasons: t.reasons, core_pages: scan.core_pages, ...platformField };
+    const ad = analysisDetails(scan); // #31 panel on estimation too (same whitelist + #23 gating)
+    if (ad.length) result.analysis_details = ad;
+    return { status: "completed", body: { indicative: true, basis: "scanned", register: "estimation", review_required: true, result } };
   }
 
   // review with no price (30+, greenfield content, > band ceiling)
@@ -103,6 +100,7 @@ export function buildQuoteResponse(args: { scan: ScanResult | null; answers: Ans
       const declaredT = mapTier({ ...input, core_pages: bandToPages(answers.pages) }, config);
       if (declaredT.indicative_total != null) min = Math.min(min, declaredT.indicative_total);
     }
+    const adEst = analysisDetails(scan); // #31 panel on the soft/band-conflict estimation too
     return {
       status: "completed",
       body: {
@@ -111,6 +109,7 @@ export function buildQuoteResponse(args: { scan: ScanResult | null; answers: Ans
           range: { min, max: proTotal }, currency: "CAD", confidence: bandConflict ? "low" : "medium",
           suggested_addons: t.suggested_addons, reasons: bandConflict ? ["declared_scan_conflict"] : t.reasons,
           core_pages: scan.core_pages, ...platformField,
+          ...(adEst.length ? { analysis_details: adEst } : {}),
         },
       },
     };
