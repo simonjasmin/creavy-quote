@@ -32,5 +32,6 @@ const input = { core_pages: r.core_pages, blog_posts: r.blog_posts, bilingual_mi
 const t = mapTier(input, pricingConfig);
 console.log(`== MAPTIER (neutral answers)`);
 console.log(`  review_required  : ${t.review_required}   bundle: ${t.bundle ? t.bundle.tier + " [" + t.bundle.addons.join(",") + "]" : "null (no auto-price)"}`);
+if (t.range) console.log(`  #35 band range   : [${t.range.min}, ${t.range.max}] cents (instant estimation, exact price human-confirmed)`);
 console.log(`  reasons (codes)  : ${JSON.stringify(t.reasons)}`);
 console.log(`  reason_text      : ${JSON.stringify(t.reason_text)}`);

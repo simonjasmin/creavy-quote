@@ -1,109 +1,78 @@
 # Corpus outcome sweep + E2 review-rate diagnosis
 
-> **Measurement only** — no rule, threshold, or config was changed. Anything that looks
-> money-touching-wrong is flagged with data below, not fixed. Reproduce:
-> `node spikes/corpus-sweep.mjs` (offline) and `node spikes/diagnose-site.mjs <url>` (live).
-> Produced 2026-07-20. Suite green (357) and 2b unstarted at time of measurement.
+> Measurement + the #35 outcome shift. Reproduce: `node spikes/corpus-sweep.mjs` (offline)
+> and `node spikes/diagnose-site.mjs <url>` (live). Updated 2026-07-20 for **#35 (size-
+> estimation band)**. Suite green (368).
 
-## 1. The two live E2 review cases — cause chain
+## 0. Corrections (founder, recorded in SPEC #35)
 
-Both scanned live (real `HttpTransport`, one polite pass, CreavyQuoteBot UA, robots respected).
-**Both hit the same condition: the ≥7-core ceiling (`review_unusual_size`, #27.2).**
+- **elevatek.ca is the founder's consulting brand — OUT of ICP**, not a tradesperson. Its
+  earlier `review` outcome was **correct, not collateral.** The prior "small trades site
+  denied a price" framing is **struck.**
+- **Bilingual mirrors do NOT inflate core counts** — #26/#28 pairing dedupes a fr/en mirror to
+  one core set. The prior "bilingual → more pages / doubled sitemap" rationale is **struck.**
 
-| site | core | blog | bilingual | platform | flags | assessable() | → outcome | reason code |
-|---|--:|--:|---|---|---|:--:|---|---|
-| **elevatek.ca** | **7** | 0 | yes (hreflang) | custom (low) | — | **false** | review, no price | `review_unusual_size` |
-| **toitureshogue.com** | **31** | 36 | yes (hreflang) | wordpress (high) | `partial` (sitemap children capped) | false | review, no price | `review_unusual_size` |
+## 1. The two live E2 cases — cause chain, under #35
 
-- **elevatek.ca** is a **legitimately small bilingual trades site** (7 paired core pages, an
-  electrician) — it clears every gate *except* core-count, landing **one page over** the auto-
-  quote ceiling of 6. This is the sharpest threshold-argument case (see §5).
-- **toitureshogue.com** — 31 core came through as a **number, not the `"30+"` sentinel**,
-  because the sitemap **index was children-capped** (`partial`), so the crawl counted 31 from
-  the sampled children instead of short-circuiting to `"30+"`. **Not money-touching:** both a
-  `31` and a `"30+"` route to review with no auto-price — identical outcome, only the reason
-  code differs (`review_unusual_size` vs `out_of_scope`). Flagged as a classification nuance,
-  §5.
+| site | core | flags | → outcome (post-#35) | reason |
+|---|--:|---|---|---|
+| **elevatek.ca** | **7** | bilingual (hreflang) | **estimation band**, range **[357000, 396000]** | `size_estimation_band` |
+| **toitureshogue.com** | **31** | `partial` (sitemap capped) | pure review (partial excludes band; >12) | `review_unusual_size` |
 
-## 2. Full-crawl outcome sweep (SET A — faithful offline replay)
+- **elevatek.ca now returns an instant range** ($3,570–$3,960) — correct by page count,
+  independent of its out-of-ICP fit (#35).
+- **toitureshogue.com stays review** — `partial` (children-capped sitemap) is a band exclusion,
+  so an undercounted huge site can't sneak a band price. Cosmetic thread: it reads
+  `review_unusual_size` vs `out_of_scope`, same no-price outcome (§4).
 
-15 sites with a faithful full-crawl fixture: 9 real goldens + 3 labelled-synthetic goldens +
-3 synthetics. `scan → assessable() → #27 mapper` with band-matched neutral answers.
+## 2. Full-crawl outcome sweep (SET A, 15 faithful fixtures) — before vs after #35
 
-| outcome | count | sites |
-|---|--:|---|
-| **flat** (instant price) | 5 | toituresmarcelpouliot(4), syn-couvreur-dated(4), syn-electricien-sain(5), syn-plomberie-bilingue(3), bilingual(2) |
-| **estimation** (instant range) | 1 | spa-shell(1, `needs_browser`→softened) |
-| **review** (no price, ≥7) | 5 | lasouche(12), mtlplomberie(10), paysagesgenest(16), pierrehamelin(27), protectoit(27) |
-| **out_of_scope** (30+) | 3 | itemconstruction, labarberie, mchenryplumbing |
-| **greenfield** | 1 | parked(0) |
+| outcome | before #35 | **after #35** | sites (after) |
+|---|--:|--:|---|
+| flat | 5 | 5 | toituresmarcelpouliot(4), syn-couvreur-dated(4), syn-electricien-sain(5), syn-plomberie-bilingue(3), bilingual(2) |
+| **estimation** | 1 | **3** | **lasouche(12)**, **mtlplomberie(10)** (now band), spa-shell(1, needs_browser) |
+| review (no price) | 5 | **3** | paysagesgenest(16), pierrehamelin(27), protectoit(27) |
+| out_of_scope (30+) | 3 | 3 | itemconstruction, labarberie, mchenryplumbing |
+| greenfield | 1 | 1 | parked(0) |
 
-- **Reason-code histogram:** `cheapest_bundle`×6, `needs_review`×5, `out_of_scope`×3,
-  `bilingual_addon`×2, `needs_closer_look`×1, `parked`×1.
-- **Core-page distribution:** `0`×1, `1`×1, `2`×1, `3`×1, `4`×2, `5`×1, `7-29`×5, `30+`×3.
-- **Auto-price rate:** flat+estimation over real (non-greenfield) sites = **6 / 14 = 43 %**.
+- **Reason histogram (after):** `cheapest_bundle`×6, `size_estimation_band`×2,
+  `out_of_scope`×3, `needs_review`×3, `bilingual_addon`×2, `needs_closer_look`×1, `parked`×1.
+- **Core distribution:** `0`×1 `1`×1 `2`×1 `3`×1 `4`×2 `5`×1 `7-29`×5 `30+`×3.
+- **Auto-price rate (flat + estimation over real sites):** **8 / 14 = 57 %** (was 43 % pre-#35).
+  Including the 2 live E2 sites (elevatek → band, toitureshogue → review): **9 / 16 = 56 %.**
 
-> **⚠ Bias caveat (load-bearing):** this corpus is **not a random ICP sample.** The 9 real
-> goldens were chosen for *crawl coverage* — 8 of 9 are ≥7 or 30+ core; only
-> `toituresmarcelpouliot` (4) is small. The synthetics fill the small end deliberately. So the
-> 43 % is a **floor, not the funnel rate.** A real small-trades funnel (the ICP) skews to
-> ≤6-core sites, which auto-price. Read §5 for what the sweep *does* argue, and §4 for why the
-> denominator is untrustworthy.
+> **⚠ Bias caveat (still load-bearing):** this is **not a random ICP sample.** The 9 real
+> goldens were chosen for *crawl coverage* — most are ≥7/30+. So 57 % is a **floor**, not the
+> funnel rate. A real small-trades funnel skews ≤6-core (instant flat) and 7–12 (now instant
+> range). The honest funnel-rate authority is **production telemetry (rider b), post-launch**
+> — the corpus sweeps are directional.
 
-## 3. Review causes, ranked (real sites, incl. the 2 live E2)
+## 3. Root-only 50-site corpus (SET B — sitemap-derived core band only)
 
-| review cause | reason code | count | note |
-|---|---|--:|---|
-| **≥7 core** | `review_unusual_size` | **7** | lasouche, mtlplomberie, paysagesgenest, pierrehamelin, protectoit + **elevatek(7)**, toitureshogue(31) |
-| 30+ pages | `out_of_scope` | 3 | itemconstruction, labarberie, mchenryplumbing |
-| greenfield | `parked` | 1 | parked (no site) |
+Root-only fixtures can't be faithfully full-scanned (no mocking to force outcomes). Reported
+only as far as the sitemap allows:
 
-**The ≥7-core ceiling is the dominant reason a real site gets no instant price** — 7 of the 11
-real reviewed sites. Every other gate (needs_browser, robots, anti_bot, partial-alone,
-bilingual_suspected, ecommerce) produced **zero** standalone reviews in this corpus.
+- **15 measurable** (`<urlset>`) · **35 not-measurable** (31 sitemap *index* files needing
+  child fetches; 4 no/unparseable).
+- **Sitemap-derived core band (ROUGH — no pairing / no soft-404):** `2`×1, `5`×1, `7-30`×8,
+  `30+`×5. Directional; reinforces the bias-large reading.
 
-## 4. Root-only 50-site corpus (SET B — sitemap-derived core band only)
+## 4. Recorded threads (not fixed)
 
-Root-only fixtures cannot be faithfully full-scanned (the sampled pages aren't captured — a
-full run would 404 them, i.e. mock the outcome, which we don't do). We report **only the
-sitemap-derived core band**, and label the rest **not-measurable**:
+- **31-vs-`"30+"` sentinel** (toitureshogue): a capped/partial sitemap yields a number just
+  over 30 instead of the `"30+"` sentinel → `review_unusual_size` not `out_of_scope`.
+  **Cosmetic** (same no-price outcome); `partial` also blocks the band, so no price leaks.
+- **Production telemetry is the real funnel-rate measure** once quotes flow (rider b).
 
-- **15 measurable** (flat `<urlset>` sitemap) · **35 not-measurable** (31 are **sitemap
-  *index*** files that need child fetches root-only can't do; 4 have no/unparseable sitemap).
-- **Sitemap-derived core band (ROUGH):** `2`×1, `5`×1, `7-30`×8, `30+`×5.
+## 5. Small-sites harvest / synthetic-golden swap — BLOCKED at sourcing (honest)
 
-> **Rough** = no bilingual pairing (a bilingual site's sitemap doubles its loc count →
-> over-counts core) and no soft-404 subtraction. Directional only. It reinforces §2's bias
-> reading: this corpus (chosen for *fingerprint* diversity) also skews large — 31 of 46
-> sitemaps are multi-child indexes, i.e. bigger CMS sites.
+The 10-site directory harvest **could not proceed politely from here:**
+- **Pages Jaunes** returns **HTTP 403 to the CreavyQuoteBot UA — including its `robots.txt`**
+  (edge anti-bot). Per the standing rules (robots respected, honest identifiable UA, no
+  detection evasion), I did **not** scrape past it.
+- **Google Maps** listing pages are JS-rendered — a plain fetch yields no business websites.
 
-## 5. Flagged — not decided (measurement-only)
-
-1. **The ≥7-core auto-quote ceiling (currently `review_pages=7`, so ≤6 auto-prices).** The
-   data argues it may be **tight for bilingual + slightly-larger small sites**:
-   - **elevatek.ca at exactly 7** — a small bilingual electrician, ICP-shaped, denied an
-     instant price by one page.
-   - A **bilingual** small business naturally carries more paired core pages; several corpus
-     sites cluster at 10–16 (mtlplomberie 10, lasouche 12, paysagesgenest 16).
-   - **Question for the founder (not a change):** should the ceiling rise (e.g. 8 or 10), or
-     should **bilingual sites get a higher ceiling** (a 7-page bilingual mirror = ~3–4 unique
-     templates)? This is money-touching — it moves sites from "book a call" to an instant
-     price — so it stays a founder decision. No code touched.
-2. **`31 core → review_unusual_size` instead of `out_of_scope`** (toitureshogue). A capped/
-   partial sitemap yields a number just over 30 rather than the `"30+"` sentinel. **Same
-   outcome** (no auto-price), only the reason code differs — a classification nuance, not a
-   pricing error. Noted in case the reason-code cleanliness matters downstream.
-3. **No money-touching price error found.** Every `flat`/`estimation` outcome priced
-   correctly (small sites → Standard/Pro per config); the review/out-of-scope/greenfield
-   routing all fired on the right conditions. Nothing was mis-priced — the open question is
-   purely *how many* sites the ceiling routes to review vs. instant price (item 1).
-
-## 6. Measurable-set extension / synthetic-golden swap — status
-
-- Added **2 live real sites** (elevatek.ca, toitureshogue.com) as real E2 data points — both
-  land in `review` (≥7), so neither can **replace** the small (≤6-core) synthetic goldens,
-  which remain the only assessable-scale real-shaped fixtures.
-- **The swap stays pending a curated list of small (≤6-core) real trades URLs.** Network
-  permits, but fabricating/guessing domains would violate evidence honesty; give me a short
-  list (or the E2 funnel's real submissions) and I'll harvest them under the standing rules
-  and fold them in — that both widens the measurable set and completes the swap.
+No domains were fabricated. **The swap stays pending a politely-accessible candidate source.**
+Recommended source: **the E2 funnel's own real submissions** (already consented, exactly ICP)
+— pipe a handful of real ≤6-core small-site URLs from staging and I'll harvest them under the
+standing rules and fold them in, completing the swap and widening the measurable set.
