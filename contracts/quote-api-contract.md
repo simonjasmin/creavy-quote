@@ -1,4 +1,4 @@
-# Creavy Quote API — contract v0.6
+# Creavy Quote API — contract v0.7
 
 > **Canonical home:** this file (`contracts/quote-api-contract.md` in `creavy-quote`).
 > creavy-site keeps a **synced copy** and never reads `SPEC.md`. Machine enums only;
@@ -16,7 +16,15 @@
 
 ## 1. Header / traceability
 
-- **Version:** 0.6 (2026-07-20). **Status:** draft for creavy-site E1; indicative only.
+- **Version:** 0.7 (2026-07-20). **Status:** draft for creavy-site E1; indicative only.
+- **Changelog v0.6 → v0.7 (stage-2 assessment delivery — `stage2-treaty-v07.md`):**
+  - **Additive only** — every stage-1 shape, both registers, reason codes, `analysis_details`
+    are **unchanged.** The site can ship stage-1 behavior as-is and layer stage 2 on.
+  - New `POST /quote/:id/assess` (body `{content_readiness}` only, **no PII**) and
+    `GET /quote/:id/assessment` (public projection). §11.
+  - `assessment_*` events ride the **existing** since-`seq` event route (§8/§24). Internal
+    assessment fields (`complexity_factors`, `review_note`, `confidence`,
+    `flagged_for_review`) are **never** on any wire.
 - **Changelog v0.5 → v0.6 (#35 size-estimation band):**
   - Appended `size_estimation_band` to the `reason_code` enum (§2a). Clean **7–12-core** sites
     now return `register:"estimation"` with a `range` (was pure review). **No shape change** —
@@ -438,3 +446,41 @@ v0.1's eight flags + the missed ninth (suggestion prices), ratified:
 
 **No open flags block v0.3.** The one ⏳ item is a ratified Phase-2 deferral, not an open
 question.
+
+## 11. Stage 2 — the assessment (v0.7, additive; spec: `stage2-treaty-v07.md` §3)
+
+The Claude assessment (design #32, model chosen #32 Fork 1) renders **below** the stage-1½
+price, which is never replaced (treaty T1). **The assessment is never a gate** (T5): any
+failure → the price/panel/CTAs are unchanged and this section is simply absent.
+
+### 11a. `POST /quote/:id/assess`
+```jsonc
+{ "content_readiness": "ready" | "partial" | "none" }   // REQUIRED, closed enum. NO other fields.
+```
+- **No PII, by construction:** an email-shaped (or any unknown) field → **`400`**. The service
+  never receives an email (T4 — PII lives only in Netlify Forms).
+- **Preconditions:** the quote **exists**, is `completed`, and `assessable()` is true (#32 A6).
+  Otherwise **`409`** + `{ "error": "<machine reason>" }` — the site renders nothing extra.
+- **Idempotent per quote (#32 A7):** repeat POSTs return the **existing** assessment — the
+  model is called **at most once per quote, ever.**
+- Full **#25-A wall** applies; the **assessment daily ceiling** (50/day) is enforced here →
+  **`409 { "error": "budget_exceeded" }`** → page unchanged.
+- **Response `202`:** `{ "assessment_id": "as_…", "poll_after_ms": 1500 }`.
+
+### 11b. `GET /quote/:id/assessment`
+```jsonc
+{
+  "status": "pending" | "streaming" | "completed" | "unavailable",  // unavailable = normal terminal (T5)
+  "assessment_id": "as_…",
+  "prose_chunks": ["…"],        // prospect-facing prose, in order (the streamed output)
+  "seq": 7,                      // last event seq (for the shared #24 route)
+  "suggested_addons": [{ "id": "copywriting_per_page", "amount": 19000 }]  // refreshed by content_readiness
+}
+```
+- **Public projection ONLY** (#24 default-deny). `complexity_factors`, `review_note`,
+  `confidence`, `flagged_for_review` are **internal — never in this response.**
+- `content_readiness` feeds `suggested_addons` + the founder review note **only** — **never a
+  pricing input** (#32 firewall). Amounts are config cents (#30.3).
+- **Streaming:** `assessment_started` → `assessment_chunk*` → `assessment_complete` on the
+  **existing** `GET /quote/:id/events?since=N` route. Real chunks, real order, no synthetic
+  pacing (#24 honesty).
