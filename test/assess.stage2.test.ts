@@ -101,6 +101,33 @@ test("ST2-06 assessment_* stream on the quote spine; internals absent from proje
   assert.ok(!stream.map((s) => s.text).join("").includes("SECRET"), "no internal leak in the projected stream");
 });
 
+// ---- readiness-invariance (gate #3): content_readiness moves suggestions + the note ONLY,
+// never complexity / complexity_factors (the #32 firewall — readiness is not a pricing/
+// complexity input). Fixed model transcript isolates the pipeline: the code must not let
+// readiness touch the model's complexity output. ----
+test("ST2-08 same page_content × {ready,partial,none} → identical complexity + factors; suggestions differ", async () => {
+  const clock = new FakeClock(T0);
+  const mk = () => scriptedModel(transcript(PROSE, validMeta({ complexity: "standard", complexity_factors: ["dated_design", "thin_but_clean"] })));
+  const out: Record<string, any> = {};
+  for (const readiness of ["ready", "partial", "none"] as const) {
+    const store = new MemoryStore();
+    const qid = await seedJob(store, clock);
+    const r = await startAssessment(svcDeps(store, mk(), clock), qid, readiness);
+    await (r as any).done;
+    out[readiness] = (await store.getAssessmentByQuote(qid))!;
+  }
+  // complexity + factors IDENTICAL across readiness
+  assert.equal(out.ready.complexity, out.partial.complexity);
+  assert.equal(out.ready.complexity, out.none.complexity);
+  assert.deepEqual(out.ready.complexity_factors, out.partial.complexity_factors);
+  assert.deepEqual(out.ready.complexity_factors, out.none.complexity_factors);
+  // suggestions DO move with readiness (the only pricing-adjacent effect, all code-mapped)
+  const ids = (a: any) => a.suggested_addons.map((s: any) => s.id).sort();
+  assert.ok(!ids(out.ready).includes("copywriting_per_page"), "ready → no content suggestion");
+  assert.ok(ids(out.partial).includes("copywriting_per_page"), "partial → copywriting");
+  assert.ok(ids(out.none).includes("copywriting_per_page") && ids(out.none).includes("photo_sourcing"), "none → copywriting + photo");
+});
+
 // ---- failure = terminal unavailable; stage 1½ untouched (T5) ----
 test("ST2-07 every failure mode → terminal unavailable, stage-1 response unchanged", async () => {
   for (const [name, model] of [

@@ -22,6 +22,9 @@ function renderPage(p: PageContent): string {
 // content_readiness (2b, treaty T2) rides in as a TRUSTED declared fact — context for the
 // review note only. It is NOT an observable signal, so the evidence-grounding rule keeps it
 // out of `complexity`; suggestions are code-mapped, never asked of the model. Firewall unchanged.
+// SAFE ONLY because content_readiness is a VALIDATED CLOSED ENUM (three constant strings — a
+// 400 otherwise), so this line cannot carry an injection. Founder-ratified 2026-07-20. If this
+// field ever becomes FREE TEXT, this analysis is VOID — re-validate the firewall before shipping.
 export function buildUser(scan: ScanResult, opts?: { contentReadiness?: string }): string {
   const platformLine =
     scan.detected_platform_confidence === "high"
