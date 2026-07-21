@@ -484,3 +484,12 @@ failure → the price/panel/CTAs are unchanged and this section is simply absent
 - **Streaming:** `assessment_started` → `assessment_chunk*` → `assessment_complete` on the
   **existing** `GET /quote/:id/events?since=N` route. Real chunks, real order, no synthetic
   pacing (#24 honesty).
+
+### 11c. Review-copy variants (treaty §7 — stop overclaiming « on a bien lu votre site »)
+
+When a scan was **limited** (`robots_blocked`, `partial_scan`, `anti_bot_challenge`), the
+stage-1 result carries that **public-safe reason code** in `reasons[]` and (for those causes)
+`register: "estimation"`. The site **keys its review copy on `register` + the public-safe
+reason code** — **never** on internal flags — so a limited read says the true thing
+(« on a regardé votre page d'accueil ») instead of overclaiming a full read. A full read
+carries **none** of those codes. Machine values only; the site owns the wording.

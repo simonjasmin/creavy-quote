@@ -99,6 +99,18 @@ test("E-band scanned clean 8-page → #35 size_estimation_band range", () => {
   assert.equal(res.detected_platform, "wordpress");
 });
 
+// ---- §8 review-copy variants: limited-view causes carry a public-safe reason code so the
+// site keys copy on (register + reason) and stops overclaiming « on a bien lu votre site ».
+test("E-review-copy robots_blocked / partial surface a public-safe reason code; clean read does not", () => {
+  const rb = buildQuoteResponse({ scan: scan({ core_pages: 3, review_flags: ["robots_blocked"] }), answers: ans(), no_site: false }, P);
+  assert.equal(rb.body.register, "estimation");
+  assert.ok((rb.body.result as any).reasons.includes("robots_blocked"), "limited-view code present");
+  const pt = buildQuoteResponse({ scan: scan({ core_pages: 3, partial: true }), answers: ans(), no_site: false }, P);
+  assert.ok((pt.body.result as any).reasons.includes("partial_scan"), "partial code present");
+  const clean = buildQuoteResponse({ scan: scan({ core_pages: 3 }), answers: ans(), no_site: false }, P);
+  assert.ok(!(clean.body.result as any).reasons.some((r: string) => ["robots_blocked", "partial_scan", "anti_bot_challenge"].includes(r)), "full read carries no limited-view code");
+});
+
 // ================= HTTP integration — the running app =================
 const ORIGIN = "https://creavy.netlify.app";
 async function withServer(transport: FakeTransport, fn: (base: string, store: MemoryStore) => Promise<void>, over: Record<string, string> = {}, assessmentModel: any = null) {
