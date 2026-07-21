@@ -1,4 +1,4 @@
-# Creavy Quote API — contract v0.5
+# Creavy Quote API — contract v0.6
 
 > **Canonical home:** this file (`contracts/quote-api-contract.md` in `creavy-quote`).
 > creavy-site keeps a **synced copy** and never reads `SPEC.md`. Machine enums only;
@@ -16,7 +16,13 @@
 
 ## 1. Header / traceability
 
-- **Version:** 0.5 (2026-07-20). **Status:** draft for creavy-site E1; indicative only.
+- **Version:** 0.6 (2026-07-20). **Status:** draft for creavy-site E1; indicative only.
+- **Changelog v0.5 → v0.6 (#35 size-estimation band):**
+  - Appended `size_estimation_band` to the `reason_code` enum (§2a). Clean **7–12-core** sites
+    now return `register:"estimation"` with a `range` (was pure review). **No shape change** —
+    the estimation shape (§4b) already exists.
+  - **Site re-sync non-urgent** (tolerate-unknown-codes rule, §2a): an un-synced site renders
+    the estimation range with a generic reason line until it adds the label.
 - **Changelog v0.4 → v0.5 (#33 CORS, ratified):**
   - §7 rewritten to **#33 as implemented**: the exact production origin **plus** the anchored,
     **https-only** deploy-preview pattern `^https://[a-z0-9-]+--creavy\.netlify\.app$` (live —
@@ -108,6 +114,7 @@ codes** (render a generic line or nothing).
 | `greenfield_no_price` | greenfield (parked / no_html / no_owned_site) — nothing to price |
 | `review_no_clean_bundle` | no clean bundle covers the shape |
 | `declared_scan_conflict` | declared vs scanned page-band disagreement (30.1, reconciliation layer — not the #27 mapper) |
+| `size_estimation_band` | clean 7–12 core → instant estimation `range`, exact price human-confirmed (#35) |
 
 **Flag line (contracts must not collide):** this "no localized strings" rule does **not**
 apply to the #24 **event-stream** endpoint, whose server-side FR/EN templates are

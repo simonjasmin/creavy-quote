@@ -14,6 +14,7 @@ export const rawPricingConfig = {
   // #27 tier-mapping constants (config per #27.7; loader-validated).
   tiermap: {
     review_pages: 7,          // ≥ this → review_required, no auto-bundle (27.2)
+    size_band_max: 12,        // #35: clean 7..this core → estimation band (range); > this → pure review
     blog_seo_threshold: 5,    // blog_posts ≥ this → SEO migration auto-included (27.5)
     extra_page_cap: 3,        // max extra-page add-ons stacked before it's a review shape
     presence_max_pages: 2,

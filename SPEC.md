@@ -500,6 +500,52 @@ missing required env var makes the service **refuse to boot** with a named error
 half-configured. No `ANTHROPIC_API_KEY` in this service or any of its environments — 2a makes
 **no model call** (assess() stays library-only; the model enters in 2b).
 
+### 2.13 Size-estimation band — amendment #35 (founder-ratified 2026-07-20)
+
+**Record corrections first** (from the corpus-sweep diagnosis, `spikes/corpus-outcome-sweep.md`):
+- **elevatek.ca is the founder's consulting brand — OUT of ICP**, not a tradesperson. Its
+  `review` outcome was **correct, not collateral.** The "small trades site denied a price"
+  framing is struck.
+- **Bilingual mirrors do NOT inflate core counts** — #26/#28 pairing dedupes a fr/en mirror to
+  **one** core set. Any "bilingual → more pages / doubled sitemap" rationale is struck: a
+  7-page bilingual site has 7 real core pages.
+
+**35. The size-estimation band** (extends #27.2/#29.4). A **clean site of 7..12 core pages**
+(no component, no other review trigger) now gets an **instant estimation range** + review
+flag; the **exact price stays human-confirmed.** **Core > 12 → pure review** as before; **30+
+→ out-of-scope** as before.
+
+- **Rationale (on record):** page-count stacking overprices **template-repeated pages —
+  layouts ≠ pages.** A range is honest where a flat number isn't.
+- **Range derivation — enumerator only, no freehand numbers** (both bounds pure config
+  arithmetic, [src/tiermap/tiermap.ts](src/tiermap/tiermap.ts) `sizeBandRange`):
+  - **lower** = cheapest #27.3 bundle at the **layout-reuse floor** (distinct layouts =
+    `min(core, pro_base_pages)=6`) = Standard + 2×extra_page = **357 000** for all 7..12.
+  - **upper** = **page = layout** (no reuse) = Standard + extra_page × (core − standard_base).
+  - Config: `tiermap.size_band_max = 12` (loader-validated ≥ `review_pages`).
+- **New reason code `size_estimation_band`** (append-only). Register `estimation`,
+  `review_required: true`, `confidence: medium`.
+- **Core → range (config-derived):** 7 `[357000,396000]` · 8 `[357000,435000]` · 9
+  `[357000,474000]` · 10 `[357000,513000]` · 11 `[357000,552000]` · 12 `[357000,591000]`.
+- **Exclusions → stay pure review:** any component (booking/listings/ecommerce) or any other
+  review trigger (`needs_browser`, `partial`, `robots_blocked`, `anti_bot`,
+  `bilingual_suspected`). **`partial` in particular** means a children-capped sitemap
+  (undercounted huge site) **cannot sneak a band price** — it stays review.
+- Tests: **T-29.7…T-29.12** (range table), T-30 (>12), T-31/32 (exclusions), T-33 (config
+  drift); goldens re-asserted (mtlplomberie 10 + lasouche 12 → band). elevatek.ca (7 core,
+  out-of-ICP) now prints an estimation range — correct by page count, independent of ICP fit.
+- Contract: [contracts/quote-api-contract.md](contracts/quote-api-contract.md) **v0.6**
+  (appends the reason code; no shape change).
+
+**Recorded threads:**
+- **31-vs-`"30+"` sentinel** (toitureshogue.com): a capped/partial sitemap yields a number
+  just over 30 rather than the `"30+"` sentinel → `review_unusual_size` instead of
+  `out_of_scope`. **Cosmetic** — same no-auto-price outcome; the `partial` flag also excludes
+  the band, so no price leaks. Left as a thread, not fixed.
+- **Production telemetry (rider b) is the real funnel-rate measure post-launch.** The corpus
+  sweeps are directional (biased-large samples); the live funnel's auto-price rate is the
+  authority once quotes flow.
+
 ---
 
 ## 3. What this service is (unchanged)

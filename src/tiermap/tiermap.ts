@@ -23,9 +23,11 @@ export type TierMapInput = {
 
 export type TierBundle = { tier: string; addons: string[]; modifiers: string[] };
 export type Suggestion = { id: string; amount: number };
+export type PriceRange = { min: number; max: number };
 export type TierResult = {
   bundle: TierBundle | null;
   indicative_total: number | null;
+  range?: PriceRange | null; // #35 size-estimation band — an instant range, exact price human-confirmed
   review_required: boolean;
   reasons: string[]; // #30.5 stable codes (append-only)
   reason_text: string[]; // internal prose — never returned by the API
@@ -35,6 +37,24 @@ export type TierResult = {
 const flatCents = (config: PricingConfig, key: string): number => {
   const p = config.addons[key]?.price;
   return p && p.kind === "flat" ? p.cents : 0;
+};
+
+// #35 range derivation — ENUMERATOR ONLY, pure config arithmetic (no freehand numbers).
+// lower = cheapest #27.3 bundle at the layout-reuse floor (distinct layouts = min(core, pro_base));
+// upper = page = layout (no reuse) = Standard + extra_page × (core − standard_base).
+const cheapestBundle = (n: number, config: PricingConfig): number => {
+  const tm = config.tiermap, extra = flatCents(config, "extra_page"), opts: number[] = [];
+  if (n <= tm.presence_max_pages) opts.push(config.tiers.presence.price_cents);
+  const ep = Math.max(0, n - tm.standard_base_pages);
+  if (n <= tm.pro_base_pages && ep <= tm.extra_page_cap) opts.push(config.tiers.standard.price_cents + ep * extra);
+  if (n <= tm.pro_base_pages) opts.push(config.tiers.pro.price_cents);
+  return Math.min(...opts);
+};
+export const sizeBandRange = (core: number, config: PricingConfig): PriceRange => {
+  const tm = config.tiermap;
+  const min = cheapestBundle(Math.min(core, tm.pro_base_pages), config); // layout-reuse floor
+  const max = config.tiers.standard.price_cents + flatCents(config, "extra_page") * Math.max(0, core - tm.standard_base_pages); // page = layout
+  return { min, max };
 };
 
 export function mapTier(input: TierMapInput, config: PricingConfig): TierResult {
@@ -66,7 +86,18 @@ export function mapTier(input: TierMapInput, config: PricingConfig): TierResult 
   // ---- 27.6 hard blockers → no auto-bundle, email-capture ----
   if (flags.has("no_owned_site") || flags.has("parked") || flags.has("no_html")) return blocked("greenfield_no_price", "greenfield — nothing to price; skip stage-2");
   if (pages === "30+") return blocked("out_of_scope_30_plus", "30+ pages — out-of-scope path, book a call");
-  if (typeof pages === "number" && pages >= tm.review_pages) return blocked("review_unusual_size", `${pages} core pages ≥ ${tm.review_pages} — unusual shape, a human decides`);
+  if (typeof pages === "number" && pages >= tm.review_pages) {
+    // #35 size-estimation band: a CLEAN 7..size_band_max site (no component, no OTHER review
+    // trigger) gets an honest instant RANGE — page-count stacking overprices template-repeated
+    // pages (layouts ≠ pages). > band ceiling, or any other complexity, → pure review as before.
+    const otherTrigger = booking || listings || ecommerce || input.needs_browser || input.partial
+      || flags.has("robots_blocked") || flags.has("anti_bot") || flags.has("bilingual_suspected");
+    if (pages <= tm.size_band_max && !otherTrigger) {
+      say("size_estimation_band", `${pages} core pages — layouts ≠ pages: an instant range, exact price human-confirmed`);
+      return { bundle: null, indicative_total: null, range: sizeBandRange(pages, config), review_required: true, reasons: codes, reason_text: text, suggested_addons: suggestions() };
+    }
+    return blocked("review_unusual_size", `${pages} core pages > ${tm.size_band_max} (or added complexity) — unusual shape, a human decides`);
+  }
 
   const n = typeof pages === "number" ? Math.max(1, pages) : 1;
 

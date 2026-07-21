@@ -74,14 +74,26 @@ export function buildQuoteResponse(args: { scan: ScanResult | null; answers: Ans
     review_flags: scan.review_flags, components: componentsOf(answers.component), has_brand_assets: answers.has_brand_assets,
   };
   const t = mapTier(input, config);
+  const highConf = scan.detected_platform_confidence === "high" && !["none", "unknown"].includes(scan.detected_platform);
+  const platformField = highConf ? { detected_platform: scan.detected_platform, confidence_platform: "high" } : { detected_platform: "unknown" };
 
-  // review with no price (30+, greenfield content, unusual size)
+  // #35 size-estimation band → estimation register with the config-derived range (7..size_band_max)
+  if (t.range) {
+    return {
+      status: "completed",
+      body: {
+        indicative: true, basis: "scanned", register: "estimation", review_required: true,
+        result: { range: t.range, currency: "CAD", confidence: "medium", suggested_addons: t.suggested_addons, reasons: t.reasons, core_pages: scan.core_pages, ...platformField },
+      },
+    };
+  }
+
+  // review with no price (30+, greenfield content, > band ceiling)
   if (!t.bundle) {
     const code = reviewReasonCode(t.reasons, scan.review_flags);
     return { status: "completed", body: { indicative: true, basis: "scanned", review_required: true, result: { reason_code: code, currency: "CAD", reasons: [code] } } };
   }
 
-  const highConf = scan.detected_platform_confidence === "high" && !["none", "unknown"].includes(scan.detected_platform);
   const bandConflict = typeof scan.core_pages === "number" && pagesToBand(scan.core_pages) !== answers.pages;
 
   // ---- estimation: band disagreement (30.1) OR a soft review trigger (#29.4) ----
@@ -91,7 +103,6 @@ export function buildQuoteResponse(args: { scan: ScanResult | null; answers: Ans
       const declaredT = mapTier({ ...input, core_pages: bandToPages(answers.pages) }, config);
       if (declaredT.indicative_total != null) min = Math.min(min, declaredT.indicative_total);
     }
-    const platformField = highConf ? { detected_platform: scan.detected_platform, confidence_platform: "high" } : { detected_platform: "unknown" };
     return {
       status: "completed",
       body: {

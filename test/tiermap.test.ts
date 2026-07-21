@@ -49,3 +49,37 @@ test("T-25 anti_bot → review", () => assert.equal(run({ review_flags: ["anti_b
 
 // ---- config-drift guard ----
 test("T-26 totals are read from config, not hardcoded", () => { assert.equal(run({ core_pages: 1 }).indicative_total, P.tiers.presence.price_cents); });
+
+// ---- #35 size-estimation band (core 7..12, clean) ----
+const BAND_MIN = STANDARD + 2 * EXTRA; // layout-reuse floor = cheapest bundle at 6 layouts
+const bandMax = (core: number) => STANDARD + (core - 4) * EXTRA; // page = layout
+for (const core of [7, 8, 9, 10, 11, 12]) {
+  test(`T-29.${core} core ${core} clean → size_estimation_band range [${BAND_MIN}, ${bandMax(core)}]`, () => {
+    const r = run({ core_pages: core });
+    assert.equal(r.bundle, null, "no auto-bundle (range, human-confirmed)");
+    assert.equal(r.review_required, true);
+    assert.deepEqual(r.range, { min: BAND_MIN, max: bandMax(core) });
+    assert.ok(r.reasons.includes("size_estimation_band"));
+    assert.ok(r.range!.min < r.range!.max, "min < max");
+  });
+}
+test("T-30 core 13 (> size_band_max) → pure review, no range", () => {
+  const r = run({ core_pages: 13 });
+  assert.equal(r.range ?? null, null);
+  assert.ok(r.reasons.includes("review_unusual_size"));
+});
+test("T-31 core 7 + component listings → pure review (band excludes components)", () => {
+  const r = run({ core_pages: 7, components: { listings: true } });
+  assert.equal(r.range ?? null, null);
+  assert.ok(r.reasons.includes("review_unusual_size"));
+});
+test("T-32 core 8 + needs_browser → pure review (band excludes other review triggers)", () => {
+  const r = run({ core_pages: 8, needs_browser: true });
+  assert.equal(r.range ?? null, null);
+  assert.ok(r.reasons.includes("review_unusual_size"));
+});
+test("T-33 band bounds are pure config arithmetic (drift guard)", () => {
+  const r = run({ core_pages: 10 });
+  assert.equal(r.range!.min, P.tiers.standard.price_cents + 2 * (P.addons.extra_page.price as any).cents);
+  assert.equal(r.range!.max, P.tiers.standard.price_cents + 6 * (P.addons.extra_page.price as any).cents);
+});

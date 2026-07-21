@@ -85,6 +85,19 @@ test("E8 listings → Pro flat", () => {
   assert.ok(res.reasons.includes("listings_needs_pro"));
 });
 
+// ---- E-band #35 size-estimation band: clean 8-page scan → estimation range ----
+test("E-band scanned clean 8-page → #35 size_estimation_band range", () => {
+  const r = buildQuoteResponse({ scan: scan({ core_pages: 8 }), answers: ans(), no_site: false }, P);
+  assert.equal(r.status, "completed");
+  assert.equal(r.body.register, "estimation");
+  assert.equal(r.body.review_required, true);
+  const res = r.body.result as any;
+  assert.deepEqual(res.range, { min: STD + 2 * EXTRA, max: STD + 4 * EXTRA }); // [layout-reuse floor, page=layout]
+  assert.ok(res.reasons.includes("size_estimation_band"));
+  assert.equal(res.core_pages, 8);
+  assert.equal(res.detected_platform, "wordpress");
+});
+
 // ================= HTTP integration — the running app =================
 const ORIGIN = "https://creavy.netlify.app";
 async function withServer(transport: FakeTransport, fn: (base: string, store: MemoryStore) => Promise<void>, over: Record<string, string> = {}) {

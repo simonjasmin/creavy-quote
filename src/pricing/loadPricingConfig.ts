@@ -20,7 +20,7 @@ export type PricingConfig = {
   tiers: { presence: Tier; standard: Tier; pro: Tier; pro_custom: ProCustomTier };
   addons: Record<string, Addon>;
   bilingual: { tree_lang_purity: number; min_tree_pages: number; min_size_ratio: number };
-  tiermap: { review_pages: number; blog_seo_threshold: number; extra_page_cap: number; presence_max_pages: number; standard_base_pages: number; pro_base_pages: number; pro_includes: string[] };
+  tiermap: { review_pages: number; size_band_max: number; blog_seo_threshold: number; extra_page_cap: number; presence_max_pages: number; standard_base_pages: number; pro_base_pages: number; pro_includes: string[] };
 };
 
 export class PricingConfigError extends Error {
@@ -94,8 +94,9 @@ export function loadPricingConfig(raw: unknown): PricingConfig {
   check(typeof b.min_size_ratio === "number" && b.min_size_ratio > 0 && b.min_size_ratio <= 1, "bilingual.min_size_ratio must be in (0,1]");
 
   const tm = c.tiermap ?? {};
-  for (const k of ["review_pages", "blog_seo_threshold", "extra_page_cap", "presence_max_pages", "standard_base_pages", "pro_base_pages"]) // #27.7
+  for (const k of ["review_pages", "size_band_max", "blog_seo_threshold", "extra_page_cap", "presence_max_pages", "standard_base_pages", "pro_base_pages"]) // #27.7 / #35
     check(Number.isInteger(tm[k]) && tm[k] >= 1, `tiermap.${k} must be a positive integer`);
+  check(tm.size_band_max >= tm.review_pages, "tiermap.size_band_max must be ≥ review_pages (#35 band ceiling)");
   check(Array.isArray(tm.pro_includes) && tm.pro_includes.every((x: unknown) => typeof x === "string"), "tiermap.pro_includes must be string[]");
 
   const t = c.tiers ?? {};
@@ -125,6 +126,6 @@ export function loadPricingConfig(raw: unknown): PricingConfig {
     },
     addons,
     bilingual: { tree_lang_purity: b.tree_lang_purity, min_tree_pages: b.min_tree_pages, min_size_ratio: b.min_size_ratio },
-    tiermap: { review_pages: tm.review_pages, blog_seo_threshold: tm.blog_seo_threshold, extra_page_cap: tm.extra_page_cap, presence_max_pages: tm.presence_max_pages, standard_base_pages: tm.standard_base_pages, pro_base_pages: tm.pro_base_pages, pro_includes: [...tm.pro_includes] },
+    tiermap: { review_pages: tm.review_pages, size_band_max: tm.size_band_max, blog_seo_threshold: tm.blog_seo_threshold, extra_page_cap: tm.extra_page_cap, presence_max_pages: tm.presence_max_pages, standard_base_pages: tm.standard_base_pages, pro_base_pages: tm.pro_base_pages, pro_includes: [...tm.pro_includes] },
   }) as PricingConfig;
 }
