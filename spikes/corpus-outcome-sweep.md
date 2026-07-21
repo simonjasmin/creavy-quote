@@ -64,15 +64,35 @@ only as far as the sitemap allows:
   **Cosmetic** (same no-price outcome); `partial` also blocks the band, so no price leaks.
 - **Production telemetry is the real funnel-rate measure** once quotes flow (rider b).
 
-## 5. Small-sites harvest / synthetic-golden swap — BLOCKED at sourcing (honest)
+## 5. Small-sites harvest / synthetic-golden swap — DEFERRED to founder-curated URLs
 
-The 10-site directory harvest **could not proceed politely from here:**
-- **Pages Jaunes** returns **HTTP 403 to the CreavyQuoteBot UA — including its `robots.txt`**
-  (edge anti-bot). Per the standing rules (robots respected, honest identifiable UA, no
-  detection evasion), I did **not** scrape past it.
-- **Google Maps** listing pages are JS-rendered — a plain fetch yields no business websites.
+**Pages Jaunes / Google Maps blocking the CreavyQuoteBot UA was the bot posture working as
+designed** (PJ 403s even `robots.txt`; Maps is JS-only). Founder resolution: **don't retry,
+don't evade — the source inverts to a founder-curated list** of 8–10 real Québec trades sites
+(a mix of ≤6-core and 7–12-core, so the #35 band gets real coverage). When that list lands:
+harvest under the standing rules, complete the synthetic-golden swap, re-run this sweep on the
+widened set, and report the new rate. No domains were fabricated; no self-sourcing.
 
-No domains were fabricated. **The swap stays pending a politely-accessible candidate source.**
-Recommended source: **the E2 funnel's own real submissions** (already consented, exactly ICP)
-— pipe a handful of real ≤6-core small-site URLs from staging and I'll harvest them under the
-standing rules and fold them in, completing the swap and widening the measurable set.
+## 6. p95 fast-path scan latency — E3 acceptance gate (measured AGAINST STAGING)
+
+`node spikes/latency-staging.mjs` — POST /quote to the live staging service (real
+`HttpTransport` crawls each URL from Railway's network), **cache-busted** (unique `?cb` →
+distinct normalized_url → #25-A cache miss → genuine fresh scan), **one polite pass each**,
+latency = POST → terminal state. Corpus = the 9 golden real sites + the 2 live E2 sites
+(harvested URLs append once curated).
+
+| run (paced, isolated) | n | p50 | **p95** | max | gate < 8 s |
+|---|--:|--:|--:|--:|:--:|
+| 1 | 11 | 3447 ms | **7710 ms** | 7710 ms | ✅ PASS |
+| 2 | 11 | 3236 ms | **7163 ms** | 7163 ms | ✅ PASS |
+
+- **p95 ≈ 7.2–7.7 s < 8 s → PASS**, stable across two runs. The p95 driver is
+  **toitureshogue.com (31 core)** — the largest, out-of-ICP-size site; the ≤6-core ICP subset
+  is all **< 2.5 s** (mchenry 0.6 s, paysages 1.1 s, toituresmarcelpouliot 1.7 s, elevatek
+  1.9 s, mtlplomberie 2.5 s). Headroom is **marginal** (~0.3–0.8 s) and single-site-driven; n=11.
+- **⚠ Contention flag (data, not fixed):** an earlier run with **bunched POSTs** (concurrent
+  scans on the **single staging instance**) degraded sharply — lasouche to ~12 s and protectoit
+  to a transient failure — pushing p95 to **11 938 ms (FAIL)**. This is a **capacity** signal,
+  not a scan-latency one: the isolated fast-path is < 8 s, but concurrency on one replica blows
+  the budget. The Phase-0 **Render-graduation trigger** (multi-instance) is the lever;
+  single-instance is the ratified MVP posture. Flagged for the launch-capacity decision.
