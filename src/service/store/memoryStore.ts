@@ -2,12 +2,13 @@
 // as PgStore, so every wall/handler/contract test runs against this and the deployed
 // service swaps in PgStore. Non-persistent: a restart loses everything (dev only).
 
-import type { Store, Job, NewJob } from "./types.ts";
+import type { Store, Job, NewJob, Assessment, NewAssessment } from "./types.ts";
 import type { ScanEvent } from "../../crawl/events.ts";
 
 export class MemoryStore implements Store {
   private jobs = new Map<string, Job>();
   private events = new Map<string, ScanEvent[]>();
+  private assessments = new Map<string, Assessment>();
 
   async createJob(j: NewJob, now: number): Promise<Job> {
     const job: Job = {
@@ -56,6 +57,36 @@ export class MemoryStore implements Store {
 
   async getEventsSince(id: string, seq: number): Promise<ScanEvent[]> {
     return (this.events.get(id) ?? []).filter((e) => e.seq > seq).map((e) => structuredClone(e));
+  }
+
+  async createAssessment(a: NewAssessment, now: number): Promise<Assessment> {
+    const asmt: Assessment = {
+      ...a, status: "pending", prose_chunks: [], suggested_addons: [],
+      complexity: null, complexity_factors: null, review_note: null, confidence: null, flagged_for_review: null,
+      reason: null, created_at: now, updated_at: now,
+    };
+    this.assessments.set(asmt.id, structuredClone(asmt));
+    return structuredClone(asmt);
+  }
+  async getAssessmentByQuote(quoteId: string): Promise<Assessment | null> {
+    for (const a of this.assessments.values()) if (a.quote_id === quoteId) return structuredClone(a);
+    return null;
+  }
+  async getAssessment(id: string): Promise<Assessment | null> {
+    const a = this.assessments.get(id);
+    return a ? structuredClone(a) : null;
+  }
+  async updateAssessment(id: string, patch: Partial<Assessment>, now: number): Promise<Assessment | null> {
+    const a = this.assessments.get(id);
+    if (!a) return null;
+    const next = { ...a, ...patch, id: a.id, quote_id: a.quote_id, created_at: a.created_at, updated_at: now };
+    this.assessments.set(id, next);
+    return structuredClone(next);
+  }
+  async countAssessmentsSince(sinceMs: number): Promise<number> {
+    let n = 0;
+    for (const a of this.assessments.values()) if (a.created_at >= sinceMs) n++;
+    return n;
   }
 
   async close(): Promise<void> { /* no-op */ }

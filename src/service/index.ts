@@ -10,6 +10,8 @@ import { readContractVersion } from "./contractVersion.ts";
 import { realClock } from "./realClock.ts";
 import { HttpTransport } from "../crawl/httpTransport.ts";
 import { pricingConfig } from "../pricing/index.ts";
+import { anthropicModel } from "../assess/anthropicModel.ts";
+import { assessConfig } from "../assess/config.ts";
 import type { Store } from "./store/types.ts";
 
 async function boot(): Promise<void> {
@@ -28,15 +30,21 @@ async function boot(): Promise<void> {
     console.warn("store: IN-MEMORY (non-persistent) — no DATABASE_URL; dev/staging-smoke only");
   }
 
+  // 2b: the assessment model (opus-4-8). Key absent → null → assessments degrade to unavailable
+  // (T5, stage 1½ intact). The key is never logged or echoed.
+  const assessmentModel = config.anthropicApiKey ? anthropicModel(config.anthropicApiKey) : null;
+  if (config.env !== "development" && !assessmentModel) console.warn("assessments: DISABLED (no ANTHROPIC_API_KEY) — stage 1½ unaffected");
+
   const server = createServer({
     config, pricing: pricingConfig, store, contractVersion,
     rateLimiter: new RateLimiter(config.rateLimit.windowMs, config.rateLimit.maxPerWindow),
     transport: new HttpTransport(),
     clock: realClock,
+    assessmentModel, assessmentModelId: assessConfig.model, assessLang: "fr",
     log: (layer, detail) => console.log(JSON.stringify({ wall: layer, ...detail })),
   });
 
-  server.listen(config.port, () => console.log(`creavy-quote listening on :${config.port} (${config.env}) — contract v${contractVersion}, origin ${config.allowedOrigin}, turnstile ${config.turnstile.enabled ? "on" : "off"}`));
+  server.listen(config.port, () => console.log(`creavy-quote listening on :${config.port} (${config.env}) — contract v${contractVersion}, origin ${config.allowedOrigin}, turnstile ${config.turnstile.enabled ? "on" : "off"}, assessments ${assessmentModel ? "on" : "off"}`));
 }
 
 boot().catch((e) => { console.error("boot failed:", (e as Error)?.message ?? e); process.exit(1); });

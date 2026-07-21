@@ -9,6 +9,13 @@ import { readContractVersion } from "./contractVersion.ts";
 import { runWall, type WallDeps } from "./wall.ts";
 import { processJob, type WorkerDeps } from "./worker.ts";
 import { projectPublic, type Lang } from "../crawl/eventProjection.ts";
+import { clientIp, ipRateKey } from "./clientIp.ts";
+import { isHoneypotTripped } from "./honeypot.ts";
+import { verifyTurnstile } from "./turnstile.ts";
+import { validateAssessBody } from "./assessment/validate.ts";
+import { startAssessment, projectAssessment, type AssessmentDeps } from "./assessment/service.ts";
+import { assessmentId } from "./ids.ts";
+import type { AssessmentModel } from "../assess/model.ts";
 import type { ServiceConfig } from "./config.ts";
 import type { Store, Job } from "./store/types.ts";
 import type { RateLimiter } from "./rateLimiter.ts";
@@ -26,6 +33,9 @@ export type ServerDeps = {
   fetchImpl?: FetchLike; // Turnstile fetch (injectable)
   syncHoldMs?: number; // #1 (default 8000)
   contractVersion?: string; // sourced at boot from the contract file; defaults to reading it
+  assessmentModel?: AssessmentModel | null; // 2b: injected (null → assessments unavailable, T5)
+  assessmentModelId?: string | null;
+  assessLang?: "fr" | "en"; // prospect prose language (default fr)
   log?: (layer: string, detail?: Record<string, unknown>) => void;
 };
 
@@ -62,6 +72,8 @@ export function createServer(deps: ServerDeps): Server {
   const contractVersion = deps.contractVersion ?? readContractVersion(); // single source: the contract file
   const wallDeps: WallDeps = { config, pricing: deps.pricing, store, rateLimiter: deps.rateLimiter, clock: deps.clock, fetchImpl: deps.fetchImpl, log: deps.log };
   const workerDeps: WorkerDeps = { store, transport: deps.transport, clock: deps.clock, pricing: deps.pricing };
+  const assessDeps: AssessmentDeps = { store, model: deps.assessmentModel ?? null, modelId: deps.assessmentModelId ?? null, clock: deps.clock, serviceConfig: config, pricing: deps.pricing, lang: deps.assessLang ?? "fr" };
+  const log = deps.log ?? (() => {});
 
   return httpCreateServer(async (req, res) => {
     const url = new URL(req.url ?? "/", "http://localhost");
@@ -93,6 +105,43 @@ export function createServer(deps: ServerDeps): Server {
             return send(res, 200, job ? jobToBody(job) : { quote_id: decision.job.id, status: "pending" }, cors);
           }
         }
+      }
+
+      // POST /quote/:id/assess — the #25-A wall (rate/honeypot/PII-validate/turnstile), then
+      // startAssessment (preconditions/409, assessment ceiling, idempotency). Returns 202.
+      const mAssess = url.pathname.match(/^\/quote\/([^/]+)\/assess$/);
+      if (req.method === "POST" && mAssess) {
+        const quoteId = mAssess[1];
+        const parsed = await readBody(req);
+        if (!parsed.ok) return send(res, 400, { error: "invalid_request", detail: "body must be JSON ≤ 64KB" }, cors);
+        const ip = clientIp(req.socket.remoteAddress ?? "", req.headers["x-forwarded-for"] as string | undefined, config.trustedProxyHops);
+        const rl = deps.rateLimiter.check(ipRateKey(ip), deps.clock.now());
+        if (!rl.allowed) { log("rate_limit", { key: ipRateKey(ip) }); return send(res, 429, { error: "rate_limited" }, { ...cors, "retry-after": String(rl.retryAfterSec) }); }
+        if (isHoneypotTripped(parsed.body)) { log("honeypot", {}); return send(res, 202, { assessment_id: assessmentId(), poll_after_ms: 1500 }, cors); } // plausible; no work
+        const v = validateAssessBody(parsed.body);
+        if (!v.ok) { log("assess_validation", { detail: v.error.detail }); return send(res, 400, v.error, cors); }
+        if (config.turnstile.enabled && config.turnstile.secret) {
+          const outcome = await verifyTurnstile((parsed.body as any)?.turnstile_token, config.turnstile.secret, ip, deps.fetchImpl);
+          if (outcome.verdict === "fail") return send(res, 403, { error: "forbidden" }, cors);
+        }
+        const r = await startAssessment(assessDeps, quoteId, v.content_readiness);
+        switch (r.kind) {
+          case "not_found": return send(res, 404, { error: "quote_not_found" }, cors);
+          case "precondition": return send(res, 409, { error: r.reason }, cors);
+          case "ceiling": { log("assess_ceiling", {}); return send(res, 409, { error: r.reason }, cors); }
+          case "existing":
+          case "started": return send(res, 202, { assessment_id: r.assessment.id, poll_after_ms: 1500 }, cors);
+        }
+      }
+
+      // GET /quote/:id/assessment — public projection ONLY (internal fields never here)
+      const mAsmt = url.pathname.match(/^\/quote\/([^/]+)\/assessment$/);
+      if (req.method === "GET" && mAsmt) {
+        const a = await store.getAssessmentByQuote(mAsmt[1]);
+        if (!a) return send(res, 404, { error: "not_found" }, cors);
+        const raw = await store.getEventsSince(mAsmt[1], -1);
+        const seq = raw.length ? raw[raw.length - 1].seq : -1;
+        return send(res, 200, { ...projectAssessment(a), seq }, cors);
       }
 
       // GET /quote/:id  and  GET /quote/:id/events

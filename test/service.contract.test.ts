@@ -8,6 +8,7 @@ import { MemoryStore } from "../src/service/store/memoryStore.ts";
 import { RateLimiter } from "../src/service/rateLimiter.ts";
 import { pricingConfig as P } from "../src/pricing/index.ts";
 import { readContractVersion } from "../src/service/contractVersion.ts";
+import { scriptedModel, transcript, validMeta } from "./helpers/assess.ts";
 import { FakeTransport, FakeClock, type Scenario } from "./helpers/replay.ts";
 
 // Contract v0.4 conformance. Prices are read FROM config (a drifted literal must fail).
@@ -100,10 +101,10 @@ test("E-band scanned clean 8-page → #35 size_estimation_band range", () => {
 
 // ================= HTTP integration — the running app =================
 const ORIGIN = "https://creavy.netlify.app";
-async function withServer(transport: FakeTransport, fn: (base: string, store: MemoryStore) => Promise<void>, over: Record<string, string> = {}) {
+async function withServer(transport: FakeTransport, fn: (base: string, store: MemoryStore) => Promise<void>, over: Record<string, string> = {}, assessmentModel: any = null) {
   const store = new MemoryStore();
   const config = loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "staging", DATABASE_URL: "postgres://test", RATE_LIMIT_MAX: "50", ...over });
-  const server = createServer({ config, pricing: P, store, rateLimiter: new RateLimiter(config.rateLimit.windowMs, config.rateLimit.maxPerWindow), transport, clock: new FakeClock(1_700_000_000_000), syncHoldMs: 4000 });
+  const server = createServer({ config, pricing: P, store, rateLimiter: new RateLimiter(config.rateLimit.windowMs, config.rateLimit.maxPerWindow), transport, clock: new FakeClock(1_700_000_000_000), syncHoldMs: 4000, assessmentModel, assessmentModelId: "claude-opus-4-8", assessLang: "fr" });
   await new Promise<void>((r) => server.listen(0, () => r()));
   const port = (server.address() as any).port;
   try { await fn(`http://127.0.0.1:${port}`, store); } finally { await new Promise<void>((r) => server.close(() => r())); }
@@ -204,4 +205,47 @@ test("HTTP events route projects public lines with seq", async () => {
     assert.ok(ev.events.some((e: any) => e.type === "scan_started"));
     assert.ok(ev.events.every((e: any) => typeof e.seq === "number" && typeof e.text === "string"));
   });
+});
+
+// ================= Stage 2 (2b) HTTP conformance =================
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const ASMT_PROSE = "Votre site a quatre pages sur WordPress. Le contenu est réutilisable. L'estimation est juste en dessous.";
+
+test("HTTP assess: POST /quote/:id/assess → 202, poll assessment → completed prose, internals absent", async () => {
+  const model = scriptedModel(transcript(ASMT_PROSE, validMeta({ review_note: "SECRET founder note", confidence: "high", flagged_for_review: true, complexity_factors: ["dated_design"] })));
+  await withServer(new FakeTransport(goldenScenario("toituresmarcelpouliot")), async (base) => {
+    let job = await (await post(base, { url: "http://toituresmarcelpouliot.com/", answers: ans() })).json();
+    for (let i = 0; i < 20 && job.status === "pending"; i++) job = await (await fetch(`${base}/quote/${job.quote_id}`)).json();
+    assert.equal(job.status, "completed");
+    // POST assess
+    const a = await fetch(`${base}/quote/${job.quote_id}/assess`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ content_readiness: "partial" }) });
+    assert.equal(a.status, 202);
+    const ab = await a.json();
+    assert.match(ab.assessment_id, /^as_/);
+    assert.equal(ab.poll_after_ms, 1500);
+    // poll assessment
+    let asmt: any;
+    for (let i = 0; i < 30; i++) { asmt = await (await fetch(`${base}/quote/${job.quote_id}/assessment`)).json(); if (["completed", "unavailable"].includes(asmt.status)) break; await sleep(80); }
+    assert.equal(asmt.status, "completed");
+    assert.ok(asmt.prose_chunks.join("").includes("L'estimation est juste en dessous"));
+    assert.ok(asmt.suggested_addons.some((s: any) => s.id === "copywriting_per_page"), "content=partial → copywriting suggestion");
+    for (const k of ["complexity", "complexity_factors", "review_note", "confidence", "flagged_for_review"]) assert.ok(!(k in asmt), `internal leak: ${k}`);
+    // idempotent: second POST → same assessment id
+    const a2 = await (await fetch(`${base}/quote/${job.quote_id}/assess`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ content_readiness: "partial" }) })).json();
+    assert.equal(a2.assessment_id, ab.assessment_id, "idempotent id");
+  }, {}, model);
+});
+
+test("HTTP assess: PII-shaped body → 400", async () => {
+  await withServer(new FakeTransport({}), async (base) => {
+    const r = await fetch(`${base}/quote/qt_x/assess`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ content_readiness: "ready", email: "a@b.com" }) });
+    assert.equal(r.status, 400);
+  }, {}, scriptedModel(transcript(ASMT_PROSE, validMeta())));
+});
+
+test("HTTP assess: unknown quote → 404; assessment for none → 404", async () => {
+  await withServer(new FakeTransport({}), async (base) => {
+    assert.equal((await fetch(`${base}/quote/qt_nope/assess`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ content_readiness: "ready" }) })).status, 404);
+    assert.equal((await fetch(`${base}/quote/qt_nope/assessment`)).status, 404);
+  }, {}, scriptedModel(transcript(ASMT_PROSE, validMeta())));
 });

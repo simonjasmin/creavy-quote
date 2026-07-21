@@ -19,7 +19,10 @@ function renderPage(p: PageContent): string {
   return [PAGE_OPEN(p.url), `title: ${p.title || "(none)"}`, `headings: ${headings}`, `text: ${text}`, PAGE_CLOSE].join("\n");
 }
 
-export function buildUser(scan: ScanResult): string {
+// content_readiness (2b, treaty T2) rides in as a TRUSTED declared fact — context for the
+// review note only. It is NOT an observable signal, so the evidence-grounding rule keeps it
+// out of `complexity`; suggestions are code-mapped, never asked of the model. Firewall unchanged.
+export function buildUser(scan: ScanResult, opts?: { contentReadiness?: string }): string {
   const platformLine =
     scan.detected_platform_confidence === "high"
       ? `platform: ${scan.detected_platform} (confidence: high)`
@@ -37,6 +40,7 @@ export function buildUser(scan: ScanResult): string {
     `bilingual_mirror: ${scan.bilingual_mirror}`,
     scan.builders_detected.length ? `builders_detected: ${scan.builders_detected.join(", ")}` : null,
     flags.length ? `review_flags: ${flags.join(", ")}` : null,
+    opts?.contentReadiness ? `content_readiness (owner-declared — context for the note only, NOT a complexity input): ${opts.contentReadiness}` : null,
   ].filter(Boolean).join("\n");
 
   const content = [

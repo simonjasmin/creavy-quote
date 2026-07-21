@@ -23,12 +23,13 @@ test("CFG-02b development allows no DATABASE_URL (in-memory fallback)", () => {
   assert.equal(c.env, "development");
   assert.equal(c.databaseUrl, null);
 });
-test("CFG-03 ANTHROPIC_API_KEY in a deployed env → boot error (#34)", () => {
-  assert.throws(() => loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "staging", ANTHROPIC_API_KEY: "sk-x" }), ConfigError);
+test("CFG-03 ANTHROPIC_API_KEY is accepted in a deployed env (2b: key expected)", () => {
+  const c = loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "staging", DATABASE_URL: "postgres://x", ANTHROPIC_API_KEY: "sk-x" });
+  assert.equal(c.anthropicApiKey, "sk-x");
 });
-test("CFG-04 ANTHROPIC_API_KEY ignored in development (local spikes)", () => {
-  const c = loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "development", ANTHROPIC_API_KEY: "sk-x" });
-  assert.equal(c.env, "development");
+test("CFG-04 no ANTHROPIC_API_KEY → null (assessments unavailable, stage 1½ intact)", () => {
+  const c = loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "development" });
+  assert.equal(c.anthropicApiKey, null);
 });
 test("CFG-05 deployed env without DATABASE_URL → boot error (staging + production)", () => {
   assert.throws(() => loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "production" }), ConfigError);

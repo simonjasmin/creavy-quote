@@ -5,3 +5,7 @@ import { randomBytes } from "node:crypto";
 export function randomId(): string {
   return "qt_" + randomBytes(6).toString("hex");
 }
+
+export function assessmentId(): string {
+  return "as_" + randomBytes(6).toString("hex");
+}

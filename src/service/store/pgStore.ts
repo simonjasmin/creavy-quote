@@ -4,7 +4,7 @@
 // jsonb artifacts (crawl_facts, mapper_output) carry everything (invariant #2).
 
 import pg from "pg";
-import type { Store, Job, NewJob } from "./types.ts";
+import type { Store, Job, NewJob, Assessment, NewAssessment } from "./types.ts";
 import type { ScanEvent } from "../../crawl/events.ts";
 
 const toMs = (t: unknown): number => (t instanceof Date ? t.getTime() : new Date(t as string).getTime());
@@ -78,5 +78,54 @@ export class PgStore implements Store {
     return log.filter((e) => e.seq > seq);
   }
 
+  async createAssessment(a: NewAssessment, now: number): Promise<Assessment> {
+    const ts = new Date(now);
+    const { rows } = await this.pool.query(
+      `INSERT INTO assessments (id, quote_id, created_at, updated_at, status, content_readiness, model)
+       VALUES ($1,$2,$3,$3,'pending',$4,$5) RETURNING *`,
+      [a.id, a.quote_id, ts, a.content_readiness, a.model],
+    );
+    return rowToAssessment(rows[0]);
+  }
+  async getAssessmentByQuote(quoteId: string): Promise<Assessment | null> {
+    const { rows } = await this.pool.query("SELECT * FROM assessments WHERE quote_id=$1 LIMIT 1", [quoteId]);
+    return rows[0] ? rowToAssessment(rows[0]) : null;
+  }
+  async getAssessment(id: string): Promise<Assessment | null> {
+    const { rows } = await this.pool.query("SELECT * FROM assessments WHERE id=$1", [id]);
+    return rows[0] ? rowToAssessment(rows[0]) : null;
+  }
+  async updateAssessment(id: string, patch: Partial<Assessment>, now: number): Promise<Assessment | null> {
+    const cols: string[] = [];
+    const vals: unknown[] = [id];
+    const put = (col: string, val: unknown, json = false) => { vals.push(json ? JSON.stringify(val) : val); cols.push(`${col}=$${vals.length}${json ? "::jsonb" : ""}`); };
+    if (patch.status !== undefined) put("status", patch.status);
+    if (patch.prose_chunks !== undefined) put("prose_chunks", patch.prose_chunks, true);
+    if (patch.suggested_addons !== undefined) put("suggested_addons", patch.suggested_addons, true);
+    if (patch.complexity !== undefined) put("complexity", patch.complexity);
+    if (patch.complexity_factors !== undefined) put("complexity_factors", patch.complexity_factors, true);
+    if (patch.review_note !== undefined) put("review_note", patch.review_note);
+    if (patch.confidence !== undefined) put("confidence", patch.confidence);
+    if (patch.flagged_for_review !== undefined) put("flagged_for_review", patch.flagged_for_review);
+    if (patch.reason !== undefined) put("reason", patch.reason);
+    vals.push(new Date(now)); cols.push(`updated_at=$${vals.length}`);
+    const { rows } = await this.pool.query(`UPDATE assessments SET ${cols.join(", ")} WHERE id=$1 RETURNING *`, vals);
+    return rows[0] ? rowToAssessment(rows[0]) : null;
+  }
+  async countAssessmentsSince(sinceMs: number): Promise<number> {
+    const { rows } = await this.pool.query("SELECT count(*)::int AS n FROM assessments WHERE created_at >= $1", [new Date(sinceMs)]);
+    return rows[0]?.n ?? 0;
+  }
+
   async close(): Promise<void> { await this.pool.end(); }
+}
+
+function rowToAssessment(r: any): Assessment {
+  return {
+    id: r.id, quote_id: r.quote_id, created_at: toMs(r.created_at), updated_at: toMs(r.updated_at),
+    status: r.status, content_readiness: r.content_readiness, model: r.model,
+    prose_chunks: r.prose_chunks ?? [], suggested_addons: r.suggested_addons ?? [],
+    complexity: r.complexity, complexity_factors: r.complexity_factors, review_note: r.review_note,
+    confidence: r.confidence, flagged_for_review: r.flagged_for_review, reason: r.reason,
+  };
 }

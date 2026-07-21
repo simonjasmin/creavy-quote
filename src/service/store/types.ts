@@ -30,6 +30,30 @@ export type Job = {
 
 export type NewJob = Pick<Job, "id" | "no_site" | "url" | "normalized_url" | "answers_hash" | "answers" | "persona" | "fresh_scan">;
 
+// ---- Stage 2 (2b) — the assessment, keyed to a quote. NO email column, ever (treaty T4). ----
+export type AssessmentStatus = "pending" | "streaming" | "completed" | "unavailable";
+export type ContentReadiness = "ready" | "partial" | "none";
+
+export type Assessment = {
+  id: string; // as_...
+  quote_id: string;
+  status: AssessmentStatus;
+  content_readiness: ContentReadiness;
+  model: string | null;
+  prose_chunks: string[]; // PUBLIC — streamed prose, in order
+  suggested_addons: { id: string; amount: number }[]; // PUBLIC — refreshed by content_readiness
+  // INTERNAL — never returned by GET /quote/:id/assessment:
+  complexity: string | null;
+  complexity_factors: string[] | null;
+  review_note: string | null;
+  confidence: string | null;
+  flagged_for_review: boolean | null;
+  reason: string | null; // unavailable reason (internal)
+  created_at: number;
+  updated_at: number;
+};
+export type NewAssessment = Pick<Assessment, "id" | "quote_id" | "content_readiness" | "model">;
+
 export interface Store {
   createJob(job: NewJob, now: number): Promise<Job>;
   getJob(id: string): Promise<Job | null>;
@@ -41,5 +65,11 @@ export interface Store {
   // #24 event log (fire-and-forget append; a failed write logs, never stalls a scan).
   appendEvent(id: string, ev: ScanEvent): Promise<void>;
   getEventsSince(id: string, seq: number): Promise<ScanEvent[]>;
+  // ---- stage 2 assessment ----
+  createAssessment(a: NewAssessment, now: number): Promise<Assessment>;
+  getAssessmentByQuote(quoteId: string): Promise<Assessment | null>; // idempotency (#32 A7)
+  getAssessment(id: string): Promise<Assessment | null>;
+  updateAssessment(id: string, patch: Partial<Assessment>, now: number): Promise<Assessment | null>;
+  countAssessmentsSince(sinceMs: number): Promise<number>; // daily ceiling (each row = one model attempt)
   close(): Promise<void>;
 }

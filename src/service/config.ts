@@ -16,6 +16,7 @@ export type ServiceConfig = {
   dailyCeilings: { scans: number; assessments: number };
   trustedProxyHops: number; // trusted reverse-proxy hops for X-Forwarded-For
   cacheTtlMs: number; // #25-A step 7 freshness (24 h)
+  anthropicApiKey: string | null; // 2b: the assessment model key (null → assessments unavailable, T5)
 };
 
 export class ConfigError extends Error {
@@ -49,10 +50,10 @@ export function loadServiceConfig(env: Env): ServiceConfig {
   const environment: ServiceConfig["env"] = raw === "production" ? "production" : raw === "staging" ? "staging" : "development";
   const deployed = environment === "production" || environment === "staging";
 
-  // #34 guard: the deployed service must never carry the model key (2a = no model call).
-  if (deployed && env.ANTHROPIC_API_KEY) {
-    throw new ConfigError("ANTHROPIC_API_KEY must not be present in a deployed environment (#34 — 2a makes no model call)");
-  }
+  // 2b: the assessment model key is now EXPECTED in this service (was refused in 2a's no-model
+  // posture). Never committed, never logged, never echoed in errors. Absent → assessments
+  // degrade to `unavailable` and stage 1½ is untouched (T5).
+  const anthropicApiKey = env.ANTHROPIC_API_KEY?.trim() || null;
 
   const allowedOrigin = required("ALLOWED_ORIGIN"); // hard-fail (#22)
   const turnstileEnabled = bool("TURNSTILE_ENABLED", false);
@@ -74,5 +75,6 @@ export function loadServiceConfig(env: Env): ServiceConfig {
     dailyCeilings: { scans: num("DAILY_SCAN_CEILING", 200), assessments: num("DAILY_ASSESSMENT_CEILING", 50) },
     trustedProxyHops: num("TRUSTED_PROXY_HOPS", 1),
     cacheTtlMs: num("CACHE_TTL_MS", 24 * 60 * 60 * 1000),
+    anthropicApiKey,
   };
 }

@@ -22,6 +22,7 @@ export type AssessOpts = {
   modelId?: string; // overrides config.model (the benchmark passes ids explicitly)
   onProse?: (chunk: string) => void; // A4: prose streams here, meta never does
   emitter?: ScanEventEmitter; // A4: assessment_started/chunk/complete onto the #24 spine
+  contentReadiness?: string; // 2b/T2 — owner-declared context for the note only (not a pricing input)
 };
 
 // Forward only the PROSE side of the stream to onProse, stopping cleanly at the delimiter
@@ -100,7 +101,7 @@ export async function assess(scan: ScanResult, opts: AssessOpts): Promise<Assess
 
   const emitter = opts.emitter ?? NOOP_EMITTER;
   const system = buildSystem(opts.lang);
-  const user = buildUser(scan);
+  const user = buildUser(scan, { contentReadiness: opts.contentReadiness });
   // A4: the prose streams onto the #24 spine as it generates; meta NEVER does.
   const onProse = (c: string) => { emitter.emit("assessment_chunk", { text: c }); opts.onProse?.(c); };
   const forward = proseForwarder(assessConfig.delimiter, onProse);
