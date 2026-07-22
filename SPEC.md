@@ -576,6 +576,28 @@ count only, never a declared answer.**
 - Contract: [contracts/quote-api-contract.md](contracts/quote-api-contract.md) **v0.8** §4f
   (additive; existing `bundle`/`indicative_total`/`range` unchanged for back-compat).
 
+### 2.15 Optional answers on the scanned path — amendment #36 (founder-ratified 2026-07-22)
+
+**36. Answers are OPTIONAL when a URL is given** (extends #30.1). Fixes a principle violation
+the site's BUG-1 workaround introduced: **primed default answers fabricated declared answers**,
+manufactured **false `declared_scan_conflict`s** on every non-`3_4` site, and would poison the
+launch's conflict-rate telemetry.
+
+- **Scanned path:** every `answers` field is optional — omit it or send `null` (the `answers`
+  object may be omitted entirely). **Absent = unanswered:** adds no declared need, manufactures
+  no conflict, contributes no answer-derived suggestion. The register comes from the **scan
+  alone** (30.1: add needs, never erase evidence). Specifically: `pages` absent → no band, no
+  conflict; `component`/`languages` absent → no need added; `has_brand_assets` absent → **no
+  `logo_refresh`** (suggestions only from real answers — scan-derived suggestions like below-
+  threshold `seo_migration` still apply, that's evidence, not a fabricated answer).
+- **`no_site` path unchanged:** nothing to crawl → all four answers **REQUIRED**; an answerless
+  or partial `no_site` request is a typed `400` (`answers.<key>: required for no_site`).
+- **Answered fields validate + price exactly as before** (out-of-enum still `400` on either
+  path); **partial subsets are first-class**; **full-answer behavior is byte-identical.**
+- Tests: **OA-01…OA-05** (absent-all across 1_2/3_4/band-edge → scan-priced, no conflict, no
+  suggestions; partial-subset matrix; `no_site`-without-answers rejected; back-compat pinned).
+- Contract: [contracts/quote-api-contract.md](contracts/quote-api-contract.md) **v0.9** §3.
+
 ---
 
 ## 3. What this service is (unchanged)

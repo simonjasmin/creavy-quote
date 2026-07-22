@@ -101,7 +101,8 @@ export function buildQuoteResponse(args: { scan: ScanResult | null; answers: Ans
     return { status: "completed", body: { indicative: true, basis: "scanned", review_required: true, result: { reason_code: code, currency: "CAD", reasons: [code] } } };
   }
 
-  const bandConflict = typeof scan.core_pages === "number" && pagesToBand(scan.core_pages) !== answers.pages;
+  // #36 — a conflict needs an ANSWERED page band; absent → no declared band, register from scan alone.
+  const bandConflict = answers.pages != null && typeof scan.core_pages === "number" && pagesToBand(scan.core_pages) !== answers.pages;
 
   // ---- estimation: band disagreement (30.1) OR a soft review trigger (#29.4) ----
   if (bandConflict || t.review_required) {

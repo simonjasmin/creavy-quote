@@ -1,4 +1,4 @@
-# Creavy Quote API — contract v0.8
+# Creavy Quote API — contract v0.9
 
 > **Canonical home:** this file (`contracts/quote-api-contract.md` in `creavy-quote`).
 > creavy-site keeps a **synced copy** and never reads `SPEC.md`. Machine enums only;
@@ -16,7 +16,19 @@
 
 ## 1. Header / traceability
 
-- **Version:** 0.8 (2026-07-22). **Status:** draft for creavy-site E1; indicative only.
+- **Version:** 0.9 (2026-07-22). **Status:** draft for creavy-site E1; indicative only.
+- **Changelog v0.8 → v0.9 (optional answers on the scanned path — #36):**
+  - With a `url`, **every `answers` field is optional** — omit it (or send `null`) to leave it
+    **unanswered**. The `answers` object itself may be omitted (URL-only POST). An unanswered
+    field adds **no declared need** and can manufacture **no `declared_scan_conflict`**; the
+    register comes from the **scan alone** (30.1: add needs, never erase evidence).
+    `has_brand_assets` absent → **no `logo_refresh` suggestion** (suggestions only from real
+    answers). An **answered** field is validated + priced exactly as before.
+  - **`no_site` is unchanged:** with nothing to crawl, all four answers stay **REQUIRED** — an
+    answerless or partial `no_site` request is a typed `400`.
+  - **Fixes** the site's BUG-1 primed-defaults workaround, which fabricated declared answers,
+    manufactured false conflicts on every non-`3_4` site, and would poison the launch's
+    conflict-rate telemetry. Full-answer behavior is **byte-identical** (back-compat pinned).
 - **Changelog v0.7 → v0.8 (price decomposition — #27.9, Option B; ADDITIVE):**
   - Every completed **flat** and **estimation** result MAY now carry a **decomposition**:
     `base` (`{tier, amount, from}`) + `additions[]` (`{code, label_key, amount, covers?}`).
@@ -157,8 +169,9 @@ separately ratified. That endpoint is out of scope here (§8). [#24]
 {
   "url": "https://example-plombier.ca",   // optional; omit iff no_site=true
   "no_site": false,                        // optional, default false (#29.3 declared basis)
-  "answers": {                             // REQUIRED — all 4 keys, no partial requests
-    "pages": "3_4",                        // enum "1_2" | "3_4" | "5_plus"
+  "answers": {                             // #36 scanned: OPTIONAL (any subset; omit the object
+                                           //   entirely for URL-only). no_site: all 4 REQUIRED.
+    "pages": "3_4",                        // enum "1_2" | "3_4" | "5_plus" (omit/null = unanswered)
     "component": "listings",               // enum "none"|"booking"|"listings"|"both" (30.2)
     "languages": "fr_en",                  // enum "fr" | "fr_en"
     "has_brand_assets": false              // boolean
@@ -177,8 +190,11 @@ role · `no_site` interplay.
 | `languages` | enum `fr`\|`fr_en` (room for future `en`) | **tier_input** (bilingual) | mode-independent — *desired* delivered language(s) | #18 (bilingual pricing) · #26/#28 |
 | `has_brand_assets` | boolean | **addon_signal only** (never tier) | mode-independent | #27 addon · `logo_refresh` $490 [cfg] |
 
-**Validation:** any **missing key** or **out-of-enum** value → **`400`** (§5 shape). `url`
-absent while `no_site=false` → `400`. Answers are all-or-nothing (client submits once).
+**Validation (#36):** an **out-of-enum / wrong-type** value on an **answered** field → **`400`**
+(§5 shape) on either path. `url` absent while `no_site=false` → `400`. **Scanned path:** every
+`answers` field is optional (absent/`null` = unanswered — no need, no conflict, no suggestion).
+**`no_site` path:** all four keys **required** — any missing → `400` (`answers.<key>: required
+for no_site`).
 
 **Reconciliation — declared vs scanned (30.1).** When both `url` (→ scanned `core_pages`)
 and `answers.pages` are present:
@@ -188,6 +204,8 @@ and `answers.pages` are present:
   (an enumerated estimation trigger, #29.4).
 - **Scanned facts (bilingual, blog_posts, platform, components) always apply as needs** —
   declared answers **add** needs, never erase evidence.
+- **#36 — `answers.pages` absent** → no reconciliation, no conflict; the register is the
+  **scan's own** (flat / #35 estimation band / review). Other absent answers simply add no need.
 
 **Legacy `needs_booking_or_listings:true`** (pre-30.2 site adapters) → `register:
 "estimation"`, `range` = [cheapest booking bundle … Pro] — never a silent under-price
