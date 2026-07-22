@@ -25,6 +25,13 @@
   - `assessment_*` events ride the **existing** since-`seq` event route (§8/§24). Internal
     assessment fields (`complexity_factors`, `review_note`, `confidence`,
     `flagged_for_review`) are **never** on any wire.
+- **v0.7 addenda (2026-07-22, additive — no version bump; the `{item,value}` shape and the
+  site's absent-tolerance already accommodate these):**
+  - **#31.1:** `analysis_details` whitelist grows to **seven** items — adds `page_titles`
+    (≤ 5 core-page titles, literal) and `blog_posts` (count, only when > 0). Any register on a
+    completed quote; absent when N/A; **no confidence gating** (both are deterministic facts).
+  - `GET /quote/:id/assessment` gains a suggested **`poll_after_ms`** — faster while
+    `streaming` (~700 ms) so generation yields more real paints; `0` at terminal states.
 - **Changelog v0.5 → v0.6 (#35 size-estimation band):**
   - Appended `size_estimation_band` to the `reason_code` enum (§2a). Clean **7–12-core** sites
     now return `register:"estimation"` with a `range` (was pure review). **No shape change** —
@@ -269,6 +276,8 @@ the stored-never-returned rule (§8) — detection-adapter facts only, ~zero tok
 | `language` | enum `fr`\|`fr_en` | #8 `languages` / `bilingual_mirror` |
 | `ecommerce` | boolean `true` | Shopify platform (no WooCommerce) |
 | `https` | boolean `true` | fetched URL scheme (**true-only**) |
+| `page_titles` | string[] (≤ 5, each ≤ 80 chars) | #31.1 — retained Option-C titles; **omitted if empty** |
+| `blog_posts` | integer (> 0) | #31.1 — #8 blog count; **omitted when 0** |
 
 Example (fragment appended to a `completed` `result`):
 ```json
@@ -472,6 +481,7 @@ failure → the price/panel/CTAs are unchanged and this section is simply absent
 {
   "status": "pending" | "streaming" | "completed" | "unavailable",  // unavailable = normal terminal (T5)
   "assessment_id": "as_…",
+  "poll_after_ms": 700,          // suggested cadence: ~700 while streaming, 1500 pending, 0 at terminal
   "prose_chunks": ["…"],        // prospect-facing prose, in order (the streamed output)
   "seq": 7,                      // last event seq (for the shared #24 route)
   "suggested_addons": [{ "id": "copywriting_per_page", "amount": 19000 }]  // refreshed by content_readiness

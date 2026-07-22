@@ -9,6 +9,7 @@ import { RateLimiter } from "../src/service/rateLimiter.ts";
 import { pricingConfig as P } from "../src/pricing/index.ts";
 import { readContractVersion } from "../src/service/contractVersion.ts";
 import { scriptedModel, transcript, validMeta } from "./helpers/assess.ts";
+import { scan as runScan } from "../src/crawl/scan.ts";
 import { FakeTransport, FakeClock, type Scenario } from "./helpers/replay.ts";
 
 // Contract v0.4 conformance. Prices are read FROM config (a drifted literal must fail).
@@ -113,6 +114,28 @@ test("E-review-copy robots_blocked / partial surface a public-safe reason code; 
   assert.ok((pt.body.result as any).reasons.includes("partial_scan"), "partial code present");
   const clean = buildQuoteResponse({ scan: scan({ core_pages: 3 }), answers: ans(), no_site: false }, P);
   assert.ok(!(clean.body.result as any).reasons.some((r: string) => ["robots_blocked", "partial_scan", "anti_bot_challenge"].includes(r)), "full read carries no limited-view code");
+});
+
+// ---- #31.1: page_titles + blog_posts; whitelist stays CLOSED at 7 items ----
+test("E-#31.1 page_titles from a real 4-page site; whitelist closed at 7; blog_posts omitted at 0", async () => {
+  const r = await runScan(new FakeTransport(goldenScenario("toituresmarcelpouliot")), new FakeClock(1_700_000_000_000), "http://toituresmarcelpouliot.com/");
+  const ad = (buildQuoteResponse({ scan: r, answers: ans(), no_site: false }, P).body.result as any).analysis_details as any[];
+  const WHITELIST = new Set(["platform", "pages", "language", "ecommerce", "https", "page_titles", "blog_posts"]);
+  for (const it of ad) assert.ok(WHITELIST.has(it.item), `unexpected analysis_details item: ${it.item}`);
+  const titles = ad.find((x) => x.item === "page_titles");
+  assert.ok(titles && Array.isArray(titles.value), "page_titles present as an array");
+  assert.ok(titles.value.length >= 1 && titles.value.length <= 5, "≤5 titles");
+  assert.ok(titles.value.every((t: string) => typeof t === "string" && t.length > 0 && t.length <= 81), "sane truncation");
+  assert.ok(titles.value.some((t: string) => /Toitures Marcel Pouliot/i.test(t)), "real titles");
+  assert.ok(!ad.some((x) => x.item === "blog_posts"), "blog_posts omitted when 0");
+});
+test("E-#31.1 blog_posts present only when > 0; long title truncated", () => {
+  const long = "Un titre de page vraiment très long qui dépasse largement la limite de quatre-vingts caractères imposée";
+  const ad = (buildQuoteResponse({ scan: scan({ blog_posts: 8, page_content: [{ url: "u", title: long, text: "x", headings: [] }] as any }), answers: ans(), no_site: false }, P).body.result as any).analysis_details as any[];
+  assert.deepEqual(ad.find((x) => x.item === "blog_posts"), { item: "blog_posts", value: 8 });
+  const titles = ad.find((x) => x.item === "page_titles").value;
+  assert.equal(titles.length, 1);
+  assert.ok(titles[0].length <= 80 && titles[0].endsWith("…"), "truncated with ellipsis");
 });
 
 // ================= HTTP integration — the running app =================

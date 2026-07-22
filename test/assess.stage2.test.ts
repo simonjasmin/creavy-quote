@@ -128,6 +128,15 @@ test("ST2-08 same page_content × {ready,partial,none} → identical complexity 
   assert.ok(ids(out.none).includes("copywriting_per_page") && ids(out.none).includes("photo_sourcing"), "none → copywriting + photo");
 });
 
+// ---- streaming poll cadence (gate #2): faster while streaming, 0 at terminal ----
+test("ST2-09 poll_after_ms — 1500 pending, ~700 streaming, 0 terminal", () => {
+  const base: any = { id: "as_x", quote_id: "q", content_readiness: "ready", model: "m", prose_chunks: [], suggested_addons: [], complexity: null, complexity_factors: null, review_note: null, confidence: null, flagged_for_review: null, reason: null, created_at: 0, updated_at: 0 };
+  assert.equal(projectAssessment({ ...base, status: "pending" }).poll_after_ms, 1500);
+  assert.equal(projectAssessment({ ...base, status: "streaming" }).poll_after_ms, 700);
+  assert.equal(projectAssessment({ ...base, status: "completed" }).poll_after_ms, 0);
+  assert.equal(projectAssessment({ ...base, status: "unavailable" }).poll_after_ms, 0);
+});
+
 // ---- failure = terminal unavailable; stage 1½ untouched (T5) ----
 test("ST2-07 every failure mode → terminal unavailable, stage-1 response unchanged", async () => {
   for (const [name, model] of [

@@ -25,7 +25,10 @@ function reviewReasonCode(mapperReasons: string[], reviewFlags: string[]): strin
   return "needs_review";
 }
 
-// #31 analysis_details — whitelisted, high-confidence-only, https true-only, no booking.
+// #31 analysis_details — whitelisted. #31.1 grows it to SEVEN items (adds page_titles +
+// blog_posts, both DETERMINISTIC scan facts, no confidence gating). The firewall is unchanged:
+// the model's analysis stays behind the email; internals never ship here.
+const TITLE_CAP = 80;
 function analysisDetails(scan: ScanResult): { item: string; value: unknown }[] {
   const out: { item: string; value: unknown }[] = [];
   const p = scan.detected_platform;
@@ -34,6 +37,12 @@ function analysisDetails(scan: ScanResult): { item: string; value: unknown }[] {
   out.push({ item: "language", value: scan.bilingual_mirror ? "fr_en" : "fr" });
   if (p === "shopify") out.push({ item: "ecommerce", value: true });
   if (scan.canonical_origin.startsWith("https://")) out.push({ item: "https", value: true });
+  // #31.1 page_titles — up to 5 core-page titles from retained Option-C content (literal); omit if empty.
+  const titles = (scan.page_content ?? []).map((pc) => (pc.title || "").trim()).filter(Boolean).slice(0, 5)
+    .map((t) => (t.length > TITLE_CAP ? t.slice(0, TITLE_CAP - 1).trimEnd() + "…" : t));
+  if (titles.length) out.push({ item: "page_titles", value: titles });
+  // #31.1 blog_posts — the count, only when > 0.
+  if (typeof scan.blog_posts === "number" && scan.blog_posts > 0) out.push({ item: "blog_posts", value: scan.blog_posts });
   return out;
 }
 

@@ -93,10 +93,15 @@ async function runModel(deps: AssessmentDeps, asmt: Assessment, scan: ScanResult
 // PUBLIC projection (#24 default-deny) — the ONLY fields that ship. Internal fields
 // (complexity_factors, review_note, confidence, flagged_for_review) are omitted BY
 // CONSTRUCTION: they are never read here.
+// Suggested poll cadence: faster WHILE streaming so a 5–7 s generation yields ~8–10 real
+// paints, not 3–4; terminal states say "stop" (0). Trivial load at our volumes.
+const POLL_AFTER_MS: Record<Assessment["status"], number> = { pending: 1500, streaming: 700, completed: 0, unavailable: 0 };
+
 export function projectAssessment(a: Assessment): Record<string, unknown> {
   return {
     assessment_id: a.id,
     status: a.status,
+    poll_after_ms: POLL_AFTER_MS[a.status],
     prose_chunks: a.prose_chunks,
     suggested_addons: a.suggested_addons,
   };
