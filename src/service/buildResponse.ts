@@ -66,7 +66,7 @@ export function buildQuoteResponse(args: { scan: ScanResult | null; answers: Ans
       status: "completed",
       body: {
         indicative: true, basis: "declared", register: "flat", review_required: false,
-        result: { bundle: t.bundle, indicative_total: t.indicative_total, currency: "CAD", suggested_addons: t.suggested_addons, care_plan_monthly: care, reasons: [...t.reasons, "declared_basis"] },
+        result: { bundle: t.bundle, indicative_total: t.indicative_total, base: t.base ? { ...t.base, from: "declared" } : t.base, additions: t.additions, currency: "CAD", suggested_addons: t.suggested_addons, care_plan_monthly: care, reasons: [...t.reasons, "declared_basis"] },
       },
     };
   }
@@ -88,7 +88,8 @@ export function buildQuoteResponse(args: { scan: ScanResult | null; answers: Ans
 
   // #35 size-estimation band → estimation register with the config-derived range (7..size_band_max)
   if (t.range) {
-    const result: Record<string, unknown> = { range: t.range, currency: "CAD", confidence: "medium", suggested_addons: t.suggested_addons, reasons: t.reasons, core_pages: scan.core_pages, ...platformField };
+    // #27.9 rider 3 — decomposition reconciles to range.min (scanned-basis layout floor)
+    const result: Record<string, unknown> = { range: t.range, base: t.base, additions: t.additions, currency: "CAD", confidence: "medium", suggested_addons: t.suggested_addons, reasons: t.reasons, core_pages: scan.core_pages, ...platformField };
     const ad = analysisDetails(scan); // #31 panel on estimation too (same whitelist + #23 gating)
     if (ad.length) result.analysis_details = ad;
     return { status: "completed", body: { indicative: true, basis: "scanned", register: "estimation", review_required: true, result } };
@@ -104,18 +105,17 @@ export function buildQuoteResponse(args: { scan: ScanResult | null; answers: Ans
 
   // ---- estimation: band disagreement (30.1) OR a soft review trigger (#29.4) ----
   if (bandConflict || t.review_required) {
-    let min = t.indicative_total!;
-    if (bandConflict) {
-      const declaredT = mapTier({ ...input, core_pages: bandToPages(answers.pages) }, config);
-      if (declaredT.indicative_total != null) min = Math.min(min, declaredT.indicative_total);
-    }
+    // #27.9 rider 3 — range.min is the SCANNED-basis floor (t.indicative_total); a declared band
+    // never moves it below the evidence (the mistap, symmetric to declaring more). The
+    // decomposition (t.base + t.additions) reconciles to range.min exactly.
+    const min = t.indicative_total!;
     const adEst = analysisDetails(scan); // #31 panel on the soft/band-conflict estimation too
     return {
       status: "completed",
       body: {
         indicative: true, basis: "scanned", register: "estimation", review_required: true,
         result: {
-          range: { min, max: proTotal }, currency: "CAD", confidence: bandConflict ? "low" : "medium",
+          range: { min, max: proTotal }, base: t.base, additions: t.additions, currency: "CAD", confidence: bandConflict ? "low" : "medium",
           suggested_addons: t.suggested_addons, reasons: bandConflict ? ["declared_scan_conflict"] : t.reasons,
           core_pages: scan.core_pages, ...platformField,
           ...(adEst.length ? { analysis_details: adEst } : {}),
@@ -126,7 +126,7 @@ export function buildQuoteResponse(args: { scan: ScanResult | null; answers: Ans
 
   // ---- flat: bands agree, no review ----
   const result: Record<string, unknown> = {
-    bundle: t.bundle, indicative_total: t.indicative_total, currency: "CAD",
+    bundle: t.bundle, indicative_total: t.indicative_total, base: t.base, additions: t.additions, currency: "CAD",
     suggested_addons: t.suggested_addons, care_plan_monthly: care, reasons: t.reasons,
     core_pages: scan.core_pages, detected_platform: highConf ? scan.detected_platform : "unknown", confidence: scan.detected_platform_confidence,
   };

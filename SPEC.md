@@ -546,6 +546,36 @@ flag; the **exact price stays human-confirmed.** **Core > 12 → pure review** a
   sweeps are directional (biased-large samples); the live funnel's auto-price rate is the
   authority once quotes flow.
 
+### 2.14 Price decomposition — amendment #27.9 (founder-ratified 2026-07-22)
+
+**27.9. `base` + `additions` breakdown** (extends #27.3). `mapTier` returns the price **broken
+out**, not just blended — a **display convention over the number #27.3 already computed; it
+never re-prices.** Firewall unchanged: the model never prices; base comes from **scanned page
+count only, never a declared answer.**
+
+- **`base: {tier, amount, from}`** = the **scanned-pages tier** (Presence/Standard + extra),
+  priced on `core_pages` **only** → **invariant to every declared answer**. The « 5 et plus »
+  mistap on a scanned 4-page site is **structurally unreachable** (mapTier only sees scanned
+  pages; the declared band lives in `buildResponse` and moves the *register*, never `base`).
+- **`additions: [{code, label_key, amount, covers?}]`** = config-priced refinement lines.
+- **Option B (ratified; A rejected — changed real prices + needed an à-la-carte listings price
+  deliberately refused; C rejected — violated "base from scan only"):** the **#27.3 Pro
+  crossover discount is preserved** (consumer-protection: Pro only when actually cheapest).
+  When a tier BUMPS above the page-base (component/crossover → Standard or Pro), the bump is
+  **one `<tier>_bundle` line** (`amount = tier − base`) carrying **`covers[]`**, not strict
+  per-feature additivity. **Strict additivity is display; it never overrides pricing.**
+- **Invariant:** `base.amount + Σ additions === indicative_total` (flat) / `=== range.min`
+  (estimation). **`care_plan` stays outside** base/additions/total.
+- **Rider 1:** `bundle.tier` (card headline) MAY differ from `base.tier` (arithmetic anchor) —
+  a Pro quote carries `bundle.tier:pro` AND `base.tier:standard`. Site headlines `bundle.tier`.
+- **Rider 2:** `covers[]` lists what a bundle line includes (site renders from payload).
+- **Rider 3:** estimation reconciles to `range.min` (the scanned-basis floor); a declared band
+  never drops `range.min` below the evidence.
+- Tests: **D-01…D-09** (reconciliation across the full combination space, riders, mistap,
+  care-plan exclusion) + goldens re-asserted with the decomposition shape.
+- Contract: [contracts/quote-api-contract.md](contracts/quote-api-contract.md) **v0.8** §4f
+  (additive; existing `bundle`/`indicative_total`/`range` unchanged for back-compat).
+
 ---
 
 ## 3. What this service is (unchanged)

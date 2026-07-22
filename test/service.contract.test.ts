@@ -34,6 +34,10 @@ test("E2 scanned flat + bilingual add + analysis_details", () => {
   assert.deepEqual(res.reasons, ["cheapest_bundle", "bilingual_addon"]);
   assert.equal(res.core_pages, 4); assert.equal(res.detected_platform, "wordpress"); assert.equal(res.confidence, "high");
   assert.deepEqual(res.analysis_details, [{ item: "platform", value: "wordpress" }, { item: "pages", value: 4 }, { item: "language", value: "fr_en" }, { item: "https", value: true }]);
+  // #27.9 decomposition on the flat register: base (scanned tier) + one config-priced line
+  assert.deepEqual(res.base, { tier: "standard", amount: STD, from: "scan" });
+  assert.deepEqual(res.additions, [{ code: "bilingual", label_key: "addon.bilingual", amount: BIL }]);
+  assert.equal(res.base.amount + res.additions.reduce((s: number, a: any) => s + a.amount, 0), res.indicative_total);
 });
 
 // ---- E3 scanned estimation: 5-page JS-heavy → softened ----
@@ -47,6 +51,10 @@ test("E3 scanned estimation (needs_browser) → range, medium confidence", () =>
   assert.equal(res.detected_platform, "unknown");
   // #31 on estimation: pages + language + https present; platform omitted (below high conf, #23)
   assert.deepEqual(res.analysis_details, [{ item: "pages", value: 5 }, { item: "language", value: "fr" }, { item: "https", value: true }]);
+  // #27.9 rider 3: decomposition reconciles to range.min (scanned-basis 5-page floor)
+  assert.deepEqual(res.base, { tier: "standard", amount: STD + EXTRA, from: "scan" });
+  assert.deepEqual(res.additions, []);
+  assert.equal(res.base.amount + res.additions.reduce((s: number, a: any) => s + a.amount, 0), res.range.min);
 });
 
 // ---- E4 declared no_site: booking + bilingual ----
@@ -59,6 +67,10 @@ test("E4 declared flat (no crawl fields)", () => {
   assert.equal(res.indicative_total, STD + BIL + BOOK);
   assert.ok(res.reasons.includes("declared_basis"));
   assert.equal(res.core_pages, undefined, "no crawl fields on declared (#29.3)");
+  // #27.9 on declared: base.from = "declared" (no scan); still reconciles
+  assert.equal(res.base.from, "declared"); assert.equal(res.base.tier, "standard");
+  assert.deepEqual(res.additions.map((a: any) => a.code).sort(), ["bilingual", "booking"]);
+  assert.equal(res.base.amount + res.additions.reduce((s: number, a: any) => s + a.amount, 0), res.indicative_total);
 });
 
 // ---- E5 review-required: 30+ → out_of_scope ----

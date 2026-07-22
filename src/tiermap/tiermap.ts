@@ -24,15 +24,31 @@ export type TierMapInput = {
 export type TierBundle = { tier: string; addons: string[]; modifiers: string[] };
 export type Suggestion = { id: string; amount: number };
 export type PriceRange = { min: number; max: number };
+// #27.9 price decomposition: base = scanned-pages tier (from scan ONLY), additions = config-
+// priced refinement lines; a tier bump (→Standard/→Pro) is ONE `<tier>_bundle` line with
+// `covers`. Invariant: base.amount + Σ additions.amount === total (flat) / range.min (estimation).
+export type PriceBase = { tier: string; amount: number; from: "scan" };
+export type Addition = { code: string; label_key: string; amount: number; covers?: string[] };
 export type TierResult = {
   bundle: TierBundle | null;
   indicative_total: number | null;
   range?: PriceRange | null; // #35 size-estimation band — an instant range, exact price human-confirmed
+  base?: PriceBase | null; // #27.9 decomposition anchor (scanned-pages tier); may differ from bundle.tier
+  additions?: Addition[]; // #27.9 refinement line items (+ the tier-bump bundle line)
   review_required: boolean;
   reasons: string[]; // #30.5 stable codes (append-only)
   reason_text: string[]; // internal prose — never returned by the API
   suggested_addons: Suggestion[]; // #30.6 {id, amount cents}
 };
+
+// The scanned-pages tier bundle — Presence(≤2) / Standard(3-4) / Standard+extra(5-6). NO
+// components, NO bilingual → INVARIANT to every declared answer (the mistap is unreachable).
+export function pageBaseBundle(scannedCore: number, config: PricingConfig): { tier: string; amount: number } {
+  const tm = config.tiermap;
+  if (scannedCore <= tm.presence_max_pages) return { tier: "presence", amount: config.tiers.presence.price_cents };
+  const ep = Math.max(0, scannedCore - tm.standard_base_pages);
+  return { tier: "standard", amount: config.tiers.standard.price_cents + ep * flatCents(config, "extra_page") };
+}
 
 const flatCents = (config: PricingConfig, key: string): number => {
   const p = config.addons[key]?.price;
@@ -94,7 +110,11 @@ export function mapTier(input: TierMapInput, config: PricingConfig): TierResult 
       || flags.has("robots_blocked") || flags.has("anti_bot") || flags.has("bilingual_suspected");
     if (pages <= tm.size_band_max && !otherTrigger) {
       say("size_estimation_band", `${pages} core pages — layouts ≠ pages: an instant range, exact price human-confirmed`);
-      return { bundle: null, indicative_total: null, range: sizeBandRange(pages, config), review_required: true, reasons: codes, reason_text: text, suggested_addons: suggestions() };
+      const range = sizeBandRange(pages, config);
+      // #27.9 rider 3 — the decomposition reconciles to range.min (the scanned-basis layout-floor
+      // bundle); it's entirely page/layout-driven, so the whole floor sits in base, additions=[].
+      const band = pageBaseBundle(Math.min(pages, tm.pro_base_pages), config);
+      return { bundle: null, indicative_total: null, range, base: { tier: band.tier, amount: range.min, from: "scan" }, additions: [], review_required: true, reasons: codes, reason_text: text, suggested_addons: suggestions() };
     }
     return blocked("review_unusual_size", `${pages} core pages > ${tm.size_band_max} (or added complexity) — unusual shape, a human decides`);
   }
@@ -137,5 +157,28 @@ export function mapTier(input: TierMapInput, config: PricingConfig): TierResult 
   else if (input.blog_posts > 0) say("blog_migration_suggested", `${input.blog_posts} blog posts — SEO migration suggested (below the ${tm.blog_seo_threshold} auto-threshold)`);
   if (ecommerce) addons.push("ecommerce"); // human_quote line; contributes nothing to indicative_total
 
-  return { bundle: { tier: best.tier, addons, modifiers: [] }, indicative_total: total, review_required: review, reasons: codes, reason_text: text, suggested_addons: suggestions() };
+  const { base, additions } = decompose({ total, bestTier: best.tier, n, bilingual, booking, listings, blogHeavy, config });
+  return { bundle: { tier: best.tier, addons, modifiers: [] }, indicative_total: total, base, additions, review_required: review, reasons: codes, reason_text: text, suggested_addons: suggestions() };
+}
+
+// #27.9 Option B — decompose the CHOSEN (#27.3-cheapest) total into base + additions WITHOUT
+// changing the total. base = scanned-pages tier (invariant to declared answers). When the
+// bundle tier BUMPS above the page-base tier (a component/crossover forcing Standard or Pro),
+// the whole bump is ONE `<tier>_bundle` line carrying `covers` (the site renders included
+// features from payload). No bump → clean config-priced refinement lines. seo_migration is a
+// standalone blog-driven line in either case. Invariant: base.amount + Σ additions === total.
+function decompose(a: { total: number; bestTier: string; n: number; bilingual: boolean; booking: boolean; listings: boolean; blogHeavy: boolean; config: PricingConfig }): { base: PriceBase; additions: Addition[] } {
+  const b = pageBaseBundle(a.n, a.config);
+  const base: PriceBase = { tier: b.tier, amount: b.amount, from: "scan" };
+  const additions: Addition[] = [];
+  const seoAmt = a.blogHeavy ? flatCents(a.config, "seo_migration") : 0;
+  if (a.bestTier !== b.tier) {
+    const covers = [...(a.bilingual ? ["bilingual"] : []), ...(a.booking ? ["booking"] : []), ...(a.listings ? ["listings"] : [])];
+    additions.push({ code: `${a.bestTier}_bundle`, label_key: `bundle.${a.bestTier}`, amount: a.total - base.amount - seoAmt, covers });
+  } else {
+    if (a.bilingual) additions.push({ code: "bilingual", label_key: "addon.bilingual", amount: flatCents(a.config, "bilingual") });
+    if (a.booking) additions.push({ code: "booking", label_key: "addon.booking", amount: flatCents(a.config, "booking") });
+  }
+  if (a.blogHeavy) additions.push({ code: "seo_migration", label_key: "addon.seo_migration", amount: flatCents(a.config, "seo_migration") });
+  return { base, additions };
 }

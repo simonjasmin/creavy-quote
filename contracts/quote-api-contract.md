@@ -1,4 +1,4 @@
-# Creavy Quote API — contract v0.7
+# Creavy Quote API — contract v0.8
 
 > **Canonical home:** this file (`contracts/quote-api-contract.md` in `creavy-quote`).
 > creavy-site keeps a **synced copy** and never reads `SPEC.md`. Machine enums only;
@@ -16,7 +16,22 @@
 
 ## 1. Header / traceability
 
-- **Version:** 0.7 (2026-07-20). **Status:** draft for creavy-site E1; indicative only.
+- **Version:** 0.8 (2026-07-22). **Status:** draft for creavy-site E1; indicative only.
+- **Changelog v0.7 → v0.8 (price decomposition — #27.9, Option B; ADDITIVE):**
+  - Every completed **flat** and **estimation** result MAY now carry a **decomposition**:
+    `base` (`{tier, amount, from}`) + `additions[]` (`{code, label_key, amount, covers?}`).
+    Existing `bundle` / `indicative_total` / `range` / `register` / `reasons` are **unchanged**
+    — the site adopts the breakdown incrementally.
+  - **Invariant:** `base.amount + Σ additions[].amount === indicative_total` (flat) or
+    `=== range.min` (estimation). `care_plan_monthly` is **outside** the sum, always.
+  - **`base` is the SCANNED-pages tier** and is **invariant to every declared answer** (a
+    « 5 et plus » tap on a scanned 4-page site never moves it — the mistap is structurally
+    unreachable). `base.tier` **MAY differ from `bundle.tier`** — see §4f rider 1.
+  - The **#27.3 Pro crossover discount is preserved** (a ratified consumer-protection pricing
+    feature): when Pro is the cheapest bundle, `additions` is one `pro_bundle` line
+    (`amount = Pro − base`, `covers: [machine codes]`), NOT strict per-feature additivity.
+  - Rolls in the **v0.7 addenda** below (#31.1 `page_titles`/`blog_posts`, streaming
+    `poll_after_ms`) — now carried by the 0.8 sync.
 - **Changelog v0.6 → v0.7 (stage-2 assessment delivery — `stage2-treaty-v07.md`):**
   - **Additive only** — every stage-1 shape, both registers, reason codes, `analysis_details`
     are **unchanged.** The site can ship stage-1 behavior as-is and layer stage 2 on.
@@ -200,9 +215,11 @@ and `answers.pages` are present:
   "result": {
     "bundle": { "tier": "standard", "addons": [] },  // #27; addons here are PRICED
     "indicative_total": 279000,       // cents = tier + priced addons, #20/#29.4
+    "base": { "tier": "standard", "amount": 279000, "from": "scan" }, // #27.9 scanned-pages anchor (§4f)
+    "additions": [],                  // #27.9 refinement line items; base.amount + Σ === indicative_total
     "currency": "CAD",
     "suggested_addons": [{ "id": "logo_refresh", "amount": 49000 }], // unpriced upsells, cents (30.3)
-    "care_plan_monthly": 5900,        // cents, [cfg] (attached at render, #27.8)
+    "care_plan_monthly": 5900,        // cents, [cfg] (attached at render, #27.8) — OUTSIDE the sum
     "reasons": ["cheapest_bundle"],   // stable codes (§2a); optional to render (30.5)
     "core_pages": 4,                  // #8 (int | "30+")
     "detected_platform": "wordpress", // high-conf only, else "unknown" (#23)
@@ -218,6 +235,8 @@ and `answers.pages` are present:
   "basis": "scanned", "register": "estimation", "review_required": true,
   "result": {
     "range": { "min": 279000, "max": 429000 },  // bounds of the #27.3 valid-bundle set
+    "base": { "tier": "standard", "amount": 279000, "from": "scan" }, // #27.9 rider 3: reconciles to range.min
+    "additions": [],                             // base.amount + Σ additions === range.min
     "currency": "CAD", "confidence": "medium",   // #29.4 enum
     "suggested_addons": [], "reasons": ["needs_closer_look"],
     "core_pages": 5, "detected_platform": "wix", "confidence_platform": "high"
@@ -288,6 +307,46 @@ Example (fragment appended to a `completed` `result`):
   {"item":"https","value":true}
 ]
 ```
+
+### 4f. `base` + `additions` — price decomposition (#27.9, Option B)
+
+Every completed **flat** and **estimation** `result` MAY carry a decomposition. It is a
+**display breakdown of the number the mapper already computed** — it never re-prices.
+
+```jsonc
+"base": { "tier": "standard", "amount": 279000, "from": "scan" },  // scanned-pages anchor
+"additions": [
+  { "code": "bilingual", "label_key": "addon.bilingual", "amount": 69000 },        // config-priced line
+  { "code": "pro_bundle", "label_key": "bundle.pro", "amount": 150000,             // tier-bump line…
+    "covers": ["listings"] }                                                        // …lists what it includes
+]
+```
+
+- **`base`** = the **scanned-pages tier** (`presence`/`standard`, + extra pages), priced on
+  `core_pages` **only**. It is **invariant to every declared answer** — the « 5 et plus »
+  mistap on a scanned 4-page site cannot move it (structurally unreachable). `from` is
+  `"scan"` on scanned quotes, `"declared"` on `no_site`.
+- **`additions[]`** = `{code, label_key, amount, covers?}`. `label_key` is a **machine key**
+  (site owns FR/EN). Config-priced refinement lines (`bilingual`, `booking`, `seo_migration`)
+  when the base tier already supports them.
+- **Invariant (all registers):** `base.amount + Σ additions[].amount === indicative_total`
+  (flat) **or `=== range.min`** (estimation). **`care_plan_monthly` is never in the sum.**
+
+**Rider 1 — displayed tier vs arithmetic anchor.** `bundle.tier` is what the **card
+headlines** (`pro` on a Pro quote). `base.tier` is the scanned-pages anchor and **MAY
+differ** (e.g. `bundle.tier:"pro"` with `base.tier:"standard"`). The site headlines
+`bundle.tier`, never `base.tier` — do not print "Standard" on a Pro quote.
+
+**Rider 2 — `covers[]`.** A tier-bump line (`pro_bundle`, `standard_bundle`) carries
+`covers: [machine codes]` (e.g. `["bilingual","booking","listings"]`) so the site renders the
+included features **from payload**, not hardcoded. Simple lines (bilingual alone) omit
+`covers`. Rationale: #27.3's Pro crossover discount is a ratified consumer-protection pricing
+feature — Pro only when actually cheapest — so a Pro quote is **one bundled line at the
+preserved total**, not strict per-feature additivity (which would over-charge).
+
+**Rider 3 — estimation.** The decomposition reconciles to **`range.min`**, the **scanned-basis
+bundle** floor; `additions` reflect that scanned-basis bundle. A declared band never drops
+`range.min` below the evidence.
 
 ## 5. Failure semantics
 
