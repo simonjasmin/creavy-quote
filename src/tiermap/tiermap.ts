@@ -135,7 +135,9 @@ export function mapTier(input: TierMapInput, config: PricingConfig): TierResult 
   const extra = flatCents(config, "extra_page"), biAdd = flatCents(config, "bilingual"), bkAdd = flatCents(config, "booking");
   const proInc = new Set(tm.pro_includes);
   const cands: { tier: string; total: number; addons: string[] }[] = [];
-  if (n <= tm.presence_max_pages && !bilingual && !booking && !listings)
+  // #38 — Présence is simple-only (config, ratified): a component/bilingual forces the Standard floor.
+  const presenceBlocked = (tm.presence_excludes_components && (booking || listings)) || (tm.presence_excludes_bilingual && bilingual);
+  if (n <= tm.presence_max_pages && !presenceBlocked)
     cands.push({ tier: "presence", total: config.tiers.presence.price_cents, addons: [] });
   if (n <= tm.pro_base_pages && !listings) {
     const ep = Math.max(0, n - tm.standard_base_pages);
@@ -162,22 +164,29 @@ export function mapTier(input: TierMapInput, config: PricingConfig): TierResult 
 }
 
 // #27.9 Option B — decompose the CHOSEN (#27.3-cheapest) total into base + additions WITHOUT
-// changing the total. base = scanned-pages tier (invariant to declared answers). When the
-// bundle tier BUMPS above the page-base tier (a component/crossover forcing Standard or Pro),
-// the whole bump is ONE `<tier>_bundle` line carrying `covers` (the site renders included
-// features from payload). No bump → clean config-priced refinement lines. seo_migration is a
-// standalone blog-driven line in either case. Invariant: base.amount + Σ additions === total.
+// changing the total. base = scanned-pages tier (invariant to declared answers).
+// #38 line-split ruling: a **Standard** tier bump is exactly ADDITIVE (no crossover discount),
+// so it renders SEPARATELY — a `standard_upgrade` line (tier delta, NO covers) + individual
+// add-on lines at config prices. The single collapsed `pro_bundle` line stays **Pro-only**,
+// where the crossover discount makes the parts inseparable (so it carries `covers`). No bump →
+// clean config-priced refinement lines. seo_migration is a standalone blog line in every case.
+// Invariant: base.amount + Σ additions === total.
 function decompose(a: { total: number; bestTier: string; n: number; bilingual: boolean; booking: boolean; listings: boolean; blogHeavy: boolean; config: PricingConfig }): { base: PriceBase; additions: Addition[] } {
   const b = pageBaseBundle(a.n, a.config);
   const base: PriceBase = { tier: b.tier, amount: b.amount, from: "scan" };
   const additions: Addition[] = [];
-  const seoAmt = a.blogHeavy ? flatCents(a.config, "seo_migration") : 0;
-  if (a.bestTier !== b.tier) {
+  const addon = (flag: boolean, code: string) => { if (flag) additions.push({ code, label_key: `addon.${code}`, amount: flatCents(a.config, code) }); };
+  if (a.bestTier === "pro") {
+    // Pro: ONE collapsed line — the crossover discount makes bilingual/booking/listings inseparable.
     const covers = [...(a.bilingual ? ["bilingual"] : []), ...(a.booking ? ["booking"] : []), ...(a.listings ? ["listings"] : [])];
-    additions.push({ code: `${a.bestTier}_bundle`, label_key: `bundle.${a.bestTier}`, amount: a.total - base.amount - seoAmt, covers });
+    const seoAmt = a.blogHeavy ? flatCents(a.config, "seo_migration") : 0;
+    additions.push({ code: "pro_bundle", label_key: "bundle.pro", amount: a.total - base.amount - seoAmt, covers });
+  } else if (a.bestTier !== b.tier) {
+    // Standard bump (additive): tier delta as its own line (no covers) + genuine add-on lines.
+    additions.push({ code: "standard_upgrade", label_key: "bundle.standard", amount: a.config.tiers.standard.price_cents - base.amount });
+    addon(a.bilingual, "bilingual"); addon(a.booking, "booking"); // listings can't reach a Standard bump (→ Pro)
   } else {
-    if (a.bilingual) additions.push({ code: "bilingual", label_key: "addon.bilingual", amount: flatCents(a.config, "bilingual") });
-    if (a.booking) additions.push({ code: "booking", label_key: "addon.booking", amount: flatCents(a.config, "booking") });
+    addon(a.bilingual, "bilingual"); addon(a.booking, "booking");
   }
   if (a.blogHeavy) additions.push({ code: "seo_migration", label_key: "addon.seo_migration", amount: flatCents(a.config, "seo_migration") });
   return { base, additions };

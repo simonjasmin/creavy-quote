@@ -1,4 +1,4 @@
-# Creavy Quote API — contract v0.10
+# Creavy Quote API — contract v0.11
 
 > **Canonical home:** this file (`contracts/quote-api-contract.md` in `creavy-quote`).
 > creavy-site keeps a **synced copy** and never reads `SPEC.md`. Machine enums only;
@@ -16,7 +16,18 @@
 
 ## 1. Header / traceability
 
-- **Version:** 0.10 (2026-07-23). **Status:** draft for creavy-site E1; indicative only.
+- **Version:** 0.11 (2026-07-23). **Status:** draft for creavy-site E1; indicative only.
+- **Changelog v0.10 → v0.11 (Présence simple-only + Standard-bump line-split — #38):**
+  - **#38 (ratified):** Présence is the one-pager/digital-card tier — **simple-only.** Any
+    component (booking/listings) or bilingual forces the **Standard floor** (config
+    `presence_excludes_components` / `_bilingual`). No response-shape change — a small 1–2 page
+    site with an add-on now maps to `bundle.tier:"standard"` (as it already did; the rule is
+    now ratified + config-driven).
+  - **`additions` line-split:** an **additive Standard bump** now renders as **separate** lines
+    — `standard_upgrade` (tier delta, **no `covers`**) + each add-on as its own config-priced
+    line — instead of one collapsed `standard_bundle`. The single collapsed **`pro_bundle`**
+    line stays **Pro-only** (the crossover discount makes its parts inseparable → it keeps
+    `covers`). `base.amount + Σ additions === total` unchanged.
 - **Changelog v0.9 → v0.10 (payment-terms display — #37; ADDITIVE):**
   - The **flat** register gains `payment_terms: {months, monthly_amount, final_amount}`
     (integer cents) — a **presentation of the same fixed total** as installments. **Not a
@@ -343,12 +354,15 @@ Every completed **flat** and **estimation** `result` MAY carry a decomposition. 
 **display breakdown of the number the mapper already computed** — it never re-prices.
 
 ```jsonc
-"base": { "tier": "standard", "amount": 279000, "from": "scan" },  // scanned-pages anchor
+// e.g. a 1-page site needing booking+bilingual → Standard floor (#38), split into lines:
+"base": { "tier": "presence", "amount": 149000, "from": "scan" },   // scanned-pages anchor
 "additions": [
-  { "code": "bilingual", "label_key": "addon.bilingual", "amount": 69000 },        // config-priced line
-  { "code": "pro_bundle", "label_key": "bundle.pro", "amount": 150000,             // tier-bump line…
-    "covers": ["listings"] }                                                        // …lists what it includes
+  { "code": "standard_upgrade", "label_key": "bundle.standard", "amount": 130000 }, // #38 tier delta, NO covers
+  { "code": "bilingual", "label_key": "addon.bilingual", "amount": 69000 },          // its own config-priced line
+  { "code": "booking",   "label_key": "addon.booking",   "amount": 59000 }
 ]
+// A PRO bump instead collapses to ONE line (crossover discount, inseparable):
+//   { "code": "pro_bundle", "label_key": "bundle.pro", "amount": 150000, "covers": ["listings"] }
 ```
 
 - **`base`** = the **scanned-pages tier** (`presence`/`standard`, + extra pages), priced on
@@ -366,12 +380,14 @@ headlines** (`pro` on a Pro quote). `base.tier` is the scanned-pages anchor and 
 differ** (e.g. `bundle.tier:"pro"` with `base.tier:"standard"`). The site headlines
 `bundle.tier`, never `base.tier` — do not print "Standard" on a Pro quote.
 
-**Rider 2 — `covers[]`.** A tier-bump line (`pro_bundle`, `standard_bundle`) carries
-`covers: [machine codes]` (e.g. `["bilingual","booking","listings"]`) so the site renders the
-included features **from payload**, not hardcoded. Simple lines (bilingual alone) omit
-`covers`. Rationale: #27.3's Pro crossover discount is a ratified consumer-protection pricing
-feature — Pro only when actually cheapest — so a Pro quote is **one bundled line at the
-preserved total**, not strict per-feature additivity (which would over-charge).
+**Rider 2 — bump lines (#38).** A **Standard** bump is exactly additive, so it splits:
+`standard_upgrade` (tier delta, **no `covers`**) + each add-on as its **own** config-priced
+line. Only the **`pro_bundle`** line collapses and carries `covers: [machine codes]` (e.g.
+`["bilingual","booking","listings"]`) — because #27.3's Pro **crossover discount** (Pro only
+when actually cheapest, a consumer-protection pricing feature) makes its parts inseparable, so
+it is **one bundled line at the preserved total**, not per-feature additivity. Simple add-on
+lines (bilingual alone on Standard) carry no `covers`. The site renders `covers` **from
+payload**, never hardcoded.
 
 **Rider 3 — estimation.** The decomposition reconciles to **`range.min`**, the **scanned-basis
 bundle** floor; `additions` reflect that scanned-basis bundle. A declared band never drops

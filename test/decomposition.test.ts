@@ -71,14 +71,32 @@ test("D-04 rider 2 — pro_bundle line carries covers[]; total is the #27.3 chea
   assert.equal(t.base.amount + pb!.amount, PRO, "base + pro_bundle reconciles to the preserved total");
 });
 
-// ---- Presence→Standard bump is one standard_bundle line, still reconciles ----
-test("D-05 tier bump Presence→Standard → one standard_bundle line, sum === total", () => {
-  const t = mapTier(inp({ core_pages: 2, components: { booking: true } }), P); // 2p can't be Presence with a component
+// ---- #38 line-split: an additive Standard bump → standard_upgrade (no covers) + add-on lines ----
+test("D-05 additive Standard bump → standard_upgrade (tier delta, no covers) + separate add-on lines", () => {
+  const t = mapTier(inp({ core_pages: 2, bilingual_mirror: true, components: { booking: true } }), P); // 2p + bilingual + booking → Standard floor (#38)
   assert.equal(t.base.tier, "presence"); assert.equal(t.base.amount, PRES);
   assert.equal(t.bundle!.tier, "standard");
-  const sb = t.additions.find((a: any) => a.code === "standard_bundle");
-  assert.ok(sb && sb.covers!.includes("booking"));
+  const up = t.additions.find((a: any) => a.code === "standard_upgrade");
+  assert.ok(up, "standard_upgrade present");
+  assert.equal(up!.amount, STD - PRES, "amount is the tier delta");
+  assert.ok(!("covers" in up!), "standard_upgrade carries NO covers (additive)");
+  // genuine add-ons are their own config-priced lines, not collapsed
+  assert.deepEqual(t.additions.filter((a: any) => a.code !== "standard_upgrade").map((a: any) => ({ code: a.code, amount: a.amount })), [{ code: "bilingual", amount: BI }, { code: "booking", amount: BK }]);
+  assert.ok(!t.additions.some((a: any) => a.code === "standard_bundle"), "no collapsed standard_bundle");
   assert.equal(sumOf(t), t.indicative_total);
+});
+
+// ---- #38 Présence is simple-only (config-driven): a component/bilingual forces the Standard floor ----
+test("D-10 #38 Présence excludes components + bilingual (config guard)", () => {
+  assert.equal(P.tiermap.presence_excludes_components, true);
+  assert.equal(P.tiermap.presence_excludes_bilingual, true);
+  // 1-2 page + booking → NOT Présence
+  assert.equal(mapTier(inp({ core_pages: 1, components: { booking: true } }), P).bundle!.tier, "standard");
+  assert.equal(mapTier(inp({ core_pages: 2, components: { listings: true } }), P).bundle!.tier, "pro"); // listings → Pro
+  assert.equal(mapTier(inp({ core_pages: 2, bilingual_mirror: true }), P).bundle!.tier, "standard");
+  // a bare 1-2 page site (no component/bilingual) is still Présence
+  assert.equal(mapTier(inp({ core_pages: 1 }), P).bundle!.tier, "presence");
+  assert.equal(mapTier(inp({ core_pages: 2 }), P).bundle!.tier, "presence");
 });
 
 // ---- rider 3: estimation reconciles to range.min (scanned-basis) ----

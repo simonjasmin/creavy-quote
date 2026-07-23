@@ -25,6 +25,11 @@ export const rawPricingConfig = {
     standard_base_pages: 4,
     pro_base_pages: 6,
     pro_includes: ["bilingual", "booking", "listings"], // heavy components Pro covers flat
+    // #38 (ratified 2026-07-23) — Présence is the one-pager/digital-card tier: simple-only.
+    // Any component (booking/listings) or a bilingual mirror is a multi-page-tool capability →
+    // forces the Standard floor. Tier is capability-defined, not page-count-only.
+    presence_excludes_components: true,
+    presence_excludes_bilingual: true,
   },
 
   tiers: {

@@ -618,6 +618,37 @@ unchanged.
 - Contract: [contracts/quote-api-contract.md](contracts/quote-api-contract.md) **v0.10** §4g
   (additive; site absent-tolerant).
 
+### 2.17 Présence is simple-only + Standard-bump line-split — amendment #38 (founder-ratified 2026-07-23)
+
+**38. Présence is the one-pager / digital-card tier — simple-only.** Any **component**
+(booking/listings) or a **bilingual** mirror is a multi-page-tool capability → forces the
+**Standard floor**. **Tier is capability-defined, not page-count-only** (consistent with
+productized-tier logic). This **ratifies** the former `tiermap.ts:138` guard (previously an
+unconfirmed assumption, TIERMAP-REPORT #5) and moves it from hardcode to **config**:
+`tiermap.presence_excludes_components` / `presence_excludes_bilingual` (booleans, loader-
+validated per #22).
+
+- **On record (gagnonconstruction.ca, 1 core):** the **4 070** screenshot was **NOT this rule
+  misfiring** — it was the rule applied to **LEAKED inputs** (stale `languages=fr_en` +
+  `has_brand_assets=false` sent by the site, neither tapped). The rule is correct; the inputs
+  were forged. The site-side leak is tracked separately (BUG-1 / #36 adoption).
+- **Correct quote, booking-only 1 page:** booking forces the Standard floor → **base Présence
+  1 490 + `standard_upgrade` 1 300 + booking (rendez-vous) 590 = 3 380** (booking is its config
+  add-on; only Pro includes it flat). ⚠ **The ruling's "Standard 2 790, booking included" reads
+  as 2 790** — the engine computes **3 380**. Flagged for confirmation: if booking is meant to
+  be *included in Standard* (2 790 flat), that is a **separate `standard_includes` config
+  change, not made here.**
+
+**#38 line-split (the #27.9 display ruling under this decision).** An **additive Standard tier
+bump** renders as **separate** lines: a `standard_upgrade` line (tier delta = Standard − base,
+**no `covers`**) + each genuine add-on as its own config-priced line. The single collapsed
+`pro_bundle` line is **Pro-only** — there the #27.3 crossover discount makes the parts
+inseparable (so it alone carries `covers`). `sum(base + additions) === total` re-pinned.
+
+- Tests: **D-05** (split shape + reconciliation), **D-10** (config guard), D-01 combination
+  reconciliation re-passes.
+- Contract: [contracts/quote-api-contract.md](contracts/quote-api-contract.md) **v0.11** §4f.
+
 ---
 
 ## 3. What this service is (unchanged)
