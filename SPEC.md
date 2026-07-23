@@ -632,12 +632,11 @@ validated per #22).
   misfiring** — it was the rule applied to **LEAKED inputs** (stale `languages=fr_en` +
   `has_brand_assets=false` sent by the site, neither tapped). The rule is correct; the inputs
   were forged. The site-side leak is tracked separately (BUG-1 / #36 adoption).
-- **Correct quote, booking-only 1 page:** booking forces the Standard floor → **base Présence
-  1 490 + `standard_upgrade` 1 300 + booking (rendez-vous) 590 = 3 380** (booking is its config
-  add-on; only Pro includes it flat). ⚠ **The ruling's "Standard 2 790, booking included" reads
-  as 2 790** — the engine computes **3 380**. Flagged for confirmation: if booking is meant to
-  be *included in Standard* (2 790 flat), that is a **separate `standard_includes` config
-  change, not made here.**
+- **Correct quote, booking-only 1 page = 3 380** (base Présence 1 490 + `standard_upgrade`
+  1 300 + booking 590). **Ratified 2026-07-23:** « Standard 2 790, booking included » meant
+  included in the **build scope, priced as a line** — booking stays the **$590 config add-on on
+  Standard; only Pro includes it flat.** No pricing change; the 3 380 figure is confirmed. The
+  forged-inputs **4 070** note above stays on record.
 
 **#38 line-split (the #27.9 display ruling under this decision).** An **additive Standard tier
 bump** renders as **separate** lines: a `standard_upgrade` line (tier delta = Standard − base,
