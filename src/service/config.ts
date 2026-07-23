@@ -13,6 +13,8 @@ export type ServiceConfig = {
   databaseUrl: string | null; // null → in-memory store (dev/test only)
   turnstile: { enabled: boolean; secret: string | null };
   rateLimit: { windowMs: number; maxPerWindow: number };
+  getRateLimit: { windowMs: number; maxPerWindow: number }; // ENG-04 Ruling 1 — all public GETs
+  soumissionValidityDays: number; // ENG-04 — soumission valid_until = prepared_at + this
   dailyCeilings: { scans: number; assessments: number };
   trustedProxyHops: number; // trusted reverse-proxy hops for X-Forwarded-For
   cacheTtlMs: number; // #25-A step 7 freshness (24 h)
@@ -72,6 +74,12 @@ export function loadServiceConfig(env: Env): ServiceConfig {
     databaseUrl,
     turnstile: { enabled: turnstileEnabled, secret: turnstileSecret },
     rateLimit: { windowMs: num("RATE_LIMIT_WINDOW_MS", 60_000), maxPerWindow: num("RATE_LIMIT_MAX", 10) },
+    // ENG-04 Ruling 1 — GET limiter. Budget: the island's worst-case single-client poll is the
+    // 700 ms assessment stream = ⌈60000/700⌉ ≈ 86 req/60 s; 300 clears that ~3.5× (and 2 tabs
+    // ≈172 at ~1.7×). Enumeration behind it: 2^48 / (live quotes × 300/min), ×30-day expiry cap
+    // → decades/IP even at launch volume. Keeps 48-bit quote_id economical (share_token = portal).
+    getRateLimit: { windowMs: num("GET_RATE_LIMIT_WINDOW_MS", 60_000), maxPerWindow: num("GET_RATE_LIMIT_MAX", 300) },
+    soumissionValidityDays: num("SOUMISSION_VALIDITY_DAYS", 30),
     dailyCeilings: { scans: num("DAILY_SCAN_CEILING", 200), assessments: num("DAILY_ASSESSMENT_CEILING", 50) },
     trustedProxyHops: num("TRUSTED_PROXY_HOPS", 1),
     cacheTtlMs: num("CACHE_TTL_MS", 24 * 60 * 60 * 1000),

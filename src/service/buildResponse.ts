@@ -14,12 +14,15 @@ const componentsOf = (c: Answers["component"]) => ({ booking: c === "booking" ||
 
 const TRANSPORT_FAIL = new Set(["unreachable", "host_down", "slow_host", "tls_invalid"]);
 
-// #37 payment-terms DISPLAY — installments of the SAME fixed total (never a price change).
-// The final versement absorbs integer-cents rounding so the schedule reconciles EXACTLY:
-// (months-1)·monthly_amount + final_amount === total. care_plan is never part of this.
-function paymentTerms(total: number, months: number): { months: number; monthly_amount: number; final_amount: number } {
-  const monthly_amount = Math.floor(total / months);
-  return { months, monthly_amount, final_amount: total - (months - 1) * monthly_amount };
+// #37 → ENG-04 Ruling 2 payment-terms — MACHINE FIELDS ONLY (zero prose; site owns all FR/EN
+// labels incl. « versements égaux » + the cent-adjustment sentence). Installments of the SAME
+// fixed total; never a price change. Single-payment mode needs NO fields (the amount is
+// indicative_total). amount = round(total/count); the final versement absorbs the remainder so
+// (count-1)·amount + final === total EXACTLY, with |amount − final| ≤ count/2. care_plan is
+// never part of this.
+function paymentTerms(total: number, count: number): { installments: { count: number; amount_cents: number; final_amount_cents: number } } {
+  const amount_cents = Math.round(total / count);
+  return { installments: { count, amount_cents, final_amount_cents: total - (count - 1) * amount_cents } };
 }
 
 export type BuiltResponse = { status: "completed" | "failed"; body: Record<string, unknown> };

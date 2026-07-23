@@ -605,10 +605,12 @@ launch's conflict-rate telemetry.
 premium, interest, or new price kind (#20 untouched).** Firewall and all pricing logic
 unchanged.
 
-- **Shape:** `{months, monthly_amount, final_amount}` (integer cents). **Invariant:**
-  `(months−1)·monthly_amount + final_amount === indicative_total`, **exactly** — the **final
-  versement absorbs** integer-cents rounding (`monthly_amount = ⌊total/months⌋`). Pinned across
-  every tier + addition combination.
+- **Shape (RE-ENCODED by ENG-04 Ruling 2, §2.18):** `payment_terms.installments =
+  {count, amount_cents, final_amount_cents}` (integer cents, **machine fields only, zero
+  prose**). **Invariant:** `(count−1)·amount_cents + final_amount_cents === indicative_total`,
+  exactly; `amount_cents = round(total/count)`; `|amount − final| ≤ 11` (the final versement
+  absorbs the remainder). Pinned across every tier + addition combination (PT-01/05). *(The
+  original #37 shape `{months, monthly_amount, final_amount}` with `⌊·⌋` is superseded.)*
 - **`months` from config** `payment_terms_months = 12` (#27.7/#22 loader-validated: integer
   ≥ 2). Arithmetic on the existing total only.
 - **FLAT register only** — estimation / review / no-price paths **omit it entirely** (absent,
@@ -647,6 +649,36 @@ inseparable (so it alone carries `covers`). `sum(base + additions) === total` re
 - Tests: **D-05** (split shape + reconciliation), **D-10** (config guard), D-01 combination
   reconciliation re-passes.
 - Contract: [contracts/quote-api-contract.md](contracts/quote-api-contract.md) **v0.11** §4f.
+
+### 2.18 Soumission endpoint + GET rate-limiter + payment_terms re-encode — ENG-04 (founder-ratified 2026-07-23)
+
+**Phase-1 sales tooling — read-only; no PII enters the service (T4); no acceptance/payment
+(portal phase, separately gated).**
+
+- **`GET /soumission/:quote_id`** renders a completed, priced quote as a shareable soumission:
+  the flat/estimation projection **VERBATIM** (never re-priced — the stored `job.response` is
+  the paper trail) + the addressee (`normalized_url`) + a **completed assessment inline** +
+  server-computed `prepared_at`/`valid_until` (= `prepared_at + soumission_validity_days`,
+  config, default 30). `404` not_found · `409` not_completed / no_price (review → the call is
+  the path) · `410` expired (machine reason). Zero-PII (no name/email/phone). Contract §12.
+- **Ruling 1 — rate-limit ALL public GET routes** (`/quote/:id`, `/events`, `/assessment`,
+  `/soumission/:id`; `/health` exempt). Budget clears the island's worst-case polling — the
+  700 ms assessment stream = ⌈60000/700⌉ ≈ **86 req/60 s**; default limit **300/60 s** ≈ 3.5×
+  margin (config `GET_RATE_LIMIT_MAX`). **Enumeration math (why 48-bit `quote_id` stays):**
+  space = 2⁴⁸ ≈ 2.8×10¹⁴; behind 300/min/IP, finding one live id among *N* non-expired quotes
+  ≈ 2⁴⁸ / (N·300) minutes — **~178 years/IP at N=10⁴**, and the **30-day expiry** caps *N* to
+  the rolling window. `share_token` (migration 0004, nullable, unused) is the reserved
+  **portal-phase revocable credential**; minting/auth/PII are founder-gated.
+- **Ruling 2 — `payment_terms` re-encoded** to machine fields only (zero prose; site owns
+  « versements égaux » + the cent-adjustment sentence + the two-mode FAQ policy): see §2.16.
+  The ENG-02 money gate **resolves here** (the two-mode / no-financement / no-milestone policy
+  is ratified; the engine ships only the math, the site renders the terms).
+- Tests: **SM-01…07** (verbatim projection, inline assessment + internals-stripped, estimation,
+  404/409/410, expiry boundary, verbatim-vs-config pin, GET-limiter polling budget), **PT-01/05**
+  (installments reconciliation + the ratified worked examples 338000→{28167,28163},
+  279000→{23250,23250}).
+- Contract: [contracts/quote-api-contract.md](contracts/quote-api-contract.md) **v0.12**
+  (§12 soumission, §4g re-encode, §6 limiter, §7 CORS coverage).
 
 ---
 

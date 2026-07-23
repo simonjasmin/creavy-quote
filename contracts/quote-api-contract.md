@@ -1,4 +1,4 @@
-# Creavy Quote API — contract v0.11
+# Creavy Quote API — contract v0.12
 
 > **Canonical home:** this file (`contracts/quote-api-contract.md` in `creavy-quote`).
 > creavy-site keeps a **synced copy** and never reads `SPEC.md`. Machine enums only;
@@ -16,7 +16,21 @@
 
 ## 1. Header / traceability
 
-- **Version:** 0.11 (2026-07-23). **Status:** draft for creavy-site E1; indicative only.
+- **Version:** 0.12 (2026-07-23). **Status:** draft for creavy-site E1; indicative only.
+- **Changelog v0.11 → v0.12 (ENG-04 — soumission endpoint + GET rate-limiter + payment_terms re-encode):**
+  - **New `GET /soumission/:quote_id`** (§12) — a shareable soumission: the flat/estimation
+    projection rendered **verbatim** + the addressee (`normalized_url`) + a **completed
+    assessment inline** + server-computed `prepared_at`/`valid_until`. **Zero-PII (T4).**
+    `404`/`409`/`410` documented in §12.
+  - **All public GET routes are now rate-limited** (Ruling 1; `/health` exempt) — protects
+    against `quote_id` enumeration and polling abuse. Budget clears the island's worst-case
+    polling with margin (§7). `quote_id` stays 48-bit for v1; `share_token` is the reserved
+    portal-phase credential.
+  - **`payment_terms` re-encoded (Ruling 2; BREAKING vs v0.10 shape):** now
+    `payment_terms.installments = { count, amount_cents, final_amount_cents }` — **machine
+    fields only, zero prose** (site owns « versements égaux » + the cent-adjustment sentence).
+    `amount = round(total/count)`; `(count−1)·amount + final === total`; `|amount−final| ≤ 11`.
+    Single-payment mode carries no fields (the amount is `indicative_total`). §4g.
 - **Changelog v0.10 → v0.11 (Présence simple-only + Standard-bump line-split — #38):**
   - **#38 (ratified):** Présence is the one-pager/digital-card tier — **simple-only.** Any
     component (booking/listings) or bilingual forces the **Standard floor** (config
@@ -256,7 +270,7 @@ and `answers.pages` are present:
     "indicative_total": 279000,       // cents = tier + priced addons, #20/#29.4
     "base": { "tier": "standard", "amount": 279000, "from": "scan" }, // #27.9 scanned-pages anchor (§4f)
     "additions": [],                  // #27.9 refinement line items; base.amount + Σ === indicative_total
-    "payment_terms": { "months": 12, "monthly_amount": 23250, "final_amount": 23250 }, // #37 FLAT only; (m-1)·monthly+final === total
+    "payment_terms": { "installments": { "count": 12, "amount_cents": 23250, "final_amount_cents": 23250 } }, // §4g FLAT only
     "currency": "CAD",
     "suggested_addons": [{ "id": "logo_refresh", "amount": 49000 }], // unpriced upsells, cents (30.3)
     "care_plan_monthly": 5900,        // cents, [cfg] (attached at render, #27.8) — OUTSIDE the sum
@@ -393,20 +407,27 @@ payload**, never hardcoded.
 bundle** floor; `additions` reflect that scanned-basis bundle. A declared band never drops
 `range.min` below the evidence.
 
-### 4g. `payment_terms` — installment display (#37)
+### 4g. `payment_terms` — installment display (#37 → ENG-04 Ruling 2)
 
-**Flat register only.** A presentation of the **same fixed `indicative_total`** as monthly
-installments — **not a price change, not a subscription, no premium/interest.**
+**Flat register only. MACHINE FIELDS ONLY — zero prose.** A presentation of the **same fixed
+`indicative_total`** as installments — **not a price change, not a subscription, no
+premium/interest.** The site owns every FR/EN label (« versements égaux », the cent-adjustment
+sentence, the two-mode policy text next to the FAQ).
 
 ```jsonc
-"payment_terms": { "months": 12, "monthly_amount": 23250, "final_amount": 23250 }  // integer cents
+"payment_terms": { "installments": { "count": 12, "amount_cents": 23250, "final_amount_cents": 23250 } }
 ```
 
-- **Exact:** `(months − 1) · monthly_amount + final_amount === indicative_total`. The **final
-  versement absorbs** integer-cents rounding (`monthly_amount = ⌊total / months⌋`;
-  `final_amount ≥ monthly_amount`). `months` = config `payment_terms_months` (loader-validated).
+- **`amount_cents = round(total / count)`**; the **final versement absorbs** the remainder:
+  `final_amount_cents = total − (count−1)·amount_cents`. **Exact:**
+  `(count−1)·amount_cents + final_amount_cents === indicative_total`, with `|amount − final| ≤ 11`.
+  `count` = config `payment_terms_months` (loader-validated).
+- **Single-payment mode needs no fields** — the amount is `indicative_total` itself.
 - **Omitted** on estimation / review / no-price results (absent, not null — site absent-tolerant).
 - **`care_plan_monthly` is never inside the schedule** — it remains a separate recurring field.
+- **Policy is site-rendered:** engine ships only the math; « single payment or 12 versements
+  égaux sans frais; le premier versement confirme le démarrage; jamais de financement » is the
+  site's FAQ-matched wording, not an engine string.
 
 ## 5. Failure semantics
 
@@ -442,6 +463,10 @@ ratified outcomes. Every terminal state is renderable — no dead ends (Phase 0 
   client ceiling is **compatible** (25 s scan + margin). On the site ceiling, render the
   last `pending` as a graceful "still working / book a call" — never a hang.
 - Stage 1½ price is deterministic and fast once the scan completes; no second poll phase.
+- **All public GET routes are rate-limited** (ENG-04 Ruling 1): a per-IP sliding window sized
+  to clear the polling budget with comfortable margin (default **300 / 60 s** vs the worst-case
+  ~86 / 60 s at the 700 ms assessment cadence). `/health` is **exempt**. Over-budget → `429`
+  with `Retry-After`. This is what keeps a 48-bit `quote_id` uneconomical to enumerate.
 
 ## 7. CORS (#33 — ratified, supersedes #30.4)
 
@@ -456,6 +481,9 @@ ratified outcomes. Every terminal state is renderable — no dead ends (Phase 0 
 - **Config-driven:** production origin from `ALLOWED_ORIGIN`; the preview pattern is a
   documented constant. Any other origin → **no `Access-Control-Allow-Origin` header** (the
   browser blocks it).
+- **Covers every route** — `POST /quote`, `POST /quote/:id/assess`, `GET /quote/:id`,
+  `/events`, `/assessment`, **and `GET /soumission/:quote_id`** — one allow-list gates all
+  (ENG-04 answer to the consumer's CORS question).
 
 ## 8. Not in this contract
 
@@ -622,3 +650,49 @@ stage-1 result carries that **public-safe reason code** in `reasons[]` and (for 
 reason code** — **never** on internal flags — so a limited read says the true thing
 (« on a regardé votre page d'accueil ») instead of overclaiming a full read. A full read
 carries **none** of those codes. Machine values only; the site owns the wording.
+
+## 12. `GET /soumission/:quote_id` — the shareable soumission (ENG-04)
+
+**Read-only** sales tooling: renders a completed, priced quote as a soumission document.
+**No acceptance, no payment** (portal phase, separately gated). **One fetch renders the page.**
+
+### Success — `200`
+```jsonc
+{
+  "quote_id": "qt_…",
+  "soumission": true,
+  "normalized_url": "https://prospect-site.ca",   // (1) ADDRESSEE — a website URL, never PII
+  "prepared_at": "2026-07-23T14:00:00.000Z",       // (2) server-computed, ISO 8601 UTC
+  "valid_until": "2026-08-22T14:00:00.000Z",       //     = prepared_at + soumission_validity_days (config, 30)
+  "indicative": true, "basis": "scanned",
+  "register": "flat",                               // or "estimation"
+  "result": { /* … */ },                            // (1)(6) the GET /quote/:id projection, VERBATIM:
+                                                    //   base · additions[] · indicative_total ·
+                                                    //   payment_terms (§4g) · care_plan_monthly · bundle.tier
+  "assessment": {                                   // (1) INLINE iff a COMPLETED assessment exists; else ABSENT
+    "prose_chunks": ["…"], "suggested_addons": [ /* … */ ] //  public fields ONLY (internals never — §8/§11)
+  }
+}
+```
+
+Answering the consumer's six questions:
+1. **Shape** — reuses the `GET /quote/:id` flat/estimation projection **verbatim**, plus the
+   addressee (`normalized_url`) and the completed assessment prose **inline**. No separate
+   assessment call.
+2. **Dates** — `prepared_at` + `valid_until` are **server-computed**; the client never computes
+   D+30 (verbatim principle).
+3. **Expiry / errors** — exact bodies:
+   - `410` `{ "error": "expired", "reason": "soumission_expired", "prepared_at": "…", "valid_until": "…" }`
+   - `404` `{ "error": "not_found" }`
+   - `409` `{ "error": "not_completed" }` (pending/failed) · `{ "error": "no_price" }` (review register — the call is the path)
+4. **Zero-PII (T4)** — carries **no name, email, or phone.** `normalized_url` is the prospect's
+   own website URL (provenance, not contact PII). The email lives only in Netlify Forms.
+5. **CORS** — production + preview origins allow-listed exactly as §7/#33.
+6. **`payment_terms`** — present on the flat register per §4g (Ruling 2 installments).
+
+- **Verbatim render:** returns the **stored** `job.response` — **never** re-runs the mapper or
+  re-prices. A later config change does **not** alter an already-issued soumission (paper trail).
+- **`share_token`** — nullable column (migration 0004) reserved as the **portal-phase revocable
+  credential**; **unused in v1** (served by `quote_id` behind the GET rate-limiter + 30-day
+  expiry). Minting/auth/PII are portal-phase, founder-gated.
+- **Wall posture:** the ENG-04 GET rate-limiter (§6); **no Turnstile on GET.**

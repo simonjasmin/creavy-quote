@@ -18,7 +18,7 @@ import { assessmentId } from "./ids.ts";
 import type { AssessmentModel } from "../assess/model.ts";
 import type { ServiceConfig } from "./config.ts";
 import type { Store, Job } from "./store/types.ts";
-import type { RateLimiter } from "./rateLimiter.ts";
+import { RateLimiter } from "./rateLimiter.ts";
 import type { Transport, Clock } from "../crawl/types.ts";
 import type { PricingConfig } from "../pricing/loadPricingConfig.ts";
 import type { FetchLike } from "./turnstile.ts";
@@ -73,7 +73,9 @@ export function createServer(deps: ServerDeps): Server {
   const wallDeps: WallDeps = { config, pricing: deps.pricing, store, rateLimiter: deps.rateLimiter, clock: deps.clock, fetchImpl: deps.fetchImpl, log: deps.log };
   const workerDeps: WorkerDeps = { store, transport: deps.transport, clock: deps.clock, pricing: deps.pricing };
   const assessDeps: AssessmentDeps = { store, model: deps.assessmentModel ?? null, modelId: deps.assessmentModelId ?? null, clock: deps.clock, serviceConfig: config, pricing: deps.pricing, lang: deps.assessLang ?? "fr" };
+  const getRateLimiter = new RateLimiter(config.getRateLimit.windowMs, config.getRateLimit.maxPerWindow); // ENG-04 Ruling 1 — all public GETs
   const log = deps.log ?? (() => {});
+  const iso = (ms: number) => new Date(ms).toISOString();
 
   return httpCreateServer(async (req, res) => {
     const url = new URL(req.url ?? "/", "http://localhost");
@@ -85,6 +87,40 @@ export function createServer(deps: ServerDeps): Server {
 
       // GET /health — includes contract_version so a consumer can detect version skew
       if (req.method === "GET" && url.pathname === "/health") return send(res, 200, { status: "ok", env: config.env, contract_version: contractVersion }, cors);
+
+      // ENG-04 Ruling 1 — EVERY other public GET is rate-limited (id enumeration + polling abuse).
+      // /health is exempt (uptime probes). Budget clears the island's 700 ms polling worst case.
+      if (req.method === "GET") {
+        const ip = clientIp(req.socket.remoteAddress ?? "", req.headers["x-forwarded-for"] as string | undefined, config.trustedProxyHops);
+        const rl = getRateLimiter.check(ipRateKey(ip), deps.clock.now());
+        if (!rl.allowed) { log("get_rate_limit", { key: ipRateKey(ip) }); return send(res, 429, { error: "rate_limited" }, { ...cors, "retry-after": String(rl.retryAfterSec) }); }
+      }
+
+      // GET /soumission/:quote_id — ENG-04. Renders the STORED quote VERBATIM (never re-price) as
+      // a shareable soumission: the flat/estimation projection + addressee (normalized_url) + the
+      // completed assessment prose INLINE + server-computed prepared_at/valid_until. Zero-PII (T4:
+      // no name/email/phone). 404 not_found · 409 not_completed/no_price · 410 expired.
+      const mSoum = url.pathname.match(/^\/soumission\/([^/]+)$/);
+      if (req.method === "GET" && mSoum) {
+        const job = await store.getJob(mSoum[1]);
+        if (!job) return send(res, 404, { error: "not_found" }, cors);
+        if (job.status !== "completed") return send(res, 409, { error: "not_completed" }, cors);
+        const stored = (job.response ?? {}) as any;
+        if (stored.register !== "flat" && stored.register !== "estimation") return send(res, 409, { error: "no_price" }, cors); // review → the call is the path
+        const preparedMs = job.created_at;
+        const validUntilMs = preparedMs + config.soumissionValidityDays * 86_400_000;
+        if (deps.clock.now() > validUntilMs) return send(res, 410, { error: "expired", reason: "soumission_expired", prepared_at: iso(preparedMs), valid_until: iso(validUntilMs) }, cors);
+        const a = await store.getAssessmentByQuote(job.id); // INLINE prose when completed — one fetch renders the page
+        const soumission: Record<string, unknown> = {
+          quote_id: job.id, soumission: true,
+          normalized_url: job.normalized_url, // addressee — a website URL, never PII
+          prepared_at: iso(preparedMs), valid_until: iso(validUntilMs),
+          indicative: stored.indicative, basis: stored.basis, register: stored.register,
+          result: stored.result, // VERBATIM: base/additions/indicative_total/payment_terms/care_plan_monthly/bundle/…
+        };
+        if (a && a.status === "completed") soumission.assessment = { prose_chunks: a.prose_chunks, suggested_addons: a.suggested_addons }; // public fields ONLY
+        return send(res, 200, soumission, cors);
+      }
 
       // POST /quote
       if (req.method === "POST" && url.pathname === "/quote") {
