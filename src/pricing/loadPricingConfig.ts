@@ -17,6 +17,8 @@ export type ProCustomTier = { label_fr: string; price_min_cents: number; price_m
 export type PricingConfig = {
   currency: string;
   care_plan: { key: string; label_fr: string; monthly_cents: number };
+  payment_terms_months: number; // #37 — installment count for the flat-register display schedule
+
   tiers: { presence: Tier; standard: Tier; pro: Tier; pro_custom: ProCustomTier };
   addons: Record<string, Addon>;
   bilingual: { tree_lang_purity: number; min_tree_pages: number; min_size_ratio: number };
@@ -87,6 +89,7 @@ export function loadPricingConfig(raw: unknown): PricingConfig {
   check(typeof c.currency === "string" && c.currency.length > 0, "currency required");
   check(c.care_plan && isPositiveInt(c.care_plan.monthly_cents), "care_plan.monthly_cents required (positive integer cents)");
   check(typeof c.care_plan.label_fr === "string" && typeof c.care_plan.key === "string", "care_plan needs key + label_fr");
+  check(isPositiveInt(c.payment_terms_months) && c.payment_terms_months >= 2, "payment_terms_months must be an integer ≥ 2 (#37 installment display)"); // #22/#27.7
 
   const b = c.bilingual ?? {};
   check(typeof b.tree_lang_purity === "number" && b.tree_lang_purity > 0 && b.tree_lang_purity <= 1, "bilingual.tree_lang_purity must be in (0,1]"); // #28/#27.7
@@ -118,6 +121,7 @@ export function loadPricingConfig(raw: unknown): PricingConfig {
   return Object.freeze({
     currency: c.currency,
     care_plan: { key: c.care_plan.key, label_fr: c.care_plan.label_fr, monthly_cents: c.care_plan.monthly_cents },
+    payment_terms_months: c.payment_terms_months,
     tiers: {
       presence: { label_fr: t.presence.label_fr, price_cents: t.presence.price_cents },
       standard: { label_fr: t.standard.label_fr, price_cents: t.standard.price_cents },

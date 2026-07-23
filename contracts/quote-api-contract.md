@@ -1,4 +1,4 @@
-# Creavy Quote API — contract v0.9
+# Creavy Quote API — contract v0.10
 
 > **Canonical home:** this file (`contracts/quote-api-contract.md` in `creavy-quote`).
 > creavy-site keeps a **synced copy** and never reads `SPEC.md`. Machine enums only;
@@ -16,7 +16,17 @@
 
 ## 1. Header / traceability
 
-- **Version:** 0.9 (2026-07-22). **Status:** draft for creavy-site E1; indicative only.
+- **Version:** 0.10 (2026-07-23). **Status:** draft for creavy-site E1; indicative only.
+- **Changelog v0.9 → v0.10 (payment-terms display — #37; ADDITIVE):**
+  - The **flat** register gains `payment_terms: {months, monthly_amount, final_amount}`
+    (integer cents) — a **presentation of the same fixed total** as installments. **Not a
+    price change, not a subscription; no premium, interest, or new price kind.**
+  - **Exact reconciliation:** `(months−1)·monthly_amount + final_amount === indicative_total`
+    — the final versement absorbs integer-cents rounding. `months` is config
+    (`payment_terms_months = 12`, loader-validated, #27.7/#22).
+  - **FLAT register only** — estimation / review / no-price results **omit it entirely**
+    (absent, not null; site is absent-tolerant). **`care_plan_monthly` is never in the
+    schedule** — it stays its own separate recurring field.
 - **Changelog v0.8 → v0.9 (optional answers on the scanned path — #36):**
   - With a `url`, **every `answers` field is optional** — omit it (or send `null`) to leave it
     **unanswered**. The `answers` object itself may be omitted (URL-only POST). An unanswered
@@ -235,6 +245,7 @@ and `answers.pages` are present:
     "indicative_total": 279000,       // cents = tier + priced addons, #20/#29.4
     "base": { "tier": "standard", "amount": 279000, "from": "scan" }, // #27.9 scanned-pages anchor (§4f)
     "additions": [],                  // #27.9 refinement line items; base.amount + Σ === indicative_total
+    "payment_terms": { "months": 12, "monthly_amount": 23250, "final_amount": 23250 }, // #37 FLAT only; (m-1)·monthly+final === total
     "currency": "CAD",
     "suggested_addons": [{ "id": "logo_refresh", "amount": 49000 }], // unpriced upsells, cents (30.3)
     "care_plan_monthly": 5900,        // cents, [cfg] (attached at render, #27.8) — OUTSIDE the sum
@@ -365,6 +376,21 @@ preserved total**, not strict per-feature additivity (which would over-charge).
 **Rider 3 — estimation.** The decomposition reconciles to **`range.min`**, the **scanned-basis
 bundle** floor; `additions` reflect that scanned-basis bundle. A declared band never drops
 `range.min` below the evidence.
+
+### 4g. `payment_terms` — installment display (#37)
+
+**Flat register only.** A presentation of the **same fixed `indicative_total`** as monthly
+installments — **not a price change, not a subscription, no premium/interest.**
+
+```jsonc
+"payment_terms": { "months": 12, "monthly_amount": 23250, "final_amount": 23250 }  // integer cents
+```
+
+- **Exact:** `(months − 1) · monthly_amount + final_amount === indicative_total`. The **final
+  versement absorbs** integer-cents rounding (`monthly_amount = ⌊total / months⌋`;
+  `final_amount ≥ monthly_amount`). `months` = config `payment_terms_months` (loader-validated).
+- **Omitted** on estimation / review / no-price results (absent, not null — site absent-tolerant).
+- **`care_plan_monthly` is never inside the schedule** — it remains a separate recurring field.
 
 ## 5. Failure semantics
 

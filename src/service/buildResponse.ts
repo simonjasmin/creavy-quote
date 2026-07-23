@@ -14,6 +14,14 @@ const componentsOf = (c: Answers["component"]) => ({ booking: c === "booking" ||
 
 const TRANSPORT_FAIL = new Set(["unreachable", "host_down", "slow_host", "tls_invalid"]);
 
+// #37 payment-terms DISPLAY — installments of the SAME fixed total (never a price change).
+// The final versement absorbs integer-cents rounding so the schedule reconciles EXACTLY:
+// (months-1)·monthly_amount + final_amount === total. care_plan is never part of this.
+function paymentTerms(total: number, months: number): { months: number; monthly_amount: number; final_amount: number } {
+  const monthly_amount = Math.floor(total / months);
+  return { months, monthly_amount, final_amount: total - (months - 1) * monthly_amount };
+}
+
 export type BuiltResponse = { status: "completed" | "failed"; body: Record<string, unknown> };
 
 function reviewReasonCode(mapperReasons: string[], reviewFlags: string[]): string {
@@ -66,7 +74,7 @@ export function buildQuoteResponse(args: { scan: ScanResult | null; answers: Ans
       status: "completed",
       body: {
         indicative: true, basis: "declared", register: "flat", review_required: false,
-        result: { bundle: t.bundle, indicative_total: t.indicative_total, base: t.base ? { ...t.base, from: "declared" } : t.base, additions: t.additions, currency: "CAD", suggested_addons: t.suggested_addons, care_plan_monthly: care, reasons: [...t.reasons, "declared_basis"] },
+        result: { bundle: t.bundle, indicative_total: t.indicative_total, base: t.base ? { ...t.base, from: "declared" } : t.base, additions: t.additions, payment_terms: paymentTerms(t.indicative_total!, config.payment_terms_months), currency: "CAD", suggested_addons: t.suggested_addons, care_plan_monthly: care, reasons: [...t.reasons, "declared_basis"] },
       },
     };
   }
@@ -127,8 +135,9 @@ export function buildQuoteResponse(args: { scan: ScanResult | null; answers: Ans
 
   // ---- flat: bands agree, no review ----
   const result: Record<string, unknown> = {
-    bundle: t.bundle, indicative_total: t.indicative_total, base: t.base, additions: t.additions, currency: "CAD",
-    suggested_addons: t.suggested_addons, care_plan_monthly: care, reasons: t.reasons,
+    bundle: t.bundle, indicative_total: t.indicative_total, base: t.base, additions: t.additions,
+    payment_terms: paymentTerms(t.indicative_total!, config.payment_terms_months), // #37 FLAT register only
+    currency: "CAD", suggested_addons: t.suggested_addons, care_plan_monthly: care, reasons: t.reasons,
     core_pages: scan.core_pages, detected_platform: highConf ? scan.detected_platform : "unknown", confidence: scan.detected_platform_confidence,
   };
   const ad = analysisDetails(scan);

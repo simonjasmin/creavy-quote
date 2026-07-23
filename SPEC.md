@@ -598,6 +598,26 @@ launch's conflict-rate telemetry.
   suggestions; partial-subset matrix; `no_site`-without-answers rejected; back-compat pinned).
 - Contract: [contracts/quote-api-contract.md](contracts/quote-api-contract.md) **v0.9** §3.
 
+### 2.16 Payment-terms display — amendment #37 (founder-ratified 2026-07-23)
+
+**37. `payment_terms` on the flat register** — a **presentation** of the same fixed
+`indicative_total` as monthly installments. **Not a price change, not a subscription; no
+premium, interest, or new price kind (#20 untouched).** Firewall and all pricing logic
+unchanged.
+
+- **Shape:** `{months, monthly_amount, final_amount}` (integer cents). **Invariant:**
+  `(months−1)·monthly_amount + final_amount === indicative_total`, **exactly** — the **final
+  versement absorbs** integer-cents rounding (`monthly_amount = ⌊total/months⌋`). Pinned across
+  every tier + addition combination.
+- **`months` from config** `payment_terms_months = 12` (#27.7/#22 loader-validated: integer
+  ≥ 2). Arithmetic on the existing total only.
+- **FLAT register only** — estimation / review / no-price paths **omit it entirely** (absent,
+  not null). **`care_plan` stays fully separate** — never in the schedule.
+- Tests: **PT-01** (reconciliation across all tier+addition combos), **PT-02** (flat-only /
+  absent elsewhere), **PT-03** (care_plan separate), **PT-04** (loader discipline).
+- Contract: [contracts/quote-api-contract.md](contracts/quote-api-contract.md) **v0.10** §4g
+  (additive; site absent-tolerant).
+
 ---
 
 ## 3. What this service is (unchanged)

@@ -8,6 +8,10 @@ export const rawPricingConfig = {
 
   care_plan: { key: "tranquillite", label_fr: "Tranquillité", monthly_cents: 5900 },
 
+  // #37 payment-terms DISPLAY only — installments of the same fixed total (no premium, no
+  // interest, no new price kind). The final versement absorbs rounding. Config per #27.7/#22.
+  payment_terms_months: 12,
+
   // #28 bilingual tree-rung guards (config per #27.7; loader-validated).
   bilingual: { tree_lang_purity: 0.8, min_tree_pages: 3, min_size_ratio: 0.5 },
 
