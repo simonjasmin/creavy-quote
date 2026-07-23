@@ -14,6 +14,7 @@ import { isHoneypotTripped } from "./honeypot.ts";
 import { verifyTurnstile } from "./turnstile.ts";
 import { validateAssessBody } from "./assessment/validate.ts";
 import { startAssessment, projectAssessment, type AssessmentDeps } from "./assessment/service.ts";
+import { soumissionValidUntil } from "./soumissionDates.ts";
 import { assessmentId } from "./ids.ts";
 import type { AssessmentModel } from "../assess/model.ts";
 import type { ServiceConfig } from "./config.ts";
@@ -108,7 +109,7 @@ export function createServer(deps: ServerDeps): Server {
         const stored = (job.response ?? {}) as any;
         if (stored.register !== "flat" && stored.register !== "estimation") return send(res, 409, { error: "no_price" }, cors); // review → the call is the path
         const preparedMs = job.created_at;
-        const validUntilMs = preparedMs + config.soumissionValidityDays * 86_400_000;
+        const validUntilMs = soumissionValidUntil(preparedMs, config.soumissionValidityDays); // ENG-05 — end of day Montreal, DST-aware
         if (deps.clock.now() > validUntilMs) return send(res, 410, { error: "expired", reason: "soumission_expired", prepared_at: iso(preparedMs), valid_until: iso(validUntilMs) }, cors);
         const a = await store.getAssessmentByQuote(job.id); // INLINE prose when completed — one fetch renders the page
         const soumission: Record<string, unknown> = {

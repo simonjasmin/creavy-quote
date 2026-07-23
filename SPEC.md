@@ -680,6 +680,25 @@ inseparable (so it alone carries `covers`). `sum(base + additions) === total` re
 - Contract: [contracts/quote-api-contract.md](contracts/quote-api-contract.md) **v0.12**
   (§12 soumission, §4g re-encode, §6 limiter, §7 CORS coverage).
 
+**ENG-05 addenda (founder-ratified 2026-07-23):**
+- **`valid_until` snaps to END OF DAY America/Montreal** (`23:59:59.999`) on the calendar date
+  of `prepared_at`'s Montreal date + `SOUMISSION_VALIDITY_DAYS`, **DST-aware** ([src/service/
+  soumissionDates.ts](src/service/soumissionDates.ts), Intl/ICU, no tz dependency #34). Reason:
+  the page prints a date, so the link must stay live for **all** of it — a soumission that 410s
+  at 20:30 on its own printed date is a document that lies. **Only ever extends.** Pinned across
+  both DST transitions (SD-01…04) + the HTTP boundary (SM-05). `prepared_at` unchanged.
+- **Both dates are true UTC instants** (`TIMESTAMPTZ` → epoch ms → `toISOString()` `Z`). A
+  −4 h console read was a local-render artifact; the wire value is UTC. Site formats
+  `valid_until` in Montreal for the printed date.
+- **Limiter key verified (no fix):** keys on the **client IP** via `X-Forwarded-For` behind the
+  trusted proxy hop (`clientIp`, `trustedProxyHops=1`), IPv6 → /64 — **per-client** 300/60 s,
+  **not** a global bucket on the edge. In-memory per-process store (effective budget =
+  300 × replicas). Pinned SM-08 (distinct client IPs → independent budgets).
+- **Bug-1 CLOSED — no leak** (founder testimony: FR+EN + brand-assets genuinely tapped; the
+  pre-#38 collapsed rendering hid the line items). No engine change; unverified-submitter
+  unchanged; the #38 forged-inputs note (§2.17) stays verbatim; origin column retained.
+- Contract: **v0.13** (§12 `valid_until`, §6 limiter note).
+
 ---
 
 ## 3. What this service is (unchanged)

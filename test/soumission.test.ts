@@ -8,15 +8,16 @@ import { loadServiceConfig } from "../src/service/config.ts";
 import { MemoryStore } from "../src/service/store/memoryStore.ts";
 import { RateLimiter } from "../src/service/rateLimiter.ts";
 import { buildQuoteResponse } from "../src/service/buildResponse.ts";
+import { soumissionValidUntil } from "../src/service/soumissionDates.ts";
 import { pricingConfig as P } from "../src/pricing/index.ts";
 import { FakeTransport, FakeClock } from "./helpers/replay.ts";
 
 const T0 = 1_700_000_000_000, DAY = 86_400_000, ORIGIN = "https://creavy.netlify.app";
 
-async function withServer(fn: (base: string, store: MemoryStore) => Promise<void>, over: Record<string, string> = {}) {
+async function withServer(fn: (base: string, store: MemoryStore) => Promise<void>, over: Record<string, string> = {}, nowMs = T0) {
   const store = new MemoryStore();
   const config = loadServiceConfig({ ALLOWED_ORIGIN: ORIGIN, NODE_ENV: "staging", DATABASE_URL: "postgres://t", ...over });
-  const server = createServer({ config, pricing: P, store, rateLimiter: new RateLimiter(config.rateLimit.windowMs, config.rateLimit.maxPerWindow), transport: new FakeTransport({}), clock: new FakeClock(T0) });
+  const server = createServer({ config, pricing: P, store, rateLimiter: new RateLimiter(config.rateLimit.windowMs, config.rateLimit.maxPerWindow), transport: new FakeTransport({}), clock: new FakeClock(nowMs) });
   await new Promise<void>((r) => server.listen(0, () => r()));
   const base = `http://127.0.0.1:${(server.address() as any).port}`;
   try { await fn(base, store); } finally { server.close(); }
@@ -41,7 +42,7 @@ test("SM-01 flat soumission — verbatim projection + addressee + server-compute
     assert.equal(s.normalized_url, "https://gagnon.ca"); // addressee (a website URL, not PII)
     assert.equal(s.register, "flat");
     assert.equal(s.prepared_at, new Date(T0).toISOString());
-    assert.equal(s.valid_until, new Date(T0 + 30 * DAY).toISOString(), "server computes D+30, client never does");
+    assert.equal(s.valid_until, new Date(soumissionValidUntil(T0, 30)).toISOString(), "server computes EOD-Montreal validity, client never does");
     assert.deepEqual(s.result, (built.body as any).result, "result rendered VERBATIM");
     assert.ok(s.result.payment_terms.installments.count === 12, "carries Ruling-2 payment_terms");
     assert.ok(!("assessment" in s), "no assessment inlined when none exists");
@@ -88,18 +89,24 @@ test("SM-04 gates — 404 missing · 409 not_completed · 409 no_price (review)"
   });
 });
 
-// ---- expiry boundary → 410 with a machine reason ----
-test("SM-05 410 at the expiry boundary (strict >), documented body", async () => {
+// ---- expiry boundary → 410 with a machine reason (end-of-day Montreal, strict >) ----
+test("SM-05 410 at the end-of-day-Montreal boundary; documented body", async () => {
+  const C = Date.parse("2026-07-23T15:39:40.483Z"); // prepared instant
+  const vu = soumissionValidUntil(C, 30);            // 2026-08-23T03:59:59.999Z (EOD Aug 22 Montreal)
+  // now === valid_until → still valid (strict >)
   await withServer(async (base, store) => {
-    await seed(store, "qt_old", { core_pages: 4 }, T0 - 30 * DAY - 1); // 30d + 1ms ago → expired
-    const r = await fetch(`${base}/soumission/qt_old`);
+    await seed(store, "qt_edge", { core_pages: 4 }, C);
+    assert.equal((await fetch(`${base}/soumission/qt_edge`)).status, 200, "boundary inclusive");
+  }, {}, vu);
+  // now = valid_until + 1 ms → 410
+  await withServer(async (base, store) => {
+    await seed(store, "qt_exp", { core_pages: 4 }, C);
+    const r = await fetch(`${base}/soumission/qt_exp`);
     assert.equal(r.status, 410);
     const b = await r.json();
     assert.equal(b.error, "expired"); assert.equal(b.reason, "soumission_expired");
-    assert.equal(b.valid_until, new Date(T0 - DAY - 1 + DAY).toISOString()); assert.ok(b.prepared_at);
-    await seed(store, "qt_edge", { core_pages: 4 }, T0 - 30 * DAY); // valid_until === now → still valid
-    assert.equal((await fetch(`${base}/soumission/qt_edge`)).status, 200, "boundary inclusive");
-  });
+    assert.equal(b.valid_until, new Date(vu).toISOString()); assert.ok(b.prepared_at);
+  }, {}, vu + 1);
 });
 
 // ---- verbatim render: a config price change never changes an already-issued soumission ----
@@ -131,4 +138,20 @@ test("SM-07 GET limiter — polling budget clears (86 req/60s at 700ms), trips p
   await withServer(async (base) => {
     for (let i = 0; i < 4; i++) assert.equal((await fetch(`${base}/health`)).status, 200, "health never limited");
   }, { GET_RATE_LIMIT_MAX: "1" });
+});
+
+// ---- Ruling: the limiter keys on the CLIENT IP (XFF behind the trusted proxy), not the edge ----
+test("SM-08 GET limiter keys per client IP (XFF), not globally on the proxy", async () => {
+  await withServer(async (base, store) => {
+    await seed(store, "qt_k", { core_pages: 4 });
+    const get = (xff: string) => fetch(`${base}/soumission/qt_k`, { headers: { "x-forwarded-for": xff } });
+    // client A (behind the trusted hop) exhausts ITS budget of 2
+    assert.equal((await get("203.0.113.10")).status, 200);
+    assert.equal((await get("203.0.113.10")).status, 200);
+    assert.equal((await get("203.0.113.10")).status, 429, "A over its own budget");
+    // client B is unaffected — a distinct key, its own 300/60s budget (NOT a shared/global bucket)
+    assert.equal((await get("203.0.113.20")).status, 200, "B unaffected → keyed per client, not on the edge");
+    // A resolves to the SAME key on every request (stable) → stays limited
+    assert.equal((await get("203.0.113.10")).status, 429, "A key is stable");
+  }, { GET_RATE_LIMIT_MAX: "2" });
 });

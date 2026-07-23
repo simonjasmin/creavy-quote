@@ -1,4 +1,4 @@
-# Creavy Quote API — contract v0.12
+# Creavy Quote API — contract v0.13
 
 > **Canonical home:** this file (`contracts/quote-api-contract.md` in `creavy-quote`).
 > creavy-site keeps a **synced copy** and never reads `SPEC.md`. Machine enums only;
@@ -16,7 +16,17 @@
 
 ## 1. Header / traceability
 
-- **Version:** 0.12 (2026-07-23). **Status:** draft for creavy-site E1; indicative only.
+- **Version:** 0.13 (2026-07-23). **Status:** draft for creavy-site E1; indicative only.
+- **Changelog v0.12 → v0.13 (ENG-05 — soumission `valid_until` semantics):**
+  - **`valid_until` now snaps to END OF DAY America/Montreal** (`23:59:59.999`) on the calendar
+    date of `prepared_at`'s Montreal date + `SOUMISSION_VALIDITY_DAYS` — **DST-aware.** The page
+    prints a date; the link now stays live for **all** of that printed date (it no longer 410s
+    mid-day). Only ever extends. `prepared_at` is unchanged (the creation instant). §12.
+  - **Both dates are true UTC instants** (ISO 8601, `Z`) — `TIMESTAMPTZ` → epoch ms →
+    `toISOString()`. A local-timezone console render (e.g. −4 h) is a display artifact; the wire
+    value is UTC. The site formats `valid_until` in `America/Montreal` to get the printed date.
+  - *(No shape change to the limiter: verified it keys on the **client IP** via `X-Forwarded-For`
+    behind the trusted proxy hop — per-client 300/60 s, not a global bucket. §6.)*
 - **Changelog v0.11 → v0.12 (ENG-04 — soumission endpoint + GET rate-limiter + payment_terms re-encode):**
   - **New `GET /soumission/:quote_id`** (§12) — a shareable soumission: the flat/estimation
     projection rendered **verbatim** + the addressee (`normalized_url`) + a **completed
@@ -662,8 +672,9 @@ carries **none** of those codes. Machine values only; the site owns the wording.
   "quote_id": "qt_…",
   "soumission": true,
   "normalized_url": "https://prospect-site.ca",   // (1) ADDRESSEE — a website URL, never PII
-  "prepared_at": "2026-07-23T14:00:00.000Z",       // (2) server-computed, ISO 8601 UTC
-  "valid_until": "2026-08-22T14:00:00.000Z",       //     = prepared_at + soumission_validity_days (config, 30)
+  "prepared_at": "2026-07-23T15:39:40.483Z",       // (2) server-computed, ISO 8601 UTC — the creation instant
+  "valid_until": "2026-08-23T03:59:59.999Z",       //     23:59:59.999 America/Montreal on (prepared's Montreal
+                                                    //     date + SOUMISSION_VALIDITY_DAYS); DST-aware; UTC on the wire
   "indicative": true, "basis": "scanned",
   "register": "flat",                               // or "estimation"
   "result": { /* … */ },                            // (1)(6) the GET /quote/:id projection, VERBATIM:
@@ -679,8 +690,11 @@ Answering the consumer's six questions:
 1. **Shape** — reuses the `GET /quote/:id` flat/estimation projection **verbatim**, plus the
    addressee (`normalized_url`) and the completed assessment prose **inline**. No separate
    assessment call.
-2. **Dates** — `prepared_at` + `valid_until` are **server-computed**; the client never computes
-   D+30 (verbatim principle).
+2. **Dates** — **server-computed, true UTC instants** (ISO 8601 `Z`). `prepared_at` = the
+   creation instant. `valid_until` = **23:59:59.999 America/Montreal** on (`prepared_at`'s
+   Montreal date + `SOUMISSION_VALIDITY_DAYS`), **DST-aware** — so the link stays live for the
+   **whole** printed date. The client never computes the deadline; to render the printed date,
+   **format `valid_until` in `America/Montreal`**.
 3. **Expiry / errors** — exact bodies:
    - `410` `{ "error": "expired", "reason": "soumission_expired", "prepared_at": "…", "valid_until": "…" }`
    - `404` `{ "error": "not_found" }`
