@@ -25,6 +25,21 @@ const validBody = (over: Record<string, unknown> = {}) => ({ url: "https://plomb
 const input = (body: unknown, headers: Record<string, string> = {}, remoteAddr = "203.0.113.5") => ({ remoteAddr, headers, body });
 const scanResult = (over: Record<string, unknown> = {}) => ({ canonical_origin: "https://plombier-test.ca", core_pages: 4, blog_posts: 0, excluded: { archives: 0, media: 0, soft_404: 0, external: 0 }, languages: ["fr"], bilingual_mirror: false, needs_browser: false, needs_browser_reasons: [], review_flags: [], partial: false, detected_platform: "wordpress", detected_platform_confidence: "high", builders_detected: [], page_content: [], ...over });
 
+// ---- origin provenance (#24): store the Origin HEADER value only, no IP/UA/referer ----
+test("W-origin — Origin header persisted as provenance; absent → null", async () => {
+  { const { deps, store } = mkDeps();
+    const d = await runWall(input(validBody(), { origin: ORIGIN }), deps);
+    assert.equal(d.kind, "enqueue");
+    assert.equal((d as any).job.origin, ORIGIN);
+    const job = await store.getJob((d as any).job.id);
+    assert.equal(job!.origin, ORIGIN, "stored on the row");
+    // provenance only — the Job shape carries no ip / user-agent / referer field at all
+    for (const k of ["ip", "user_agent", "ua", "referer", "referrer"]) assert.ok(!(k in job!), `no ${k} on the job`); }
+  { const { deps } = mkDeps();
+    const d = await runWall(input(validBody(), {}), deps); // no Origin header
+    assert.equal((d as any).job.origin, null, "absent header → null"); }
+});
+
 // ---- W-01 order: a rate-limited request never reaches siteverify ----
 test("W-01 rate-limited request never reaches Turnstile siteverify", async () => {
   let calls = 0;
@@ -58,8 +73,8 @@ test("W-03 each rejection layer logs its name", async () => {
 // ---- W-04 ceiling flip → email-capture mode (not an error) ----
 test("W-04 daily ceiling exceeded → email-capture payload", async () => {
   const { deps, store, clock } = mkDeps({ DAILY_SCAN_CEILING: "2" });
-  await store.createJob({ id: "qt_a", no_site: false, url: "u", normalized_url: "n", answers_hash: null, answers: {}, persona: null, fresh_scan: true }, clock.now());
-  await store.createJob({ id: "qt_b", no_site: false, url: "u", normalized_url: "n", answers_hash: null, answers: {}, persona: null, fresh_scan: true }, clock.now());
+  await store.createJob({ id: "qt_a", no_site: false, url: "u", normalized_url: "n", answers_hash: null, answers: {}, persona: null, origin: null, fresh_scan: true }, clock.now());
+  await store.createJob({ id: "qt_b", no_site: false, url: "u", normalized_url: "n", answers_hash: null, answers: {}, persona: null, origin: null, fresh_scan: true }, clock.now());
   const d = await runWall(input(validBody()), deps);
   assert.equal(d.kind, "completed");
   assert.equal((d as any).via, "email_capture");
@@ -70,7 +85,7 @@ test("W-04 daily ceiling exceeded → email-capture payload", async () => {
 test("W-05 cache hit → reuse crawl, re-price, no fresh scan enqueued", async () => {
   const { deps, store, clock } = mkDeps();
   const nurl = (normalize("https://plombier-test.ca") as any).identity;
-  const seed = await store.createJob({ id: "qt_seed", no_site: false, url: "https://plombier-test.ca", normalized_url: nurl, answers_hash: null, answers: {}, persona: null, fresh_scan: true }, clock.now());
+  const seed = await store.createJob({ id: "qt_seed", no_site: false, url: "https://plombier-test.ca", normalized_url: nurl, answers_hash: null, answers: {}, persona: null, origin: null, fresh_scan: true }, clock.now());
   const { page_content, ...facts } = scanResult();
   await store.updateJob(seed.id, { status: "completed", crawl_facts: facts, page_content, response: { indicative: true } }, clock.now());
   const before = await store.countFreshScansSince(0);

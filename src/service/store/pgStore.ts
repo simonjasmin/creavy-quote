@@ -13,7 +13,7 @@ function rowToJob(r: any): Job {
   return {
     id: r.id, created_at: toMs(r.created_at), updated_at: toMs(r.updated_at), status: r.status,
     no_site: r.no_site, url: r.url, normalized_url: r.normalized_url, answers_hash: r.answers_hash,
-    answers: r.answers, persona: r.persona, fresh_scan: r.fresh_scan,
+    answers: r.answers, persona: r.persona, origin: r.origin ?? null, fresh_scan: r.fresh_scan,
     crawl_facts: r.crawl_facts, page_content: r.page_content, mapper_output: r.mapper_output,
     claude_assessment: r.claude_assessment, response: r.response, reason: r.reason,
   };
@@ -26,9 +26,9 @@ export class PgStore implements Store {
   async createJob(j: NewJob, now: number): Promise<Job> {
     const ts = new Date(now);
     const { rows } = await this.pool.query(
-      `INSERT INTO quotes (id, created_at, updated_at, status, no_site, url, normalized_url, answers_hash, answers, persona, fresh_scan)
-       VALUES ($1,$2,$2,'pending',$3,$4,$5,$6,$7::jsonb,$8,$9) RETURNING *`,
-      [j.id, ts, j.no_site, j.url, j.normalized_url, j.answers_hash, JSON.stringify(j.answers), j.persona, j.fresh_scan],
+      `INSERT INTO quotes (id, created_at, updated_at, status, no_site, url, normalized_url, answers_hash, answers, persona, origin, fresh_scan)
+       VALUES ($1,$2,$2,'pending',$3,$4,$5,$6,$7::jsonb,$8,$9,$10) RETURNING *`,
+      [j.id, ts, j.no_site, j.url, j.normalized_url, j.answers_hash, JSON.stringify(j.answers), j.persona, j.origin, j.fresh_scan],
     );
     return rowToJob(rows[0]);
   }

@@ -18,7 +18,7 @@ const svcDeps = (store: MemoryStore, model: any, clock: FakeClock, over: Record<
 async function seedJob(store: MemoryStore, clock: FakeClock, scanOver = {}, status: "completed" | "pending" = "completed") {
   const scan = fakeScan(scanOver as any);
   const { page_content, ...facts } = scan;
-  const job = await store.createJob({ id: "qt_seed", no_site: false, url: "https://roof.example/", normalized_url: "https://roof.example/", answers_hash: null, answers: { pages: "3_4", component: "none", languages: "fr", has_brand_assets: true }, persona: null, fresh_scan: true }, clock.now());
+  const job = await store.createJob({ id: "qt_seed", no_site: false, url: "https://roof.example/", normalized_url: "https://roof.example/", answers_hash: null, answers: { pages: "3_4", component: "none", languages: "fr", has_brand_assets: true }, persona: null, origin: null, fresh_scan: true }, clock.now());
   await store.updateJob(job.id, { status, crawl_facts: facts, page_content, mapper_output: { suggested_addons: [{ id: "logo_refresh", amount: 49000 }] }, response: { basis: "scanned", register: "flat", result: {} } }, clock.now());
   return job.id;
 }

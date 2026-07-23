@@ -76,7 +76,9 @@ export async function runWall(input: WallInput, deps: WallDeps): Promise<WallDec
   }
 
   const isScan = !request.no_site && !!request.normalized_url;
-  const newJob = (fresh_scan: boolean) => store.createJob({ id: randomId(), no_site: request.no_site, url: request.url, normalized_url: request.normalized_url, answers_hash: null, answers: request.answers, persona: request.persona, fresh_scan }, now);
+  // #24 provenance — the Origin HEADER value only (no IP/UA/referer), capped defensively.
+  const origin = input.headers.origin ? input.headers.origin.slice(0, 256) : null;
+  const newJob = (fresh_scan: boolean) => store.createJob({ id: randomId(), no_site: request.no_site, url: request.url, normalized_url: request.normalized_url, answers_hash: null, answers: request.answers, persona: request.persona, origin, fresh_scan }, now);
 
   // 6. daily ceiling (scans only) → email-capture mode (not an error)
   if (isScan) {

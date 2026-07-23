@@ -18,6 +18,7 @@ export type Job = {
   answers_hash: string | null; // (normalized_url, answers_hash) = A7 stage-2 key (used in 2b)
   answers: unknown;
   persona: string | null; // conversion funnel (Phase 0)
+  origin: string | null; // #24 provenance — the POST Origin HEADER value only (no IP/UA/referer); never returned
   fresh_scan: boolean; // did this job enqueue a real crawl? (daily-ceiling accounting)
   // artifacts — invariant #2 raw columns kept even when empty
   crawl_facts: unknown | null; // the decision-#8 ScanResult (tour "scan_result"); repricing loop
@@ -28,7 +29,7 @@ export type Job = {
   reason: string | null; // failure reason (§5 enum)
 };
 
-export type NewJob = Pick<Job, "id" | "no_site" | "url" | "normalized_url" | "answers_hash" | "answers" | "persona" | "fresh_scan">;
+export type NewJob = Pick<Job, "id" | "no_site" | "url" | "normalized_url" | "answers_hash" | "answers" | "persona" | "origin" | "fresh_scan">;
 
 // ---- Stage 2 (2b) — the assessment, keyed to a quote. NO email column, ever (treaty T4). ----
 export type AssessmentStatus = "pending" | "streaming" | "completed" | "unavailable";
